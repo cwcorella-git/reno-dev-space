@@ -1,0 +1,14 @@
+{
+  "name": "reno-dev-space-relay",
+  "version": "1.0.0",
+  "description": "Socket.io relay server for Reno Dev Space chat",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "socket.io": "^4.7.2",
+    "sql.js": "^1.8.0"
+  }
+}
