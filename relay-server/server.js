@@ -21,8 +21,7 @@ const PORT = process.env.PORT || 8080;
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
   'https://localhost:3000',
-  // Add your GitHub Pages URL here after deployment
-  // 'https://yourusername.github.io',
+  'https://cwcorella-git.github.io',
 ];
 
 // ============================================
