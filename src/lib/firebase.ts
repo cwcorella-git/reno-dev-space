@@ -39,7 +39,7 @@ function getAuthInstance(): Auth {
 
 function getDbInstance(): Firestore {
   if (!db) {
-    db = getFirestore(getApp())
+    db = getFirestore(getApp(), 'main')
   }
   return db
 }

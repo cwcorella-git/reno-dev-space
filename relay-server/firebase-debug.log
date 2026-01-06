@@ -1,0 +1,19 @@
+[debug] [2026-01-06T02:24:40.824Z] ----------------------------------------------------------------------
+[debug] [2026-01-06T02:24:40.826Z] Command:       /home/user/.nvm/versions/node/v20.18.2/bin/node /home/user/.nvm/versions/node/v20.18.2/bin/firebase init
+[debug] [2026-01-06T02:24:40.826Z] CLI Version:   15.1.0
+[debug] [2026-01-06T02:24:40.826Z] Platform:      linux
+[debug] [2026-01-06T02:24:40.826Z] Node Version:  v20.18.2
+[debug] [2026-01-06T02:24:40.826Z] Time:          Mon Jan 05 2026 18:24:40 GMT-0800 (Pacific Standard Time)
+[debug] [2026-01-06T02:24:40.826Z] ----------------------------------------------------------------------
+[debug] 
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  /home/user/Projects/reno-dev-space/relay-server
+
