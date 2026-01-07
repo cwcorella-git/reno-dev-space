@@ -15,6 +15,10 @@ interface DragState {
   y: number
 }
 
+interface ResizeState {
+  width: number
+}
+
 export function CanvasBlock({ block }: CanvasBlockProps) {
   const { isAdmin } = useAuth()
   const {
@@ -35,6 +39,10 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
   // Local drag state for immediate visual feedback
   const [dragPos, setDragPos] = useState<DragState | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+
+  // Local resize state for immediate visual feedback
+  const [resizeWidth, setResizeWidth] = useState<ResizeState | null>(null)
+  const [isResizing, setIsResizing] = useState(false)
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -138,7 +146,7 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
     [isAdmin, isSelected, isEditing, canvasRef, block, moveBlock, dragPos]
   )
 
-  // Handle resize
+  // Handle resize with local state for immediate feedback
   const handleResizeStart = useCallback(
     (e: React.MouseEvent, handle: string) => {
       if (!isAdmin || !isSelected || isEditing) return
@@ -152,6 +160,9 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
       const startX = e.clientX
       const startWidth = block.width
 
+      setIsResizing(true)
+      setResizeWidth({ width: block.width })
+
       const handleMouseMove = (moveEvent: MouseEvent) => {
         const deltaX = ((moveEvent.clientX - startX) / rect.width) * 100
         let newWidth = startWidth
@@ -163,26 +174,22 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
           newWidth = Math.max(5, startWidth - deltaX)
         }
 
-        // For now, just update width on mouse up
+        setResizeWidth({ width: newWidth })
       }
 
-      const handleMouseUp = (upEvent: MouseEvent) => {
+      const handleMouseUp = () => {
         document.removeEventListener('mousemove', handleMouseMove)
         document.removeEventListener('mouseup', handleMouseUp)
 
-        const deltaX = ((upEvent.clientX - startX) / rect.width) * 100
-        let newWidth = startWidth
+        setIsResizing(false)
 
-        if (handle.includes('e')) {
-          newWidth = Math.max(5, startWidth + deltaX)
-        }
-        if (handle.includes('w')) {
-          newWidth = Math.max(5, startWidth - deltaX)
-        }
-
-        if (newWidth !== block.width) {
-          resizeBlock(block.id, newWidth, block.height)
-        }
+        // Save final width to Firestore
+        setResizeWidth((currentWidth) => {
+          if (currentWidth && currentWidth.width !== block.width) {
+            resizeBlock(block.id, currentWidth.width, block.height)
+          }
+          return null
+        })
       }
 
       document.addEventListener('mousemove', handleMouseMove)
@@ -209,17 +216,21 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
   // Use drag position if dragging, otherwise use block position
   const displayX = dragPos?.x ?? block.x
   const displayY = dragPos?.y ?? block.y
+  // Use resize width if resizing, otherwise use block width
+  const displayWidth = resizeWidth?.width ?? block.width
+
+  const isInteracting = isDragging || isResizing
 
   const blockStyle: React.CSSProperties = {
     position: 'absolute',
     left: `${displayX}%`,
     top: `${displayY}%`,
-    width: block.width > 0 ? `${block.width}%` : 'auto',
+    width: displayWidth > 0 ? `${displayWidth}%` : 'auto',
     minWidth: '50px',
     minHeight: '30px',
     zIndex: block.zIndex,
-    transition: isDragging ? 'none' : 'left 0.15s ease-out, top 0.15s ease-out',
-    opacity: isDragging ? 0.8 : 1,
+    transition: isInteracting ? 'none' : 'left 0.15s ease-out, top 0.15s ease-out, width 0.15s ease-out',
+    opacity: isInteracting ? 0.9 : 1,
   }
 
   return (
@@ -229,7 +240,7 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
       className={`
         ${isAdmin ? 'cursor-move' : ''}
         ${isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-transparent' : ''}
-        ${isDragging ? 'shadow-lg shadow-indigo-500/30' : ''}
+        ${isInteracting ? 'shadow-lg shadow-indigo-500/30' : ''}
       `}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}

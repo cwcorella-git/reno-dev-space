@@ -64,7 +64,7 @@ export async function addTextBlock(
     type: 'text',
     x,
     y,
-    width: 20,
+    width: 30, // wider default for better text wrapping
     height: 0, // auto
     zIndex: maxZIndex + 1,
     content,
