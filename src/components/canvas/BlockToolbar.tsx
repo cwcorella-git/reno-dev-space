@@ -113,14 +113,14 @@ export function BlockToolbar() {
           {/* Voteable toggle */}
           <button
             onClick={() => toggleBlockVoteable(selectedBlockId, !textBlock.voteable)}
-            className={`px-3 py-1 rounded text-sm font-medium ${
+            className={`px-3 py-2 rounded text-sm font-medium whitespace-nowrap ${
               textBlock.voteable
                 ? 'bg-green-600 text-white'
                 : 'bg-white/10 hover:bg-white/20 text-gray-300'
             }`}
             title={textBlock.voteable ? 'Disable voting' : 'Enable voting'}
           >
-            {textBlock.voteable ? 'Voteable' : 'Make Voteable'}
+            {textBlock.voteable ? 'Voteable' : 'Voteable'}
           </button>
 
           <div className="w-px h-6 bg-white/20 mx-1" />
