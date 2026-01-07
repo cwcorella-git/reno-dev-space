@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
-import { ChatMessage } from '@/hooks/useSocketChat'
+import { ChatMessage } from '@/hooks/useFirestoreChat'
 
 interface MessageListProps {
   messages: ChatMessage[]

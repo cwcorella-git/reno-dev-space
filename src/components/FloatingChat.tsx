@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useSocketChat } from '@/hooks/useSocketChat'
+import { useFirestoreChat } from '@/hooks/useFirestoreChat'
 import { MessageList } from '@/components/chat/MessageList'
 import { MessageInput } from '@/components/chat/MessageInput'
 
@@ -12,8 +12,8 @@ export function FloatingChat() {
   const [isMinimized, setIsMinimized] = useState(false)
   const [mounted, setMounted] = useState(false)
 
-  // Main community chat room
-  const { messages, sendMessage, deleteMessage, isConnected } = useSocketChat('community')
+  // Main community chat room - now using Firestore
+  const { messages, sendMessage, deleteMessage, isConnected } = useFirestoreChat('community')
 
   useEffect(() => {
     setMounted(true)
