@@ -7,6 +7,7 @@ import { CanvasBlock } from './CanvasBlock'
 import { AdminToolbar } from './AdminToolbar'
 import { BlockToolbar } from './BlockToolbar'
 import { AuthModal } from '@/components/AuthModal'
+import { IntroHint } from '@/components/IntroHint'
 
 export function Canvas() {
   const { user, isAdmin, loading: authLoading } = useAuth()
@@ -74,6 +75,9 @@ export function Canvas() {
 
       {/* Block toolbar */}
       <BlockToolbar />
+
+      {/* Intro hint for non-logged-in users */}
+      {!user && <IntroHint />}
 
       {/* Auth modal */}
       {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}

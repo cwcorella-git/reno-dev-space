@@ -34,6 +34,7 @@ const PROPOSALS_COLLECTION = 'proposals'
 const EXPIRY_DAYS = 14
 const PASS_THRESHOLD = 5 // Net votes needed to pass
 const REJECT_THRESHOLD = -3 // Net votes to reject
+export const QUORUM_THRESHOLD = 5 // Minimum voters before pass/fail can trigger
 
 // Create a new proposal
 export async function createProposal(
@@ -210,6 +211,11 @@ async function checkAndUpdateStatus(proposalId: string): Promise<void> {
 
   if (!proposal || proposal.status !== 'active') return
 
+  const totalVoters = getTotalVoters(proposal)
+
+  // Quorum not yet met - don't pass or fail
+  if (totalVoters < QUORUM_THRESHOLD) return
+
   const netVotes = proposal.upvotes.length - proposal.downvotes.length
 
   if (netVotes >= PASS_THRESHOLD) {
@@ -239,6 +245,18 @@ export function getUserVote(proposal: Proposal, userId: string): 'up' | 'down' |
 // Get net votes
 export function getNetVotes(proposal: Proposal): number {
   return proposal.upvotes.length - proposal.downvotes.length
+}
+
+// Get total number of unique voters
+export function getTotalVoters(proposal: Proposal): number {
+  // Count unique voters (in case someone is somehow in both arrays)
+  const allVoters = new Set([...proposal.upvotes, ...proposal.downvotes])
+  return allVoters.size
+}
+
+// Check if quorum is met
+export function hasQuorum(proposal: Proposal): boolean {
+  return getTotalVoters(proposal) >= QUORUM_THRESHOLD
 }
 
 // Format time remaining

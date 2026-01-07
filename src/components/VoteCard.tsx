@@ -7,6 +7,9 @@ import {
   voteOnProposal,
   getUserVote,
   getNetVotes,
+  getTotalVoters,
+  hasQuorum,
+  QUORUM_THRESHOLD,
   formatTimeRemaining,
 } from '@/lib/proposalStorage'
 
@@ -21,6 +24,8 @@ export function VoteCard({ proposal, onVoteChange }: VoteCardProps) {
 
   const userVote = user ? getUserVote(proposal, user.uid) : null
   const netVotes = getNetVotes(proposal)
+  const totalVoters = getTotalVoters(proposal)
+  const quorumMet = hasQuorum(proposal)
   const timeRemaining = formatTimeRemaining(proposal.expiresAt)
 
   const handleVote = async (vote: 'up' | 'down') => {
@@ -120,12 +125,20 @@ export function VoteCard({ proposal, onVoteChange }: VoteCardProps) {
           </button>
         </div>
 
-        {/* Net score */}
+        {/* Quorum / Net score */}
         <div className="text-sm">
-          <span className={netVotes > 0 ? 'text-green-400' : netVotes < 0 ? 'text-red-400' : 'text-gray-400'}>
-            {netVotes > 0 ? '+' : ''}{netVotes}
-          </span>
-          <span className="text-gray-500"> net</span>
+          {proposal.status === 'active' && !quorumMet ? (
+            <span className="text-yellow-400">
+              {totalVoters}/{QUORUM_THRESHOLD} to decide
+            </span>
+          ) : (
+            <>
+              <span className={netVotes > 0 ? 'text-green-400' : netVotes < 0 ? 'text-red-400' : 'text-gray-400'}>
+                {netVotes > 0 ? '+' : ''}{netVotes}
+              </span>
+              <span className="text-gray-500"> net</span>
+            </>
+          )}
         </div>
       </div>
 
