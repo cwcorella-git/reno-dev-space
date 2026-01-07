@@ -2,8 +2,29 @@
 
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { isTextBlock, TextBlock } from '@/types/canvas'
+import { isTextBlock, TextBlock, TEXT_COLORS } from '@/types/canvas'
 import { toggleBlockVoteable } from '@/lib/canvasStorage'
+
+// Font size options with friendly labels
+const FONT_SIZES = [
+  { value: 0.75, label: 'XS' },
+  { value: 1, label: 'S' },
+  { value: 1.25, label: 'M' },
+  { value: 1.5, label: 'L' },
+  { value: 2, label: 'XL' },
+  { value: 2.5, label: '2XL' },
+  { value: 3, label: '3XL' },
+  { value: 4, label: '4XL' },
+]
+
+// Available fonts
+const FONTS = [
+  { value: 'Inter', label: 'Inter' },
+  { value: 'Georgia', label: 'Georgia' },
+  { value: 'Monaco', label: 'Monaco' },
+  { value: 'Comic Sans MS', label: 'Comic' },
+  { value: 'Impact', label: 'Impact' },
+]
 
 export function BlockToolbar() {
   const { isAdmin } = useAuth()
@@ -25,32 +46,36 @@ export function BlockToolbar() {
   const isText = isTextBlock(selectedBlock)
   const textBlock = isText ? (selectedBlock as TextBlock) : null
 
-  const fontSizes = [0.75, 1, 1.25, 1.5, 2, 2.5, 3, 4]
-  const colors = [
-    '#ffffff',
-    '#f87171',
-    '#fb923c',
-    '#facc15',
-    '#4ade80',
-    '#22d3ee',
-    '#818cf8',
-    '#e879f9',
-  ]
+  // Common button class for consistent height
+  const btnClass = 'h-8 px-2 rounded flex items-center justify-center'
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 border border-white/10 rounded-xl p-2 shadow-xl">
       {/* Text-specific controls */}
       {isText && textBlock && (
         <>
+          {/* Font family */}
+          <select
+            value={textBlock.style.fontFamily || 'Inter'}
+            onChange={(e) => updateStyle(selectedBlockId, { fontFamily: e.target.value })}
+            className={`${btnClass} bg-white/10 border border-white/20 text-sm min-w-[80px]`}
+          >
+            {FONTS.map((font) => (
+              <option key={font.value} value={font.value}>
+                {font.label}
+              </option>
+            ))}
+          </select>
+
           {/* Font size */}
           <select
             value={textBlock.style.fontSize}
             onChange={(e) => updateStyle(selectedBlockId, { fontSize: parseFloat(e.target.value) })}
-            className="bg-white/10 border border-white/20 rounded px-2 py-1 text-sm"
+            className={`${btnClass} bg-white/10 border border-white/20 text-sm min-w-[60px]`}
           >
-            {fontSizes.map((size) => (
-              <option key={size} value={size}>
-                {size}rem
+            {FONT_SIZES.map((size) => (
+              <option key={size.value} value={size.value}>
+                {size.label}
               </option>
             ))}
           </select>
@@ -62,20 +87,20 @@ export function BlockToolbar() {
                 fontWeight: textBlock.style.fontWeight === 'bold' ? 'normal' : 'bold',
               })
             }
-            className={`p-2 rounded ${
+            className={`${btnClass} w-8 ${
               textBlock.style.fontWeight === 'bold' ? 'bg-indigo-600' : 'bg-white/10 hover:bg-white/20'
             }`}
           >
-            <span className="font-bold">B</span>
+            <span className="font-bold text-sm">B</span>
           </button>
 
           {/* Text align */}
-          <div className="flex border border-white/20 rounded overflow-hidden">
+          <div className="flex border border-white/20 rounded overflow-hidden h-8">
             {(['left', 'center', 'right'] as const).map((align) => (
               <button
                 key={align}
                 onClick={() => updateStyle(selectedBlockId, { textAlign: align })}
-                className={`p-2 ${
+                className={`w-8 h-full flex items-center justify-center ${
                   textBlock.style.textAlign === align ? 'bg-indigo-600' : 'bg-white/10 hover:bg-white/20'
                 }`}
               >
@@ -95,13 +120,13 @@ export function BlockToolbar() {
           </div>
 
           {/* Color picker */}
-          <div className="flex gap-1">
-            {colors.map((color) => (
+          <div className="flex gap-1 items-center">
+            {TEXT_COLORS.map((color) => (
               <button
                 key={color}
                 onClick={() => updateStyle(selectedBlockId, { color })}
-                className={`w-6 h-6 rounded-full border-2 ${
-                  textBlock.style.color === color ? 'border-white' : 'border-transparent'
+                className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                  textBlock.style.color === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
                 }`}
                 style={{ backgroundColor: color }}
               />
@@ -113,7 +138,7 @@ export function BlockToolbar() {
           {/* Voteable toggle */}
           <button
             onClick={() => toggleBlockVoteable(selectedBlockId, !textBlock.voteable)}
-            className={`px-3 py-2 rounded text-sm font-medium whitespace-nowrap ${
+            className={`${btnClass} px-3 text-sm font-medium whitespace-nowrap ${
               textBlock.voteable
                 ? 'bg-green-600 text-white'
                 : 'bg-white/10 hover:bg-white/20 text-gray-300'
@@ -130,7 +155,7 @@ export function BlockToolbar() {
       {/* Z-index controls */}
       <button
         onClick={() => bringBlockToFront(selectedBlockId)}
-        className="p-2 bg-white/10 hover:bg-white/20 rounded"
+        className={`${btnClass} w-8 bg-white/10 hover:bg-white/20`}
         title="Bring to front"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -140,7 +165,7 @@ export function BlockToolbar() {
 
       <button
         onClick={() => sendBlockToBack(selectedBlockId)}
-        className="p-2 bg-white/10 hover:bg-white/20 rounded"
+        className={`${btnClass} w-8 bg-white/10 hover:bg-white/20`}
         title="Send to back"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -153,7 +178,7 @@ export function BlockToolbar() {
       {/* Delete */}
       <button
         onClick={() => removeBlock(selectedBlockId)}
-        className="p-2 bg-red-600/50 hover:bg-red-600 rounded"
+        className={`${btnClass} w-8 bg-red-600/50 hover:bg-red-600`}
         title="Delete"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

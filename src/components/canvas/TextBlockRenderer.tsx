@@ -53,6 +53,7 @@ export function TextBlockRenderer({
   const style = {
     fontSize: `${block.style.fontSize}rem`,
     fontWeight: block.style.fontWeight,
+    fontFamily: block.style.fontFamily || 'Inter',
     color: block.style.color,
     textAlign: block.style.textAlign as 'left' | 'center' | 'right',
     backgroundColor: block.style.backgroundColor || 'transparent',

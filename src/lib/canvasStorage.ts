@@ -12,7 +12,7 @@ import {
   Unsubscribe,
 } from 'firebase/firestore'
 import { getDb } from './firebase'
-import { CanvasBlock, TextBlock, DEFAULT_TEXT_STYLE } from '@/types/canvas'
+import { CanvasBlock, TextBlock, DEFAULT_TEXT_STYLE, getRandomColor } from '@/types/canvas'
 import { arrayUnion, arrayRemove } from 'firebase/firestore'
 
 const COLLECTION_NAME = 'canvasBlocks'
@@ -68,7 +68,7 @@ export async function addTextBlock(
     height: 0, // auto
     zIndex: maxZIndex + 1,
     content,
-    style: { ...DEFAULT_TEXT_STYLE },
+    style: { ...DEFAULT_TEXT_STYLE, color: getRandomColor() },
     createdAt: now,
     updatedAt: now,
   }
