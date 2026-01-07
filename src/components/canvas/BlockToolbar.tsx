@@ -31,14 +31,13 @@ export function BlockToolbar() {
   const {
     blocks,
     selectedBlockId,
-    isEditing,
     updateStyle,
     removeBlock,
     bringBlockToFront,
     sendBlockToBack,
   } = useCanvas()
 
-  if (!isAdmin || !selectedBlockId || isEditing) return null
+  if (!isAdmin || !selectedBlockId) return null
 
   const selectedBlock = blocks.find((b) => b.id === selectedBlockId)
   if (!selectedBlock) return null

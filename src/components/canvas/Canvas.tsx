@@ -44,7 +44,7 @@ export function Canvas() {
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center text-gray-500">
               <p className="text-lg mb-2">Your canvas is empty</p>
-              <p className="text-sm">Use the toolbar above to add text or voting widgets</p>
+              <p className="text-sm">Click &quot;Add Text&quot; in the top-left to get started</p>
             </div>
           </div>
         )}
