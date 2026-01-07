@@ -5,8 +5,8 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Update this when deploying to GitHub Pages
-  // basePath: '/reno-dev-space',
+  basePath: '/reno-dev-space',
+  assetPrefix: '/reno-dev-space/',
 }
 
 module.exports = nextConfig
