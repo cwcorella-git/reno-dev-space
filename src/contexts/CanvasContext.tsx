@@ -14,7 +14,6 @@ import { CanvasBlock, TextBlock } from '@/types/canvas'
 import {
   subscribeToCanvas,
   addTextBlock,
-  addVoteBlock,
   updateBlockPosition,
   updateBlockSize,
   updateTextContent,
@@ -38,7 +37,6 @@ interface CanvasContextType {
 
   // Block operations (admin only)
   addText: (x: number, y: number) => Promise<string | null>
-  addVote: (x: number, y: number, proposalId: string) => Promise<string | null>
   moveBlock: (id: string, x: number, y: number) => Promise<void>
   resizeBlock: (id: string, width: number, height: number) => Promise<void>
   updateContent: (id: string, content: string) => Promise<void>
@@ -102,21 +100,6 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         return id
       } catch (error) {
         console.error('[CanvasContext] Failed to add text:', error)
-        return null
-      }
-    },
-    [isAdmin, getMaxZIndex]
-  )
-
-  const addVote = useCallback(
-    async (x: number, y: number, proposalId: string): Promise<string | null> => {
-      if (!isAdmin) return null
-      try {
-        const id = await addVoteBlock(x, y, proposalId, getMaxZIndex())
-        setSelectedBlockId(id)
-        return id
-      } catch (error) {
-        console.error('[CanvasContext] Failed to add vote:', error)
         return null
       }
     },
@@ -221,7 +204,6 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         selectBlock,
         setIsEditing,
         addText,
-        addVote,
         moveBlock,
         resizeBlock,
         updateContent,

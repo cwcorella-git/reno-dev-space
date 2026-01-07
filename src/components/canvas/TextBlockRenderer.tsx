@@ -1,7 +1,9 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import { TextBlock } from '@/types/canvas'
+import { useAuth } from '@/contexts/AuthContext'
+import { voteOnBlock, removeBlockVote } from '@/lib/canvasStorage'
 
 const PLACEHOLDER_TEXT = 'Click to edit'
 
@@ -18,8 +20,35 @@ export function TextBlockRenderer({
   onContentChange,
   onEditComplete,
 }: TextBlockRendererProps) {
+  const { user } = useAuth()
   const editorRef = useRef<HTMLDivElement>(null)
   const isEmpty = !block.content || block.content.trim() === ''
+
+  // Voting state
+  const upvotes = block.upvotes || []
+  const downvotes = block.downvotes || []
+  const userVote = user
+    ? upvotes.includes(user.uid)
+      ? 'up'
+      : downvotes.includes(user.uid)
+        ? 'down'
+        : null
+    : null
+
+  const handleVote = useCallback(
+    async (voteType: 'up' | 'down', e: React.MouseEvent) => {
+      e.stopPropagation()
+      if (!user) return
+
+      if (userVote === voteType) {
+        // Remove vote if clicking same button
+        await removeBlockVote(block.id, user.uid)
+      } else {
+        await voteOnBlock(block.id, user.uid, voteType)
+      }
+    },
+    [user, userVote, block.id]
+  )
 
   const style = {
     fontSize: `${block.style.fontSize}rem`,
@@ -68,24 +97,71 @@ export function TextBlockRenderer({
     )
   }
 
+  // Voting UI component
+  const VotingUI = () => {
+    if (!block.voteable) return null
+
+    const netVotes = upvotes.length - downvotes.length
+
+    return (
+      <div className="flex items-center gap-3 mt-2 text-sm">
+        <button
+          onClick={(e) => handleVote('up', e)}
+          className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
+            userVote === 'up'
+              ? 'bg-green-600 text-white'
+              : 'bg-white/10 hover:bg-white/20 text-gray-300'
+          } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={!user}
+          title={user ? 'Upvote' : 'Login to vote'}
+        >
+          <span>👍</span>
+          <span>{upvotes.length}</span>
+        </button>
+        <button
+          onClick={(e) => handleVote('down', e)}
+          className={`flex items-center gap-1 px-2 py-1 rounded transition-colors ${
+            userVote === 'down'
+              ? 'bg-red-600 text-white'
+              : 'bg-white/10 hover:bg-white/20 text-gray-300'
+          } ${!user ? 'opacity-50 cursor-not-allowed' : ''}`}
+          disabled={!user}
+          title={user ? 'Downvote' : 'Login to vote'}
+        >
+          <span>👎</span>
+          <span>{downvotes.length}</span>
+        </button>
+        <span className={`ml-1 font-medium ${netVotes > 0 ? 'text-green-400' : netVotes < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+          {netVotes > 0 ? '+' : ''}{netVotes}
+        </span>
+      </div>
+    )
+  }
+
   // Show placeholder if empty
   if (isEmpty) {
     return (
-      <div
-        className="w-full h-full whitespace-pre-wrap break-words opacity-40 italic"
-        style={style}
-      >
-        {PLACEHOLDER_TEXT}
+      <div>
+        <div
+          className="w-full whitespace-pre-wrap break-words opacity-40 italic"
+          style={style}
+        >
+          {PLACEHOLDER_TEXT}
+        </div>
+        <VotingUI />
       </div>
     )
   }
 
   return (
-    <div
-      className="w-full h-full whitespace-pre-wrap break-words"
-      style={style}
-    >
-      {block.content}
+    <div>
+      <div
+        className="w-full whitespace-pre-wrap break-words"
+        style={style}
+      >
+        {block.content}
+      </div>
+      <VotingUI />
     </div>
   )
 }

@@ -12,7 +12,8 @@ import {
   Unsubscribe,
 } from 'firebase/firestore'
 import { getDb } from './firebase'
-import { CanvasBlock, TextBlock, VoteBlock, DEFAULT_TEXT_STYLE } from '@/types/canvas'
+import { CanvasBlock, TextBlock, DEFAULT_TEXT_STYLE } from '@/types/canvas'
+import { arrayUnion, arrayRemove } from 'firebase/firestore'
 
 const COLLECTION_NAME = 'canvasBlocks'
 
@@ -76,30 +77,57 @@ export async function addTextBlock(
   return docRef.id
 }
 
-// Add a new vote block
-export async function addVoteBlock(
-  x: number,
-  y: number,
-  proposalId: string,
-  maxZIndex: number = 0
-): Promise<string> {
+// Toggle whether a block is voteable
+export async function toggleBlockVoteable(
+  id: string,
+  voteable: boolean
+): Promise<void> {
   const db = getDb()
-  const now = Date.now()
+  await updateDoc(doc(db, COLLECTION_NAME, id), {
+    voteable,
+    // Initialize vote arrays if enabling
+    ...(voteable ? { upvotes: [], downvotes: [] } : {}),
+    updatedAt: Date.now(),
+  })
+}
 
-  const block: Omit<VoteBlock, 'id'> = {
-    type: 'vote',
-    x,
-    y,
-    width: 25,
-    height: 0, // auto
-    zIndex: maxZIndex + 1,
-    proposalId,
-    createdAt: now,
-    updatedAt: now,
+// Vote on a block (upvote or downvote)
+export async function voteOnBlock(
+  id: string,
+  odId: string,
+  voteType: 'up' | 'down'
+): Promise<void> {
+  const db = getDb()
+  const docRef = doc(db, COLLECTION_NAME, id)
+
+  if (voteType === 'up') {
+    // Remove from downvotes, add to upvotes
+    await updateDoc(docRef, {
+      upvotes: arrayUnion(odId),
+      downvotes: arrayRemove(odId),
+      updatedAt: Date.now(),
+    })
+  } else {
+    // Remove from upvotes, add to downvotes
+    await updateDoc(docRef, {
+      downvotes: arrayUnion(odId),
+      upvotes: arrayRemove(odId),
+      updatedAt: Date.now(),
+    })
   }
+}
 
-  const docRef = await addDoc(collection(db, COLLECTION_NAME), block)
-  return docRef.id
+// Remove vote from a block
+export async function removeBlockVote(
+  id: string,
+  odId: string
+): Promise<void> {
+  const db = getDb()
+  await updateDoc(doc(db, COLLECTION_NAME, id), {
+    upvotes: arrayRemove(odId),
+    downvotes: arrayRemove(odId),
+    updatedAt: Date.now(),
+  })
 }
 
 // Update block position

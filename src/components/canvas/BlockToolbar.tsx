@@ -3,6 +3,7 @@
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { isTextBlock, TextBlock } from '@/types/canvas'
+import { toggleBlockVoteable } from '@/lib/canvasStorage'
 
 export function BlockToolbar() {
   const { isAdmin } = useAuth()
@@ -106,6 +107,21 @@ export function BlockToolbar() {
               />
             ))}
           </div>
+
+          <div className="w-px h-6 bg-white/20 mx-1" />
+
+          {/* Voteable toggle */}
+          <button
+            onClick={() => toggleBlockVoteable(selectedBlockId, !textBlock.voteable)}
+            className={`px-3 py-1 rounded text-sm font-medium ${
+              textBlock.voteable
+                ? 'bg-green-600 text-white'
+                : 'bg-white/10 hover:bg-white/20 text-gray-300'
+            }`}
+            title={textBlock.voteable ? 'Disable voting' : 'Enable voting'}
+          >
+            {textBlock.voteable ? 'Voteable' : 'Make Voteable'}
+          </button>
 
           <div className="w-px h-6 bg-white/20 mx-1" />
         </>

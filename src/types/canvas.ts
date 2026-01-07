@@ -1,4 +1,4 @@
-export type BlockType = 'text' | 'vote'
+export type BlockType = 'text'
 
 export interface BlockPosition {
   x: number  // percentage 0-100 from left
@@ -34,22 +34,17 @@ export interface TextBlock extends BaseBlock {
   type: 'text'
   content: string
   style: TextStyle
+  // Voting fields (optional - not all text blocks are voteable)
+  voteable?: boolean
+  upvotes?: string[]    // User IDs
+  downvotes?: string[]  // User IDs
 }
 
-export interface VoteBlock extends BaseBlock {
-  type: 'vote'
-  proposalId: string
-}
+export type CanvasBlock = TextBlock
 
-export type CanvasBlock = TextBlock | VoteBlock
-
-// Type guards
+// Type guard
 export function isTextBlock(block: CanvasBlock): block is TextBlock {
   return block.type === 'text'
-}
-
-export function isVoteBlock(block: CanvasBlock): block is VoteBlock {
-  return block.type === 'vote'
 }
 
 // Default values for new blocks

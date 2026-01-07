@@ -1,9 +1,8 @@
 'use client'
 
 import { useCallback, useRef, useState } from 'react'
-import { CanvasBlock as CanvasBlockType, isTextBlock, isVoteBlock } from '@/types/canvas'
+import { CanvasBlock as CanvasBlockType, isTextBlock } from '@/types/canvas'
 import { TextBlockRenderer } from './TextBlockRenderer'
-import { VoteBlockRenderer } from './VoteBlockRenderer'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -203,9 +202,6 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
           onEditComplete={() => setIsEditing(false)}
         />
       )
-    }
-    if (isVoteBlock(block)) {
-      return <VoteBlockRenderer block={block} />
     }
     return null
   }
