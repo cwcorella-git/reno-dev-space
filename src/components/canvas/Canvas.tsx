@@ -4,19 +4,37 @@ import { useCallback, useState } from 'react'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { CanvasBlock } from './CanvasBlock'
-import { AdminToolbar } from './AdminToolbar'
 import { BlockToolbar } from './BlockToolbar'
 import { AuthModal } from '@/components/AuthModal'
 import { IntroHint } from '@/components/IntroHint'
 
 export function Canvas() {
   const { user, isAdmin, loading: authLoading } = useAuth()
-  const { blocks, canvasRef, loading: canvasLoading, selectBlock } = useCanvas()
+  const { blocks, canvasRef, loading: canvasLoading, selectBlock, addText } = useCanvas()
   const [showAuthModal, setShowAuthModal] = useState(false)
 
   const handleCanvasClick = useCallback(() => {
     selectBlock(null)
   }, [selectBlock])
+
+  // Right-click to add text at cursor position (admin only)
+  const handleContextMenu = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isAdmin) return
+
+      e.preventDefault()
+
+      const canvas = canvasRef.current
+      if (!canvas) return
+
+      const rect = canvas.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * 100
+      const y = ((e.clientY - rect.top) / rect.height) * 100
+
+      addText(x, y)
+    },
+    [isAdmin, canvasRef, addText]
+  )
 
   if (authLoading || canvasLoading) {
     return (
@@ -33,6 +51,7 @@ export function Canvas() {
         ref={canvasRef}
         className="min-h-screen w-full bg-brand-dark relative overflow-hidden"
         onClick={handleCanvasClick}
+        onContextMenu={handleContextMenu}
       >
         {/* Render all blocks */}
         {blocks.map((block) => (
@@ -44,7 +63,7 @@ export function Canvas() {
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center text-gray-500">
               <p className="text-lg mb-2">Your canvas is empty</p>
-              <p className="text-sm">Click &quot;Add Text&quot; in the top-left to get started</p>
+              <p className="text-sm">Right-click anywhere to add text</p>
             </div>
           </div>
         )}
@@ -69,9 +88,6 @@ export function Canvas() {
           </div>
         )}
       </div>
-
-      {/* Admin toolbar */}
-      <AdminToolbar />
 
       {/* Block toolbar */}
       <BlockToolbar />
