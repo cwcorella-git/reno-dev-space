@@ -11,6 +11,7 @@ import {
 } from 'firebase/auth'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { getAuth, getDb } from '@/lib/firebase'
+import { isAdmin as checkIsAdmin } from '@/lib/admin'
 
 interface UserProfile {
   uid: string
@@ -24,6 +25,7 @@ interface AuthContextType {
   user: User | null
   profile: UserProfile | null
   loading: boolean
+  isAdmin: boolean
   signup: (email: string, password: string, displayName: string) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -116,8 +118,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const isAdmin = checkIsAdmin(user?.email)
+
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signup, login, logout, updateUserProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signup, login, logout, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   )

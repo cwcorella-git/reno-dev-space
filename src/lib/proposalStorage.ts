@@ -103,6 +103,38 @@ export async function getActiveProposals(type?: ProposalType): Promise<Proposal[
   })
 }
 
+// Subscribe to a single proposal (real-time updates)
+export function subscribeToProposal(
+  proposalId: string,
+  callback: (proposal: Proposal | null) => void,
+  onError?: (error: Error) => void
+) {
+  if (typeof window === 'undefined') {
+    return () => {}
+  }
+
+  const db = getDb()
+  const proposalRef = doc(db, PROPOSALS_COLLECTION, proposalId)
+
+  return onSnapshot(
+    proposalRef,
+    (snapshot) => {
+      if (snapshot.exists()) {
+        callback({
+          id: snapshot.id,
+          ...snapshot.data(),
+        } as Proposal)
+      } else {
+        callback(null)
+      }
+    },
+    (error) => {
+      console.error('[proposalStorage] Subscription error:', error)
+      onError?.(error)
+    }
+  )
+}
+
 // Subscribe to proposals (real-time updates)
 export function subscribeToProposals(
   callback: (proposals: Proposal[]) => void,
