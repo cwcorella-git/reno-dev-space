@@ -97,7 +97,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     async (x: number, y: number): Promise<string | null> => {
       if (!isAdmin) return null
       try {
-        const id = await addTextBlock(x, y, 'Click to edit', getMaxZIndex())
+        const id = await addTextBlock(x, y, '', getMaxZIndex())
         setSelectedBlockId(id)
         return id
       } catch (error) {

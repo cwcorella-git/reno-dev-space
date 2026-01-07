@@ -53,7 +53,7 @@ export function subscribeToCanvas(
 export async function addTextBlock(
   x: number,
   y: number,
-  content: string = 'New text',
+  content: string = '',
   maxZIndex: number = 0
 ): Promise<string> {
   const db = getDb()
