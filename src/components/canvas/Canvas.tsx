@@ -5,8 +5,8 @@ import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { CanvasBlock } from './CanvasBlock'
 import { BlockToolbar } from './BlockToolbar'
-import { AuthModal } from '@/components/AuthModal'
 import { IntroHint } from '@/components/IntroHint'
+import { FloatingAccount } from '@/components/FloatingAccount'
 
 interface ContextMenuState {
   x: number // screen position
@@ -25,7 +25,6 @@ interface MarqueeState {
 export function Canvas() {
   const { user, isAdmin, loading: authLoading } = useAuth()
   const { blocks, canvasRef, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText } = useCanvas()
-  const [showAuthModal, setShowAuthModal] = useState(false)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [marquee, setMarquee] = useState<MarqueeState | null>(null)
   const isMarqueeActive = useRef(false)
@@ -206,25 +205,6 @@ export function Canvas() {
           </div>
         )}
 
-        {/* Login button for non-logged in users */}
-        {!user && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setShowAuthModal(true)
-            }}
-            className="fixed top-4 right-4 z-50 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg shadow-lg transition-colors"
-          >
-            Login / Join
-          </button>
-        )}
-
-        {/* User info for logged in users */}
-        {user && !isAdmin && (
-          <div className="fixed top-4 right-4 z-50 px-4 py-2 bg-white/10 text-white rounded-lg">
-            {user.displayName || user.email}
-          </div>
-        )}
       </div>
 
       {/* Context Menu */}
@@ -251,8 +231,8 @@ export function Canvas() {
       {/* Intro hint for non-logged-in users */}
       {!user && <IntroHint />}
 
-      {/* Auth modal */}
-      {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
+      {/* Floating account button */}
+      <FloatingAccount />
     </>
   )
 }
