@@ -21,10 +21,12 @@ Everything is Firestore-based with real-time updates via `onSnapshot`:
 Admin is identified by email: `christopher@corella.com` (hardcoded in `src/lib/admin.ts`)
 
 Admin can:
-- Add/edit/delete text blocks on canvas
-- Drag and resize blocks (real-time visual feedback)
+- **Right-click** anywhere on canvas to open context menu → "Add Text"
+- Double-click text to edit
+- Drag blocks to reposition (real-time visual feedback)
+- Resize blocks via corner handles
 - Toggle blocks as "voteable"
-- Style text (font size, color, alignment, bold)
+- Style text (font family, size, color, alignment, bold)
 
 ## Key Files
 
@@ -35,10 +37,9 @@ src/
 │   └── page.tsx            # Main page (renders Canvas)
 ├── components/
 │   ├── canvas/
-│   │   ├── Canvas.tsx          # Main canvas container
+│   │   ├── Canvas.tsx          # Main canvas + right-click context menu
 │   │   ├── CanvasBlock.tsx     # Draggable/resizable block wrapper
 │   │   ├── TextBlockRenderer.tsx # Text display + voting UI
-│   │   ├── AdminToolbar.tsx    # "Add Text" button
 │   │   └── BlockToolbar.tsx    # Style controls when block selected
 │   ├── chat/
 │   │   ├── MessageList.tsx     # Chat message display
@@ -76,6 +77,7 @@ src/
   style: {
     fontSize: number    // rem
     fontWeight: 'normal' | 'bold'
+    fontFamily: string  // e.g., 'Inter', 'Georgia', 'Monaco'
     color: string       // hex
     textAlign: 'left' | 'center' | 'right'
     backgroundColor?: string
@@ -140,7 +142,7 @@ git push         # GitHub Actions deploys to Pages
 
 ## Features
 
-- **Canvas Editor**: Admin places text anywhere, drags to reposition, resizes
+- **Canvas Editor**: Admin right-clicks to add text, drags to reposition, resizes via handles
 - **Voting**: Any text block can be made voteable; logged-in users vote with thumbs up/down
 - **Chat**: Persistent community chat using Firestore (no relay server)
 - **Real-time**: All changes sync instantly across clients via Firestore listeners
