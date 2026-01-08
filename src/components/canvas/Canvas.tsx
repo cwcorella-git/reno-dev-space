@@ -36,11 +36,10 @@ export function Canvas() {
     }
   }, [selectBlock])
 
-  // Start marquee selection on mouse down
+  // Start marquee selection on mouse down (available to everyone)
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (e.button !== 0) return // Only left click
-      if (!user) return // Must be logged in
 
       const canvas = canvasRef.current
       if (!canvas) return
@@ -52,7 +51,7 @@ export function Canvas() {
       isMarqueeActive.current = true
       setMarquee({ startX: x, startY: y, currentX: x, currentY: y })
     },
-    [user, canvasRef]
+    [canvasRef]
   )
 
   // Update marquee and handle selection
