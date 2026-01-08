@@ -113,11 +113,15 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
   // Handle drag with local state for immediate feedback
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
-      if (!isAdmin || !isSelected || isEditing) return
       if (e.button !== 0) return // Only left click
 
-      e.preventDefault()
+      // Always stop propagation to prevent canvas marquee from starting
       e.stopPropagation()
+
+      // Only admin can drag selected blocks
+      if (!isAdmin || !isSelected || isEditing) return
+
+      e.preventDefault()
 
       const canvas = canvasRef.current
       if (!canvas) return
