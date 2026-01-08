@@ -7,6 +7,9 @@ import { CanvasBlock } from './CanvasBlock'
 import { BlockToolbar } from './BlockToolbar'
 import { IntroHint } from '@/components/IntroHint'
 import { FloatingAccount } from '@/components/FloatingAccount'
+import { CampaignBanner } from '@/components/CampaignBanner'
+import { AdminPanel } from '@/components/AdminPanel'
+import { incrementPageViews } from '@/lib/campaignStorage'
 
 interface ContextMenuState {
   x: number // screen position
@@ -158,6 +161,15 @@ export function Canvas() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [])
 
+  // Track page views (once per browser session)
+  useEffect(() => {
+    const viewKey = 'reno-dev-space-viewed'
+    if (!localStorage.getItem(viewKey)) {
+      incrementPageViews()
+      localStorage.setItem(viewKey, Date.now().toString())
+    }
+  }, [])
+
   if (authLoading || canvasLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-dark">
@@ -229,6 +241,12 @@ export function Canvas() {
 
       {/* Intro hint for non-logged-in users */}
       {!user && <IntroHint />}
+
+      {/* Campaign banner at top */}
+      <CampaignBanner />
+
+      {/* Admin panel */}
+      <AdminPanel />
 
       {/* Floating account button */}
       <FloatingAccount />
