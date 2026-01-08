@@ -226,11 +226,11 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
     left: `${displayX}%`,
     top: `${displayY}%`,
     width: displayWidth > 0 ? `${displayWidth}%` : 'auto',
-    minWidth: '50px',
-    minHeight: '30px',
+    minWidth: '80px',
     zIndex: block.zIndex,
     transition: isInteracting ? 'none' : 'left 0.15s ease-out, top 0.15s ease-out, width 0.15s ease-out',
     opacity: isInteracting ? 0.9 : 1,
+    padding: '8px 12px',
   }
 
   return (

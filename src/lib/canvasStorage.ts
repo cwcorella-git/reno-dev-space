@@ -64,8 +64,8 @@ export async function addTextBlock(
     type: 'text',
     x,
     y,
-    width: 30, // wider default for better text wrapping
-    height: 0, // auto
+    width: 0, // auto width - fits content
+    height: 0, // auto height
     zIndex: maxZIndex + 1,
     content,
     style: { ...DEFAULT_TEXT_STYLE, color: getRandomColor() },

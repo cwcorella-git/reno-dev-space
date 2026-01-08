@@ -144,7 +144,7 @@ export function TextBlockRenderer({
     return (
       <div>
         <div
-          className="w-full whitespace-pre-wrap break-words opacity-40 italic"
+          className="whitespace-nowrap opacity-40 italic"
           style={style}
         >
           {PLACEHOLDER_TEXT}
@@ -157,7 +157,7 @@ export function TextBlockRenderer({
   return (
     <div>
       <div
-        className="w-full whitespace-pre-wrap break-words"
+        className="whitespace-pre-wrap break-words"
         style={style}
       >
         {block.content}
