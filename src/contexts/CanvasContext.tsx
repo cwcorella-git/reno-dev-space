@@ -21,18 +21,21 @@ import {
   deleteBlock,
   bringToFront,
   sendToBack,
+  voteBrightness,
 } from '@/lib/canvasStorage'
 import { useAuth } from './AuthContext'
 
 interface CanvasContextType {
   blocks: CanvasBlock[]
   selectedBlockId: string | null
+  selectedBlockIds: string[]
   isEditing: boolean
   canvasRef: RefObject<HTMLDivElement | null>
   loading: boolean
 
   // Selection
   selectBlock: (id: string | null) => void
+  selectBlocks: (ids: string[]) => void
   setIsEditing: (editing: boolean) => void
 
   // Block operations (admin only)
@@ -44,14 +47,18 @@ interface CanvasContextType {
   removeBlock: (id: string) => Promise<void>
   bringBlockToFront: (id: string) => Promise<void>
   sendBlockToBack: (id: string) => Promise<void>
+
+  // Voting (any logged-in user)
+  vote: (id: string, direction: 'up' | 'down') => Promise<boolean>
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined)
 
 export function CanvasProvider({ children }: { children: ReactNode }) {
-  const { isAdmin } = useAuth()
+  const { user, isAdmin } = useAuth()
   const [blocks, setBlocks] = useState<CanvasBlock[]>([])
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
+  const [selectedBlockIds, setSelectedBlockIds] = useState<string[]>([])
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const canvasRef = useRef<HTMLDivElement | null>(null)
@@ -80,9 +87,18 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
   // Clear selection when clicking outside
   const selectBlock = useCallback((id: string | null) => {
     setSelectedBlockId(id)
+    setSelectedBlockIds(id ? [id] : [])
     if (!id) {
       setIsEditing(false)
     }
+  }, [])
+
+  // Select multiple blocks (for marquee selection)
+  const selectBlocks = useCallback((ids: string[]) => {
+    setSelectedBlockIds(ids)
+    // Set first block as primary selected
+    setSelectedBlockId(ids.length > 0 ? ids[0] : null)
+    setIsEditing(false)
   }, [])
 
   // Get max z-index for new blocks
@@ -93,9 +109,9 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
   // Admin operations
   const addText = useCallback(
     async (x: number, y: number): Promise<string | null> => {
-      if (!isAdmin) return null
+      if (!isAdmin || !user) return null
       try {
-        const id = await addTextBlock(x, y, '', getMaxZIndex())
+        const id = await addTextBlock(x, y, user.uid, '', getMaxZIndex())
         setSelectedBlockId(id)
         return id
       } catch (error) {
@@ -103,7 +119,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         return null
       }
     },
-    [isAdmin, getMaxZIndex]
+    [isAdmin, user, getMaxZIndex]
   )
 
   const moveBlock = useCallback(
@@ -193,15 +209,35 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     [isAdmin, blocks]
   )
 
+  // Voting - any logged-in user can vote
+  const vote = useCallback(
+    async (id: string, direction: 'up' | 'down'): Promise<boolean> => {
+      if (!user) return false
+      try {
+        const wasDeleted = await voteBrightness(id, user.uid, direction)
+        if (wasDeleted && selectedBlockId === id) {
+          setSelectedBlockId(null)
+        }
+        return wasDeleted
+      } catch (error) {
+        console.error('[CanvasContext] Failed to vote:', error)
+        return false
+      }
+    },
+    [user, selectedBlockId]
+  )
+
   return (
     <CanvasContext.Provider
       value={{
         blocks,
         selectedBlockId,
+        selectedBlockIds,
         isEditing,
         canvasRef,
         loading,
         selectBlock,
+        selectBlocks,
         setIsEditing,
         addText,
         moveBlock,
@@ -211,6 +247,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         removeBlock,
         bringBlockToFront,
         sendBlockToBack,
+        vote,
       }}
     >
       {children}

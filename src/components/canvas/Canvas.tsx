@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { CanvasBlock } from './CanvasBlock'
@@ -15,16 +15,108 @@ interface ContextMenuState {
   canvasY: number // percentage position on canvas
 }
 
+interface MarqueeState {
+  startX: number // percentage
+  startY: number // percentage
+  currentX: number // percentage
+  currentY: number // percentage
+}
+
 export function Canvas() {
   const { user, isAdmin, loading: authLoading } = useAuth()
-  const { blocks, canvasRef, loading: canvasLoading, selectBlock, addText } = useCanvas()
+  const { blocks, canvasRef, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText } = useCanvas()
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
+  const [marquee, setMarquee] = useState<MarqueeState | null>(null)
+  const isMarqueeActive = useRef(false)
 
   const handleCanvasClick = useCallback(() => {
-    selectBlock(null)
-    setContextMenu(null)
+    if (!isMarqueeActive.current) {
+      selectBlock(null)
+      setContextMenu(null)
+    }
   }, [selectBlock])
+
+  // Start marquee selection on mouse down
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.button !== 0) return // Only left click
+      if (!user) return // Must be logged in
+
+      const canvas = canvasRef.current
+      if (!canvas) return
+
+      const rect = canvas.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * 100
+      const y = ((e.clientY - rect.top) / rect.height) * 100
+
+      isMarqueeActive.current = true
+      setMarquee({ startX: x, startY: y, currentX: x, currentY: y })
+    },
+    [user, canvasRef]
+  )
+
+  // Update marquee and handle selection
+  useEffect(() => {
+    if (!marquee) return
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * 100
+      const y = ((e.clientY - rect.top) / rect.height) * 100
+      setMarquee((prev) => prev ? { ...prev, currentX: x, currentY: y } : null)
+    }
+
+    const handleMouseUp = () => {
+      if (!marquee) return
+
+      // Calculate selection rectangle bounds
+      const left = Math.min(marquee.startX, marquee.currentX)
+      const right = Math.max(marquee.startX, marquee.currentX)
+      const top = Math.min(marquee.startY, marquee.currentY)
+      const bottom = Math.max(marquee.startY, marquee.currentY)
+
+      // Only select if dragged a meaningful distance
+      const width = right - left
+      const height = bottom - top
+      if (width > 2 || height > 2) {
+        // Find blocks within the selection rectangle
+        const selectedIds = blocks
+          .filter((block) => {
+            // Check if block intersects with selection
+            const blockLeft = block.x
+            const blockTop = block.y
+            // Approximate block size for hit testing
+            const blockRight = block.x + (block.width || 10)
+            const blockBottom = block.y + 5 // Approximate height
+
+            return !(blockRight < left || blockLeft > right || blockBottom < top || blockTop > bottom)
+          })
+          .map((block) => block.id)
+
+        if (selectedIds.length > 0) {
+          selectBlocks(selectedIds)
+        }
+      }
+
+      setMarquee(null)
+      // Reset after a short delay to prevent click handler from deselecting
+      setTimeout(() => {
+        isMarqueeActive.current = false
+      }, 50)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [marquee, blocks, selectBlocks, canvasRef])
 
   // Right-click to show context menu (admin only)
   const handleContextMenu = useCallback(
@@ -83,12 +175,26 @@ export function Canvas() {
         ref={canvasRef}
         className="min-h-screen w-full bg-brand-dark relative overflow-hidden"
         onClick={handleCanvasClick}
+        onMouseDown={handleMouseDown}
         onContextMenu={handleContextMenu}
       >
         {/* Render all blocks */}
         {blocks.map((block) => (
           <CanvasBlock key={block.id} block={block} />
         ))}
+
+        {/* Marquee selection rectangle */}
+        {marquee && (
+          <div
+            className="absolute border-2 border-indigo-500 bg-indigo-500/20 pointer-events-none z-50"
+            style={{
+              left: `${Math.min(marquee.startX, marquee.currentX)}%`,
+              top: `${Math.min(marquee.startY, marquee.currentY)}%`,
+              width: `${Math.abs(marquee.currentX - marquee.startX)}%`,
+              height: `${Math.abs(marquee.currentY - marquee.startY)}%`,
+            }}
+          />
+        )}
 
         {/* Empty state for admin */}
         {isAdmin && blocks.length === 0 && (

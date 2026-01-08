@@ -20,9 +20,10 @@ interface ResizeState {
 }
 
 export function CanvasBlock({ block }: CanvasBlockProps) {
-  const { isAdmin } = useAuth()
+  const { user, isAdmin } = useAuth()
   const {
     selectedBlockId,
+    selectedBlockIds,
     isEditing,
     canvasRef,
     selectBlock,
@@ -31,9 +32,11 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
     resizeBlock,
     updateContent,
     removeBlock,
+    vote,
   } = useCanvas()
 
   const isSelected = selectedBlockId === block.id
+  const isInSelection = selectedBlockIds.includes(block.id)
   const blockRef = useRef<HTMLDivElement>(null)
 
   // Local drag state for immediate visual feedback
@@ -47,11 +50,13 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation()
-      if (isAdmin) {
+      // Anyone can select a block (for voting focus)
+      // Admin can also edit/drag after selecting
+      if (user) {
         selectBlock(block.id)
       }
     },
-    [isAdmin, selectBlock, block.id]
+    [user, selectBlock, block.id]
   )
 
   const handleDoubleClick = useCallback(
@@ -66,7 +71,22 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!isAdmin || !isSelected) return
+      if (!isSelected) return
+
+      // Voting: Space = brighten (up), Alt = dim (down)
+      if (e.key === ' ' && user && !isEditing) {
+        e.preventDefault()
+        vote(block.id, 'up')
+        return
+      }
+      if (e.key === 'Alt' && user && !isEditing) {
+        e.preventDefault()
+        vote(block.id, 'down')
+        return
+      }
+
+      // Admin-only actions
+      if (!isAdmin) return
 
       if (e.key === 'Delete' || e.key === 'Backspace') {
         if (!isEditing) {
@@ -78,7 +98,7 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
         selectBlock(null)
       }
     },
-    [isAdmin, isSelected, isEditing, removeBlock, block.id, selectBlock]
+    [isAdmin, isSelected, isEditing, removeBlock, block.id, selectBlock, user, vote]
   )
 
   const handleContentChange = useCallback(
@@ -240,13 +260,14 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
       className={`
         ${isAdmin ? 'cursor-move' : ''}
         ${isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-transparent' : ''}
+        ${isInSelection && !isSelected ? 'ring-2 ring-indigo-400/50 ring-offset-1 ring-offset-transparent' : ''}
         ${isInteracting ? 'shadow-lg shadow-indigo-500/30' : ''}
       `}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleKeyDown}
       onMouseDown={handleMouseDown}
-      tabIndex={isAdmin ? 0 : -1}
+      tabIndex={user ? 0 : -1}
     >
       {renderContent()}
 

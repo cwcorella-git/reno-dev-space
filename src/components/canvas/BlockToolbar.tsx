@@ -3,7 +3,6 @@
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { isTextBlock, TextBlock, TEXT_COLORS } from '@/types/canvas'
-import { toggleBlockVoteable } from '@/lib/canvasStorage'
 
 // Font size options with friendly labels
 const FONT_SIZES = [
@@ -27,7 +26,7 @@ const FONTS = [
 ]
 
 export function BlockToolbar() {
-  const { isAdmin } = useAuth()
+  const { user, isAdmin } = useAuth()
   const {
     blocks,
     selectedBlockId,
@@ -37,7 +36,7 @@ export function BlockToolbar() {
     sendBlockToBack,
   } = useCanvas()
 
-  if (!isAdmin || !selectedBlockId) return null
+  if (!selectedBlockId) return null
 
   const selectedBlock = blocks.find((b) => b.id === selectedBlockId)
   if (!selectedBlock) return null
@@ -45,8 +44,14 @@ export function BlockToolbar() {
   const isText = isTextBlock(selectedBlock)
   const textBlock = isText ? (selectedBlock as TextBlock) : null
 
+  // Check if user can edit this block (creator or admin)
+  const canEdit = isAdmin || (user && textBlock?.createdBy === user.uid)
+
   // Common button class for consistent height
   const btnClass = 'h-8 px-2 rounded flex items-center justify-center'
+
+  // Only show toolbar if user can edit this block
+  if (!canEdit) return null
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 border border-white/10 rounded-xl p-2 shadow-xl">
@@ -89,8 +94,54 @@ export function BlockToolbar() {
             className={`${btnClass} w-8 ${
               textBlock.style.fontWeight === 'bold' ? 'bg-indigo-600' : 'bg-white/10 hover:bg-white/20'
             }`}
+            title="Bold"
           >
             <span className="font-bold text-sm">B</span>
+          </button>
+
+          {/* Italic toggle */}
+          <button
+            onClick={() =>
+              updateStyle(selectedBlockId, {
+                fontStyle: textBlock.style.fontStyle === 'italic' ? 'normal' : 'italic',
+              })
+            }
+            className={`${btnClass} w-8 ${
+              textBlock.style.fontStyle === 'italic' ? 'bg-indigo-600' : 'bg-white/10 hover:bg-white/20'
+            }`}
+            title="Italic"
+          >
+            <span className="italic text-sm">I</span>
+          </button>
+
+          {/* Underline toggle */}
+          <button
+            onClick={() =>
+              updateStyle(selectedBlockId, {
+                textDecoration: textBlock.style.textDecoration === 'underline' ? 'none' : 'underline',
+              })
+            }
+            className={`${btnClass} w-8 ${
+              textBlock.style.textDecoration === 'underline' ? 'bg-indigo-600' : 'bg-white/10 hover:bg-white/20'
+            }`}
+            title="Underline"
+          >
+            <span className="underline text-sm">U</span>
+          </button>
+
+          {/* Strikethrough toggle */}
+          <button
+            onClick={() =>
+              updateStyle(selectedBlockId, {
+                textDecoration: textBlock.style.textDecoration === 'line-through' ? 'none' : 'line-through',
+              })
+            }
+            className={`${btnClass} w-8 ${
+              textBlock.style.textDecoration === 'line-through' ? 'bg-indigo-600' : 'bg-white/10 hover:bg-white/20'
+            }`}
+            title="Strikethrough"
+          >
+            <span className="line-through text-sm">S</span>
           </button>
 
           {/* Text align */}
@@ -134,17 +185,17 @@ export function BlockToolbar() {
 
           <div className="w-px h-6 bg-white/20 mx-1" />
 
-          {/* Voteable toggle */}
+          {/* Marquee toggle */}
           <button
-            onClick={() => toggleBlockVoteable(selectedBlockId, !textBlock.voteable)}
+            onClick={() => updateStyle(selectedBlockId, { marquee: !textBlock.style.marquee })}
             className={`${btnClass} px-3 text-sm font-medium whitespace-nowrap ${
-              textBlock.voteable
-                ? 'bg-green-600 text-white'
+              textBlock.style.marquee
+                ? 'bg-indigo-600 text-white'
                 : 'bg-white/10 hover:bg-white/20 text-gray-300'
             }`}
-            title={textBlock.voteable ? 'Disable voting' : 'Enable voting'}
+            title={textBlock.style.marquee ? 'Stop scrolling' : 'Scroll text'}
           >
-            {textBlock.voteable ? 'Voteable' : 'Voteable'}
+            Marquee
           </button>
 
           <div className="w-px h-6 bg-white/20 mx-1" />

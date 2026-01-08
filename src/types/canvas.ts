@@ -13,9 +13,12 @@ export interface BlockSize {
 export interface TextStyle {
   fontSize: number        // rem units
   fontWeight: 'normal' | 'bold'
+  fontStyle: 'normal' | 'italic'
+  textDecoration: 'none' | 'underline' | 'line-through'
   fontFamily: string      // font family name
   color: string           // hex color
   textAlign: 'left' | 'center' | 'right'
+  marquee?: boolean       // scrolling text effect
   backgroundColor?: string
 }
 
@@ -52,10 +55,12 @@ export interface TextBlock extends BaseBlock {
   type: 'text'
   content: string
   style: TextStyle
-  // Voting fields (optional - not all text blocks are voteable)
-  voteable?: boolean
-  upvotes?: string[]    // User IDs
-  downvotes?: string[]  // User IDs
+  createdBy: string       // User ID of creator
+  // Brightness voting (0-100, starts at 50)
+  // Space = brighten, Alt = dim
+  // At 0 brightness, block is deleted
+  brightness: number
+  voters: string[]        // User IDs who have voted (prevent double voting)
 }
 
 export type CanvasBlock = TextBlock
@@ -65,13 +70,22 @@ export function isTextBlock(block: CanvasBlock): block is TextBlock {
   return block.type === 'text'
 }
 
+// Default brightness for new blocks
+export const DEFAULT_BRIGHTNESS = 50
+
+// Brightness change per vote
+export const VOTE_BRIGHTNESS_CHANGE = 5
+
 // Default values for new blocks
 export const DEFAULT_TEXT_STYLE: TextStyle = {
   fontSize: 1,
   fontWeight: 'normal',
+  fontStyle: 'normal',
+  textDecoration: 'none',
   fontFamily: 'Inter',
   color: '#ffffff', // Will be overridden with random color on creation
   textAlign: 'left',
+  marquee: false,
 }
 
 export const DEFAULT_BLOCK_SIZE = {

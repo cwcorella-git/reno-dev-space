@@ -10,10 +10,18 @@ import {
   query,
   orderBy,
   Unsubscribe,
+  getDoc,
 } from 'firebase/firestore'
 import { getDb } from './firebase'
-import { CanvasBlock, TextBlock, DEFAULT_TEXT_STYLE, getRandomColor } from '@/types/canvas'
-import { arrayUnion, arrayRemove } from 'firebase/firestore'
+import {
+  CanvasBlock,
+  TextBlock,
+  DEFAULT_TEXT_STYLE,
+  DEFAULT_BRIGHTNESS,
+  VOTE_BRIGHTNESS_CHANGE,
+  getRandomColor,
+} from '@/types/canvas'
+import { arrayUnion } from 'firebase/firestore'
 
 const COLLECTION_NAME = 'canvasBlocks'
 
@@ -54,6 +62,7 @@ export function subscribeToCanvas(
 export async function addTextBlock(
   x: number,
   y: number,
+  createdBy: string,
   content: string = '',
   maxZIndex: number = 0
 ): Promise<string> {
@@ -69,6 +78,9 @@ export async function addTextBlock(
     zIndex: maxZIndex + 1,
     content,
     style: { ...DEFAULT_TEXT_STYLE, color: getRandomColor() },
+    createdBy,
+    brightness: DEFAULT_BRIGHTNESS,
+    voters: [],
     createdAt: now,
     updatedAt: now,
   }
@@ -77,57 +89,46 @@ export async function addTextBlock(
   return docRef.id
 }
 
-// Toggle whether a block is voteable
-export async function toggleBlockVoteable(
-  id: string,
-  voteable: boolean
-): Promise<void> {
-  const db = getDb()
-  await updateDoc(doc(db, COLLECTION_NAME, id), {
-    voteable,
-    // Initialize vote arrays if enabling
-    ...(voteable ? { upvotes: [], downvotes: [] } : {}),
-    updatedAt: Date.now(),
-  })
-}
-
-// Vote on a block (upvote or downvote)
-export async function voteOnBlock(
+// Vote on a block (brightness-based)
+// Space = brighten (+), Alt = dim (-)
+// Returns true if block was deleted (brightness hit 0)
+export async function voteBrightness(
   id: string,
   odId: string,
-  voteType: 'up' | 'down'
-): Promise<void> {
+  direction: 'up' | 'down'
+): Promise<boolean> {
   const db = getDb()
   const docRef = doc(db, COLLECTION_NAME, id)
 
-  if (voteType === 'up') {
-    // Remove from downvotes, add to upvotes
-    await updateDoc(docRef, {
-      upvotes: arrayUnion(odId),
-      downvotes: arrayRemove(odId),
-      updatedAt: Date.now(),
-    })
-  } else {
-    // Remove from upvotes, add to downvotes
-    await updateDoc(docRef, {
-      downvotes: arrayUnion(odId),
-      upvotes: arrayRemove(odId),
-      updatedAt: Date.now(),
-    })
-  }
-}
+  // Get current block data
+  const docSnap = await getDoc(docRef)
+  if (!docSnap.exists()) return false
 
-// Remove vote from a block
-export async function removeBlockVote(
-  id: string,
-  odId: string
-): Promise<void> {
-  const db = getDb()
-  await updateDoc(doc(db, COLLECTION_NAME, id), {
-    upvotes: arrayRemove(odId),
-    downvotes: arrayRemove(odId),
+  const block = docSnap.data() as TextBlock
+
+  // Check if user already voted
+  if (block.voters?.includes(odId)) {
+    return false // Already voted
+  }
+
+  // Calculate new brightness
+  const change = direction === 'up' ? VOTE_BRIGHTNESS_CHANGE : -VOTE_BRIGHTNESS_CHANGE
+  const newBrightness = Math.max(0, Math.min(100, (block.brightness ?? DEFAULT_BRIGHTNESS) + change))
+
+  // If brightness hits 0, delete the block
+  if (newBrightness <= 0) {
+    await deleteDoc(docRef)
+    return true // Block was deleted
+  }
+
+  // Update brightness and add voter
+  await updateDoc(docRef, {
+    brightness: newBrightness,
+    voters: arrayUnion(odId),
     updatedAt: Date.now(),
   })
+
+  return false
 }
 
 // Update block position
