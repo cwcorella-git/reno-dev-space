@@ -188,6 +188,18 @@ export function Canvas() {
         onMouseDown={handleMouseDown}
         onContextMenu={handleContextMenu}
       >
+        {/* Mobile safe zone overlay (admin only) */}
+        {isAdmin && (
+          <div
+            className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-[375px] border-x-2 border-dashed border-white/15 pointer-events-none z-[5]"
+            title="Mobile safe zone (375px)"
+          >
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] text-white/30 whitespace-nowrap">
+              mobile view
+            </div>
+          </div>
+        )}
+
         {/* Render all blocks */}
         {blocks.map((block) => (
           <CanvasBlock key={block.id} block={block} />

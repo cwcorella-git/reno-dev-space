@@ -4,17 +4,8 @@ import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { isTextBlock, TextBlock, TEXT_COLORS } from '@/types/canvas'
 
-// Font size options with friendly labels
-const FONT_SIZES = [
-  { value: 0.75, label: 'XS' },
-  { value: 1, label: 'S' },
-  { value: 1.25, label: 'M' },
-  { value: 1.5, label: 'L' },
-  { value: 2, label: 'XL' },
-  { value: 2.5, label: '2XL' },
-  { value: 3, label: '3XL' },
-  { value: 4, label: '4XL' },
-]
+// Font size presets for quick selection
+const FONT_SIZE_PRESETS = [1, 1.5, 2, 3]
 
 // Available fonts
 const FONTS = [
@@ -54,7 +45,7 @@ export function BlockToolbar() {
   if (!canEdit) return null
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-gray-900 border border-white/10 rounded-xl p-2 shadow-xl">
+    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-wrap items-center justify-center gap-2 bg-gray-900 border border-white/10 rounded-xl p-2 shadow-xl max-w-[95vw]">
       {/* Text-specific controls */}
       {isText && textBlock && (
         <>
@@ -72,17 +63,34 @@ export function BlockToolbar() {
           </select>
 
           {/* Font size */}
-          <select
-            value={textBlock.style.fontSize}
-            onChange={(e) => updateStyle(selectedBlockId, { fontSize: parseFloat(e.target.value) })}
-            className={`${btnClass} bg-white/10 border border-white/20 text-sm min-w-[60px]`}
-          >
-            {FONT_SIZES.map((size) => (
-              <option key={size.value} value={size.value}>
-                {size.label}
-              </option>
+          <div className="flex items-center gap-1">
+            <input
+              type="number"
+              step="0.25"
+              min="0.5"
+              max="8"
+              value={textBlock.style.fontSize}
+              onChange={(e) => updateStyle(selectedBlockId, { fontSize: parseFloat(e.target.value) || 1 })}
+              className="w-14 h-8 px-2 bg-white/10 border border-white/20 rounded text-sm text-center"
+            />
+            <span className="text-xs text-gray-400">rem</span>
+          </div>
+          {/* Font size presets */}
+          <div className="flex gap-0.5">
+            {FONT_SIZE_PRESETS.map((size) => (
+              <button
+                key={size}
+                onClick={() => updateStyle(selectedBlockId, { fontSize: size })}
+                className={`w-7 h-7 text-xs rounded ${
+                  textBlock.style.fontSize === size
+                    ? 'bg-indigo-600 text-white'
+                    : 'bg-white/10 hover:bg-white/20 text-gray-300'
+                }`}
+              >
+                {size}
+              </button>
             ))}
-          </select>
+          </div>
 
           {/* Bold toggle */}
           <button

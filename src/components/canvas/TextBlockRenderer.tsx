@@ -37,20 +37,12 @@ export function TextBlockRenderer({
     opacity,
   }
 
-  // Focus and select all when entering edit mode
+  // Focus when entering edit mode (cursor positioned naturally by browser)
   useEffect(() => {
     if (isEditing && editorRef.current) {
       editorRef.current.focus()
-      // Select all text if there's content
-      if (block.content) {
-        const selection = window.getSelection()
-        const range = document.createRange()
-        range.selectNodeContents(editorRef.current)
-        selection?.removeAllRanges()
-        selection?.addRange(range)
-      }
     }
-  }, [isEditing, block.content])
+  }, [isEditing])
 
   if (isEditing) {
     return (

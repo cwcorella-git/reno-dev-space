@@ -132,6 +132,25 @@ export function CampaignBanner() {
             </span>
           </div>
         </div>
+
+        {/* Public backers list */}
+        {pledges.length > 0 && (
+          <div className="mt-2 pt-2 border-t border-white/10">
+            <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-white/70">
+              {[...pledges]
+                .sort((a, b) => b.amount - a.amount)
+                .slice(0, 12)
+                .map((pledge) => (
+                  <span key={pledge.odId}>
+                    {pledge.displayName}: <span className="text-white">${pledge.amount}</span>
+                  </span>
+                ))}
+              {pledges.length > 12 && (
+                <span className="text-white/50">+{pledges.length - 12} more</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

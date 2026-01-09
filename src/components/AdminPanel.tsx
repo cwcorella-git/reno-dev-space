@@ -168,21 +168,38 @@ export function AdminPanel() {
                 </button>
               </div>
 
-              <div className="flex gap-2 items-center">
-                <span className="text-sm text-gray-400">Goal: $</span>
-                <input
-                  type="number"
-                  value={goalInput}
-                  onChange={(e) => setGoalInput(e.target.value)}
-                  className="w-24 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
-                />
-                <button
-                  onClick={handleUpdateGoal}
-                  disabled={loading}
-                  className="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm disabled:opacity-50"
-                >
-                  Update
-                </button>
+              <div className="space-y-2">
+                <div className="flex gap-2 items-center">
+                  <span className="text-sm text-gray-400">Goal: $</span>
+                  <input
+                    type="number"
+                    value={goalInput}
+                    onChange={(e) => setGoalInput(e.target.value)}
+                    className="w-24 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-sm"
+                  />
+                  <button
+                    onClick={handleUpdateGoal}
+                    disabled={loading}
+                    className="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm disabled:opacity-50"
+                  >
+                    Update
+                  </button>
+                </div>
+                <div className="flex gap-1">
+                  {[1000, 2500, 5000, 10000].map((amount) => (
+                    <button
+                      key={amount}
+                      onClick={() => setGoalInput(amount.toString())}
+                      className={`px-2 py-0.5 text-xs rounded transition-colors ${
+                        parseInt(goalInput, 10) === amount
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-white/10 hover:bg-white/20 text-gray-300'
+                      }`}
+                    >
+                      ${amount.toLocaleString()}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* Stats */}
