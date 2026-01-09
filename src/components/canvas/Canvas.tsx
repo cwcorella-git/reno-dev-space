@@ -166,17 +166,34 @@ export function Canvas() {
     }
   }, [contextMenu, addText])
 
-  // Close context menu / cancel add text mode on escape
+  // Keyboard shortcuts: Escape, Ctrl+A
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Ctrl+A or Cmd+A - select all blocks
+      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
+        // Only intercept if not in a text input
+        const target = e.target as HTMLElement
+        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+          return
+        }
+        e.preventDefault()
+        const allIds = blocks.map((b) => b.id)
+        if (allIds.length > 0) {
+          selectBlocks(allIds)
+        }
+        return
+      }
+
+      // Escape - clear selection and cancel modes
       if (e.key === 'Escape') {
         setContextMenu(null)
         setIsAddTextMode(false)
+        selectBlock(null)
       }
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  }, [blocks, selectBlocks, selectBlock])
 
   // Track page views (once per browser session)
   useEffect(() => {
@@ -200,7 +217,7 @@ export function Canvas() {
       {/* Canvas */}
       <div
         ref={canvasRef}
-        className="min-h-screen w-full bg-brand-dark relative overflow-hidden"
+        className={`min-h-screen w-full bg-brand-dark relative overflow-hidden ${marquee ? 'select-none' : ''}`}
         onClick={handleCanvasClick}
         onMouseDown={handleMouseDown}
         onContextMenu={handleContextMenu}

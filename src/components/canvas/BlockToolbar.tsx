@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { isTextBlock, TextBlock, TEXT_COLORS } from '@/types/canvas'
+import { filterEditableBlocks } from '@/lib/permissions'
 
 // Available fonts
 const FONTS = [
@@ -24,6 +25,7 @@ export function BlockToolbar() {
   const {
     blocks,
     selectedBlockId,
+    selectedBlockIds,
     updateStyle,
     removeBlock,
     bringBlockToFront,
@@ -32,6 +34,27 @@ export function BlockToolbar() {
 
   const [mode, setMode] = useState<ToolbarMode>('collapsed')
   const [touchStartY, setTouchStartY] = useState<number | null>(null)
+
+  // Get editable block IDs (user can edit their own blocks, admin can edit all)
+  const editableBlockIds = filterEditableBlocks(
+    selectedBlockIds,
+    blocks,
+    user?.uid,
+    isAdmin
+  )
+  const editableTextBlockIds = editableBlockIds.filter(id => {
+    const b = blocks.find(x => x.id === id)
+    return b && isTextBlock(b)
+  })
+  const hasMultipleSelected = selectedBlockIds.length > 1
+
+  // Apply style to all selected editable text blocks
+  const applyStyleToSelection = useCallback(
+    (style: Partial<TextBlock['style']>) => {
+      editableTextBlockIds.forEach(id => updateStyle(id, style))
+    },
+    [editableTextBlockIds, updateStyle]
+  )
 
   // Set default mode based on screen size
   useEffect(() => {
@@ -139,6 +162,16 @@ export function BlockToolbar() {
         )}
       </div>
 
+      {/* Selection count indicator */}
+      {hasMultipleSelected && mode !== 'collapsed' && (
+        <div className="px-4 pb-2 text-xs text-gray-400">
+          {selectedBlockIds.length} blocks selected
+          {editableTextBlockIds.length < selectedBlockIds.length && (
+            <span className="text-gray-500"> ({editableTextBlockIds.length} editable)</span>
+          )}
+        </div>
+      )}
+
       {/* Collapsed row - quick actions */}
       <div className="flex items-center justify-center gap-2 px-4 pb-2">
         {/* Quick color picker */}
@@ -147,7 +180,7 @@ export function BlockToolbar() {
             {QUICK_COLORS.map((color) => (
               <button
                 key={color}
-                onClick={() => updateStyle(selectedBlockId, { color })}
+                onClick={() => applyStyleToSelection({ color })}
                 className={`w-6 h-6 rounded-full border-2 transition-transform ${
                   textBlock.style.color === color ? 'border-white scale-110' : 'border-transparent'
                 }`}
@@ -164,7 +197,7 @@ export function BlockToolbar() {
             <div className="flex gap-1">
               <button
                 onClick={() =>
-                  updateStyle(selectedBlockId, {
+                  applyStyleToSelection({
                     fontWeight: textBlock.style.fontWeight === 'bold' ? 'normal' : 'bold',
                   })
                 }
@@ -176,7 +209,7 @@ export function BlockToolbar() {
               </button>
               <button
                 onClick={() =>
-                  updateStyle(selectedBlockId, {
+                  applyStyleToSelection({
                     fontStyle: textBlock.style.fontStyle === 'italic' ? 'normal' : 'italic',
                   })
                 }
@@ -188,7 +221,7 @@ export function BlockToolbar() {
               </button>
               <button
                 onClick={() =>
-                  updateStyle(selectedBlockId, {
+                  applyStyleToSelection({
                     textDecoration: textBlock.style.textDecoration === 'underline' ? 'none' : 'underline',
                   })
                 }
@@ -229,7 +262,7 @@ export function BlockToolbar() {
               {/* Font family */}
               <select
                 value={textBlock.style.fontFamily || 'Inter'}
-                onChange={(e) => updateStyle(selectedBlockId, { fontFamily: e.target.value })}
+                onChange={(e) => applyStyleToSelection({ fontFamily: e.target.value })}
                 className="h-8 px-2 bg-white/10 border border-white/20 rounded text-sm flex-1 min-w-[100px]"
               >
                 {FONTS.map((font) => (
@@ -247,7 +280,7 @@ export function BlockToolbar() {
                   min="0.5"
                   max="8"
                   value={textBlock.style.fontSize}
-                  onChange={(e) => updateStyle(selectedBlockId, { fontSize: parseFloat(e.target.value) || 1 })}
+                  onChange={(e) => applyStyleToSelection({ fontSize: parseFloat(e.target.value) || 1 })}
                   className="w-16 h-8 px-2 bg-white/10 border border-white/20 rounded text-sm text-center"
                 />
                 <span className="text-xs text-gray-400">rem</span>
@@ -263,7 +296,7 @@ export function BlockToolbar() {
               <div className="flex gap-1">
                 <button
                   onClick={() =>
-                    updateStyle(selectedBlockId, {
+                    applyStyleToSelection({
                       fontWeight: textBlock.style.fontWeight === 'bold' ? 'normal' : 'bold',
                     })
                   }
@@ -275,7 +308,7 @@ export function BlockToolbar() {
                 </button>
                 <button
                   onClick={() =>
-                    updateStyle(selectedBlockId, {
+                    applyStyleToSelection({
                       fontStyle: textBlock.style.fontStyle === 'italic' ? 'normal' : 'italic',
                     })
                   }
@@ -287,7 +320,7 @@ export function BlockToolbar() {
                 </button>
                 <button
                   onClick={() =>
-                    updateStyle(selectedBlockId, {
+                    applyStyleToSelection({
                       textDecoration: textBlock.style.textDecoration === 'underline' ? 'none' : 'underline',
                     })
                   }
@@ -299,7 +332,7 @@ export function BlockToolbar() {
                 </button>
                 <button
                   onClick={() =>
-                    updateStyle(selectedBlockId, {
+                    applyStyleToSelection({
                       textDecoration: textBlock.style.textDecoration === 'line-through' ? 'none' : 'line-through',
                     })
                   }
@@ -316,7 +349,7 @@ export function BlockToolbar() {
                 {(['left', 'center', 'right'] as const).map((align) => (
                   <button
                     key={align}
-                    onClick={() => updateStyle(selectedBlockId, { textAlign: align })}
+                    onClick={() => applyStyleToSelection({ textAlign: align })}
                     className={`w-8 h-full flex items-center justify-center ${
                       textBlock.style.textAlign === align ? 'bg-indigo-600' : 'bg-white/10 hover:bg-white/20'
                     }`}
@@ -339,7 +372,7 @@ export function BlockToolbar() {
               {TEXT_COLORS.map((color) => (
                 <button
                   key={color}
-                  onClick={() => updateStyle(selectedBlockId, { color })}
+                  onClick={() => applyStyleToSelection({ color })}
                   className={`w-7 h-7 rounded-full border-2 transition-transform ${
                     textBlock.style.color === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
                   }`}

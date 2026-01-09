@@ -41,6 +41,7 @@ interface CanvasContextType {
   // Block operations (admin only)
   addText: (x: number, y: number) => Promise<string | null>
   moveBlock: (id: string, x: number, y: number) => Promise<void>
+  moveBlocks: (moves: { id: string; x: number; y: number }[]) => Promise<void>
   resizeBlock: (id: string, width: number, height: number) => Promise<void>
   updateContent: (id: string, content: string) => Promise<void>
   updateStyle: (id: string, style: Partial<TextBlock['style']>) => Promise<void>
@@ -129,6 +130,21 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         await updateBlockPosition(id, x, y)
       } catch (error) {
         console.error('[CanvasContext] Failed to move block:', error)
+      }
+    },
+    [isAdmin]
+  )
+
+  // Batch move multiple blocks (for group move)
+  const moveBlocks = useCallback(
+    async (moves: { id: string; x: number; y: number }[]): Promise<void> => {
+      if (!isAdmin) return
+      try {
+        await Promise.all(
+          moves.map(({ id, x, y }) => updateBlockPosition(id, x, y))
+        )
+      } catch (error) {
+        console.error('[CanvasContext] Failed to move blocks:', error)
       }
     },
     [isAdmin]
@@ -241,6 +257,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         setIsEditing,
         addText,
         moveBlock,
+        moveBlocks,
         resizeBlock,
         updateContent,
         updateStyle,
