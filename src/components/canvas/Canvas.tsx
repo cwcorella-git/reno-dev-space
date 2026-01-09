@@ -30,14 +30,30 @@ export function Canvas() {
   const { blocks, canvasRef, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText } = useCanvas()
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [marquee, setMarquee] = useState<MarqueeState | null>(null)
+  const [isAddTextMode, setIsAddTextMode] = useState(false)
   const isMarqueeActive = useRef(false)
 
-  const handleCanvasClick = useCallback(() => {
-    if (!isMarqueeActive.current) {
-      selectBlock(null)
-      setContextMenu(null)
-    }
-  }, [selectBlock])
+  const handleCanvasClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isMarqueeActive.current) {
+        // If in add text mode, place text at click position
+        if (isAddTextMode && isAdmin) {
+          const canvas = canvasRef.current
+          if (canvas) {
+            const rect = canvas.getBoundingClientRect()
+            const x = ((e.clientX - rect.left) / rect.width) * 100
+            const y = ((e.clientY - rect.top) / rect.height) * 100
+            addText(x, y)
+            setIsAddTextMode(false)
+            return
+          }
+        }
+        selectBlock(null)
+        setContextMenu(null)
+      }
+    },
+    [selectBlock, isAddTextMode, isAdmin, canvasRef, addText]
+  )
 
   // Start marquee selection on mouse down (available to everyone)
   const handleMouseDown = useCallback(
@@ -150,11 +166,12 @@ export function Canvas() {
     }
   }, [contextMenu, addText])
 
-  // Close context menu on escape or click outside
+  // Close context menu / cancel add text mode on escape
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setContextMenu(null)
+        setIsAddTextMode(false)
       }
     }
     document.addEventListener('keydown', handleKeyDown)
@@ -223,7 +240,16 @@ export function Canvas() {
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className="text-center text-gray-500">
               <p className="text-lg mb-2">Your canvas is empty</p>
-              <p className="text-sm">Right-click anywhere to add text</p>
+              <p className="text-sm">Tap the + button or right-click to add text</p>
+            </div>
+          </div>
+        )}
+
+        {/* Add text mode indicator */}
+        {isAddTextMode && (
+          <div className="absolute inset-0 pointer-events-none z-40">
+            <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm shadow-lg">
+              Tap anywhere to place text
             </div>
           </div>
         )}
@@ -262,6 +288,27 @@ export function Canvas() {
 
       {/* Floating account button */}
       <FloatingAccount />
+
+      {/* Add Text button for admin (mobile-friendly) */}
+      {isAdmin && (
+        <button
+          onClick={() => setIsAddTextMode(!isAddTextMode)}
+          className={`fixed bottom-20 left-4 z-50 p-3 rounded-full shadow-lg transition-all hover:scale-105 ${
+            isAddTextMode
+              ? 'bg-indigo-600 text-white ring-2 ring-indigo-400 ring-offset-2 ring-offset-brand-dark'
+              : 'bg-gray-700 hover:bg-gray-600 text-white'
+          }`}
+          title={isAddTextMode ? 'Cancel' : 'Add Text'}
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {isAddTextMode ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            )}
+          </svg>
+        </button>
+      )}
     </>
   )
 }
