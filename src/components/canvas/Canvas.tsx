@@ -4,9 +4,8 @@ import { useCallback, useState, useEffect, useRef } from 'react'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { CanvasBlock } from './CanvasBlock'
-import { BlockToolbar } from './BlockToolbar'
+import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
-import { FloatingAccount } from '@/components/FloatingAccount'
 import { CampaignBanner } from '@/components/CampaignBanner'
 import { AdminPanel } from '@/components/AdminPanel'
 import { incrementPageViews } from '@/lib/campaignStorage'
@@ -291,8 +290,8 @@ export function Canvas() {
         </div>
       )}
 
-      {/* Block toolbar */}
-      <BlockToolbar />
+      {/* Unified panel with editor + chat tabs */}
+      <UnifiedPanel />
 
       {/* Intro hint for non-logged-in users */}
       {!user && <IntroHint />}
@@ -302,9 +301,6 @@ export function Canvas() {
 
       {/* Admin panel */}
       <AdminPanel />
-
-      {/* Floating account button */}
-      <FloatingAccount />
 
       {/* Add Text button for admin (mobile-friendly) */}
       {isAdmin && (
