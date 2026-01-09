@@ -353,16 +353,6 @@ export function BlockToolbar() {
           <div className="space-y-2">
             <span className="text-[10px] uppercase tracking-wider text-gray-500">Actions</span>
             <div className="flex flex-wrap gap-2">
-              {/* Marquee */}
-              <button
-                onClick={() => updateStyle(selectedBlockId, { marquee: !textBlock.style.marquee })}
-                className={`h-8 px-3 rounded text-sm font-medium ${
-                  textBlock.style.marquee ? 'bg-indigo-600 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-300'
-                }`}
-              >
-                Marquee
-              </button>
-
               {/* Layer controls */}
               <button
                 onClick={() => bringBlockToFront(selectedBlockId)}

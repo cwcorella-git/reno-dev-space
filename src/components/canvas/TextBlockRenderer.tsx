@@ -68,18 +68,6 @@ export function TextBlockRenderer({
     )
   }
 
-  // Marquee wrapper for scrolling text effect
-  const MarqueeWrapper = ({ children }: { children: React.ReactNode }) => {
-    if (!block.style.marquee) return <>{children}</>
-    return (
-      <div className="overflow-hidden">
-        <div className="animate-marquee whitespace-nowrap">
-          {children}
-        </div>
-      </div>
-    )
-  }
-
   // Show placeholder if empty
   if (isEmpty) {
     return (
@@ -93,13 +81,11 @@ export function TextBlockRenderer({
   }
 
   return (
-    <MarqueeWrapper>
-      <div
-        className="whitespace-pre-wrap break-words"
-        style={style}
-      >
-        {block.content}
-      </div>
-    </MarqueeWrapper>
+    <div
+      className="whitespace-pre-wrap break-words"
+      style={style}
+    >
+      {block.content}
+    </div>
   )
 }
