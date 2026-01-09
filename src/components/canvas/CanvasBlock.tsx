@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useRef, useState, useEffect } from 'react'
 import { CanvasBlock as CanvasBlockType, isTextBlock } from '@/types/canvas'
 import { TextBlockRenderer } from './TextBlockRenderer'
 import { useCanvas } from '@/contexts/CanvasContext'
@@ -18,6 +18,8 @@ interface DragState {
 interface ResizeState {
   width: number
 }
+
+const TOUCH_HOLD_DURATION = 300 // ms to hold before drag activates
 
 export function CanvasBlock({ block }: CanvasBlockProps) {
   const { user, isAdmin } = useAuth()
@@ -46,6 +48,12 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
   // Local resize state for immediate visual feedback
   const [resizeWidth, setResizeWidth] = useState<ResizeState | null>(null)
   const [isResizing, setIsResizing] = useState(false)
+
+  // Touch-and-hold state
+  const [isHolding, setIsHolding] = useState(false)
+  const touchHoldTimer = useRef<NodeJS.Timeout | null>(null)
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null)
+  const isTouchDragging = useRef(false)
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -222,6 +230,108 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
     [isAdmin, isSelected, isEditing, canvasRef, block, resizeBlock]
   )
 
+  // Clear touch hold timer on unmount
+  useEffect(() => {
+    return () => {
+      if (touchHoldTimer.current) {
+        clearTimeout(touchHoldTimer.current)
+      }
+    }
+  }, [])
+
+  // Touch start - begin hold timer
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isAdmin || !isSelected || isEditing) return
+
+      const touch = e.touches[0]
+      touchStartPos.current = { x: touch.clientX, y: touch.clientY }
+      isTouchDragging.current = false
+
+      // Start hold timer
+      touchHoldTimer.current = setTimeout(() => {
+        setIsHolding(true)
+        isTouchDragging.current = true
+
+        // Vibrate if supported (haptic feedback)
+        if (navigator.vibrate) {
+          navigator.vibrate(50)
+        }
+      }, TOUCH_HOLD_DURATION)
+    },
+    [isAdmin, isSelected, isEditing]
+  )
+
+  // Touch move - drag if hold completed
+  const handleTouchMove = useCallback(
+    (e: React.TouchEvent) => {
+      if (!touchStartPos.current) return
+
+      const touch = e.touches[0]
+      const deltaX = Math.abs(touch.clientX - touchStartPos.current.x)
+      const deltaY = Math.abs(touch.clientY - touchStartPos.current.y)
+
+      // If moved too much before hold completed, cancel the hold
+      if (!isTouchDragging.current && (deltaX > 10 || deltaY > 10)) {
+        if (touchHoldTimer.current) {
+          clearTimeout(touchHoldTimer.current)
+          touchHoldTimer.current = null
+        }
+        setIsHolding(false)
+        return
+      }
+
+      // If drag mode is active, handle the drag
+      if (isTouchDragging.current) {
+        e.preventDefault() // Prevent scrolling while dragging
+
+        const canvas = canvasRef.current
+        if (!canvas) return
+
+        const rect = canvas.getBoundingClientRect()
+        const startX = touchStartPos.current.x
+        const startY = touchStartPos.current.y
+
+        const deltaXPercent = ((touch.clientX - startX) / rect.width) * 100
+        const deltaYPercent = ((touch.clientY - startY) / rect.height) * 100
+
+        const newX = Math.max(0, Math.min(95, block.x + deltaXPercent))
+        const newY = Math.max(0, Math.min(95, block.y + deltaYPercent))
+
+        setDragPos({ x: newX, y: newY })
+        setIsDragging(true)
+
+        // Update start position for continuous dragging
+        touchStartPos.current = { x: touch.clientX, y: touch.clientY }
+      }
+    },
+    [canvasRef, block.x, block.y]
+  )
+
+  // Touch end - complete drag or cancel
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      // Clear hold timer
+      if (touchHoldTimer.current) {
+        clearTimeout(touchHoldTimer.current)
+        touchHoldTimer.current = null
+      }
+
+      setIsHolding(false)
+
+      // If was dragging, save position
+      if (isTouchDragging.current && dragPos) {
+        moveBlock(block.id, dragPos.x, dragPos.y)
+        setDragPos(null)
+        setIsDragging(false)
+      }
+
+      isTouchDragging.current = false
+      touchStartPos.current = null
+    },
+    [block.id, dragPos, moveBlock]
+  )
+
   // Render block content based on type
   const renderContent = () => {
     if (isTextBlock(block)) {
@@ -243,7 +353,7 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
   // Use resize width if resizing, otherwise use block width
   const displayWidth = resizeWidth?.width ?? block.width
 
-  const isInteracting = isDragging || isResizing
+  const isInteracting = isDragging || isResizing || isHolding
 
   const blockStyle: React.CSSProperties = {
     position: 'absolute',
@@ -266,11 +376,16 @@ export function CanvasBlock({ block }: CanvasBlockProps) {
         ${isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-transparent' : ''}
         ${isInSelection && !isSelected ? 'ring-2 ring-indigo-400/50 ring-offset-1 ring-offset-transparent' : ''}
         ${isInteracting ? 'shadow-lg shadow-indigo-500/30' : ''}
+        ${isHolding ? 'animate-pulse scale-105' : ''}
+        touch-none
       `}
       onClick={handleClick}
       onDoubleClick={handleDoubleClick}
       onKeyDown={handleKeyDown}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       tabIndex={user ? 0 : -1}
     >
       {renderContent()}
