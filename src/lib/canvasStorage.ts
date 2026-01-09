@@ -11,6 +11,7 @@ import {
   orderBy,
   Unsubscribe,
   getDoc,
+  getDocs,
 } from 'firebase/firestore'
 import { getDb } from './firebase'
 import {
@@ -221,4 +222,24 @@ export async function sendToBack(
 ): Promise<void> {
   const minZ = Math.min(...blocks.map((b) => b.zIndex), 0)
   await updateBlockZIndex(id, minZ - 1)
+}
+
+// Reset brightness for all blocks to default (admin only)
+export async function resetAllBrightness(): Promise<number> {
+  const db = getDb()
+  const snapshot = await getDocs(collection(db, COLLECTION_NAME))
+
+  const promises: Promise<void>[] = []
+  snapshot.forEach((docSnapshot) => {
+    promises.push(
+      updateDoc(doc(db, COLLECTION_NAME, docSnapshot.id), {
+        brightness: DEFAULT_BRIGHTNESS,
+        voters: [],
+        updatedAt: Date.now(),
+      })
+    )
+  })
+
+  await Promise.all(promises)
+  return snapshot.size
 }

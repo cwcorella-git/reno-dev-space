@@ -13,6 +13,7 @@ import {
   unlockCampaign,
   CampaignSettings,
 } from '@/lib/campaignStorage'
+import { resetAllBrightness } from '@/lib/canvasStorage'
 
 interface UserWithStats extends UserProfile {
   stats?: UserStats
@@ -97,6 +98,14 @@ export function AdminPanel() {
     } else {
       await lockCampaign()
     }
+    setLoading(false)
+  }
+
+  const handleResetBrightness = async () => {
+    if (!confirm('Reset brightness for all blocks to default (50)?')) return
+    setLoading(true)
+    const count = await resetAllBrightness()
+    alert(`Reset brightness for ${count} block(s)`)
     setLoading(false)
   }
 
@@ -185,6 +194,17 @@ export function AdminPanel() {
                     <span>Backers: <span className="text-white">{summary.count}</span></span>
                   </>
                 )}
+              </div>
+
+              {/* Canvas Actions */}
+              <div className="pt-2 border-t border-white/10">
+                <button
+                  onClick={handleResetBrightness}
+                  disabled={loading}
+                  className="px-3 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg text-sm disabled:opacity-50"
+                >
+                  Reset All Brightness
+                </button>
               </div>
             </div>
 

@@ -24,12 +24,12 @@ export function FloatingChat() {
   const username = profile?.displayName || user?.email?.split('@')[0] || ''
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      {/* Chat Window */}
+    <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end">
+      {/* Chat Window - positioned above button */}
       {isOpen && (
         <div
-          className={`bg-brand-dark border border-white/20 rounded-xl shadow-2xl overflow-hidden transition-all duration-300 ${
-            isMinimized ? 'w-80 h-12' : 'w-80 sm:w-96 h-[500px]'
+          className={`mb-2 bg-brand-dark border border-white/20 rounded-xl shadow-2xl overflow-hidden transition-all duration-300 ${
+            isMinimized ? 'w-80 h-12' : 'w-80 sm:w-96 h-[400px]'
           }`}
         >
           {/* Header */}
@@ -66,7 +66,7 @@ export function FloatingChat() {
 
           {/* Chat Content */}
           {!isMinimized && (
-            <div className="flex flex-col h-[calc(100%-48px)]">
+            <div className="flex flex-col h-[calc(100%-44px)]">
               {/* Messages */}
               <div className="flex-1 overflow-hidden">
                 <MessageList
@@ -88,26 +88,24 @@ export function FloatingChat() {
         </div>
       )}
 
-      {/* Toggle Button */}
-      {!isOpen && (
-        <button
-          onClick={() => setIsOpen(true)}
-          className="bg-brand-primary hover:bg-brand-secondary text-white p-4 rounded-full shadow-lg transition-all hover:scale-105 relative"
-          title="Open Chat"
-        >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-            />
-          </svg>
-          {isConnected && (
-            <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-brand-dark" />
-          )}
-        </button>
-      )}
+      {/* Toggle Button - always visible */}
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="bg-brand-primary hover:bg-brand-secondary text-white p-4 rounded-full shadow-lg transition-all hover:scale-105 relative"
+        title={isOpen ? 'Close Chat' : 'Open Chat'}
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+          />
+        </svg>
+        {isConnected && (
+          <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-brand-dark" />
+        )}
+      </button>
     </div>
   )
 }
