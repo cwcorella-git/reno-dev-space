@@ -106,14 +106,37 @@ export function BlockToolbar() {
         mode === 'collapsed' ? 'rounded-full' : 'rounded-2xl'
       }`}
     >
-      {/* Drag handle */}
+      {/* Header with drag handle and close button */}
       <div
-        className="flex justify-center py-2 cursor-pointer"
-        onClick={cycleMode}
+        className="flex items-center justify-between px-3 py-2"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div className="w-10 h-1 bg-white/30 rounded-full" />
+        {/* Spacer for balance */}
+        <div className="w-8" />
+
+        {/* Drag handle */}
+        <div
+          className="flex-1 flex justify-center cursor-pointer py-1"
+          onClick={cycleMode}
+        >
+          <div className="w-10 h-1 bg-white/30 rounded-full" />
+        </div>
+
+        {/* Close button (visible when expanded) */}
+        {mode !== 'collapsed' ? (
+          <button
+            onClick={() => setMode('collapsed')}
+            className="w-8 h-8 flex items-center justify-center rounded hover:bg-white/10 text-gray-400 hover:text-white"
+            title="Collapse toolbar"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        ) : (
+          <div className="w-8" />
+        )}
       </div>
 
       {/* Collapsed row - quick actions */}
