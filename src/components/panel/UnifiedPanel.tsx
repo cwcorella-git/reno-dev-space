@@ -9,10 +9,11 @@ import { EditorTab } from './EditorTab'
 import { ChatTab } from './ChatTab'
 import { MembersTab } from './MembersTab'
 import { AdminTab } from './AdminTab'
+import { DonateTab } from './DonateTab'
 import { ProfileDropdown } from './ProfileDropdown'
 import { SettingsDropdown } from './SettingsDropdown'
 
-type TabType = 'editor' | 'chat' | 'members' | 'admin'
+type TabType = 'editor' | 'chat' | 'members' | 'donate' | 'admin'
 
 export function UnifiedPanel() {
   const { user, isAdmin } = useAuth()
@@ -108,6 +109,22 @@ export function UnifiedPanel() {
             >
               Members
             </button>
+            <button
+              onClick={() => {
+                setActiveTab('donate')
+                setIsMinimized(false)
+              }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
+                activeTab === 'donate'
+                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+              Donate
+            </button>
             {isAdmin && (
               <button
                 onClick={() => {
@@ -149,6 +166,7 @@ export function UnifiedPanel() {
             {activeTab === 'editor' && <EditorTab />}
             {activeTab === 'chat' && <ChatTab isConnected={isConnected} />}
             {activeTab === 'members' && <MembersTab />}
+            {activeTab === 'donate' && <DonateTab />}
             {activeTab === 'admin' && isAdmin && <AdminTab />}
           </div>
         )}
