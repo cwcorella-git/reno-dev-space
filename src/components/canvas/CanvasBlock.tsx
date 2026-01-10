@@ -9,7 +9,7 @@ import { filterEditableBlocks } from '@/lib/permissions'
 
 interface CanvasBlockProps {
   block: CanvasBlockType
-  canvasHeight: number // Dynamic canvas height in vh percentage units
+  canvasHeightPercent: number // Dynamic canvas height as percentage (100 = DESIGN_HEIGHT)
 }
 
 interface DragState {
@@ -23,7 +23,7 @@ interface ResizeState {
 
 const TOUCH_HOLD_DURATION = 300 // ms to hold before drag activates
 
-export function CanvasBlock({ block, canvasHeight }: CanvasBlockProps) {
+export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
   const { user, isAdmin } = useAuth()
   const {
     blocks,
@@ -182,13 +182,13 @@ export function CanvasBlock({ block, canvasHeight }: CanvasBlockProps) {
 
       const handleMouseMove = (moveEvent: MouseEvent) => {
         // x is percentage of width (0-100)
-        // y is percentage of canvasHeight (which may be > 100)
+        // y is percentage of canvasHeightPercent (which may be > 100)
         const deltaX = ((moveEvent.clientX - startX) / rect.width) * 100
-        const deltaY = ((moveEvent.clientY - startY) / rect.height) * canvasHeight
+        const deltaY = ((moveEvent.clientY - startY) / rect.height) * canvasHeightPercent
 
         const newX = Math.max(0, Math.min(95, startBlockX + deltaX))
-        // Allow y to go up to canvasHeight - 5 (leaving some margin)
-        const newY = Math.max(0, Math.min(canvasHeight - 5, startBlockY + deltaY))
+        // Allow y to go up to canvasHeightPercent - 5 (leaving some margin)
+        const newY = Math.max(0, Math.min(canvasHeightPercent - 5, startBlockY + deltaY))
 
         setDragPos({ x: newX, y: newY })
       }
@@ -212,7 +212,7 @@ export function CanvasBlock({ block, canvasHeight }: CanvasBlockProps) {
                 return {
                   id,
                   x: Math.max(0, Math.min(95, startPos.x + deltaX)),
-                  y: Math.max(0, Math.min(canvasHeight - 5, startPos.y + deltaY)),
+                  y: Math.max(0, Math.min(canvasHeightPercent - 5, startPos.y + deltaY)),
                 }
               })
               moveBlocks(moves)
@@ -228,7 +228,7 @@ export function CanvasBlock({ block, canvasHeight }: CanvasBlockProps) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
     },
-    [isAdmin, isSelected, isEditing, canvasRef, block, moveBlock, moveBlocks, selectedBlockIds, blocks, user?.uid, canvasHeight]
+    [isAdmin, isSelected, isEditing, canvasRef, block, moveBlock, moveBlocks, selectedBlockIds, blocks, user?.uid, canvasHeightPercent]
   )
 
   // Handle resize with local state for immediate feedback
@@ -346,12 +346,12 @@ export function CanvasBlock({ block, canvasHeight }: CanvasBlockProps) {
         const startY = touchStartPos.current.y
 
         // x is percentage of width (0-100)
-        // y is percentage of canvasHeight (which may be > 100)
+        // y is percentage of canvasHeightPercent (which may be > 100)
         const deltaXPercent = ((touch.clientX - startX) / rect.width) * 100
-        const deltaYPercent = ((touch.clientY - startY) / rect.height) * canvasHeight
+        const deltaYPercent = ((touch.clientY - startY) / rect.height) * canvasHeightPercent
 
         const newX = Math.max(0, Math.min(95, block.x + deltaXPercent))
-        const newY = Math.max(0, Math.min(canvasHeight - 5, block.y + deltaYPercent))
+        const newY = Math.max(0, Math.min(canvasHeightPercent - 5, block.y + deltaYPercent))
 
         setDragPos({ x: newX, y: newY })
         setIsDragging(true)
@@ -360,7 +360,7 @@ export function CanvasBlock({ block, canvasHeight }: CanvasBlockProps) {
         touchStartPos.current = { x: touch.clientX, y: touch.clientY }
       }
     },
-    [canvasRef, block.x, block.y, canvasHeight]
+    [canvasRef, block.x, block.y, canvasHeightPercent]
   )
 
   // Touch end - complete drag or cancel
@@ -410,10 +410,10 @@ export function CanvasBlock({ block, canvasHeight }: CanvasBlockProps) {
 
   const isInteracting = isDragging || isResizing || isHolding
 
-  // Convert y from canvasHeight-relative to 100%-relative for CSS
-  // y is stored as percentage of canvasHeight (e.g., y=50 means 50% of canvasHeight)
+  // Convert y from canvasHeightPercent-relative to 100%-relative for CSS
+  // y is stored as percentage of canvasHeightPercent (e.g., y=50 means 50% of canvasHeightPercent)
   // CSS top needs to be percentage of actual element height
-  const displayTopPercent = (displayY / canvasHeight) * 100
+  const displayTopPercent = (displayY / canvasHeightPercent) * 100
 
   const blockStyle: React.CSSProperties = {
     position: 'absolute',

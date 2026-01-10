@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useState, useEffect, useRef, useMemo } from 'react'
-import { useCanvas, DESIGN_WIDTH } from '@/contexts/CanvasContext'
+import { useCanvas, DESIGN_WIDTH, DESIGN_HEIGHT } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { CanvasBlock } from './CanvasBlock'
 import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
@@ -38,18 +38,24 @@ export function Canvas() {
   const [scale, setScale] = useState(1)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
-  // Calculate canvas height based on lowest block + one page of empty space
-  const canvasHeight = useMemo(() => {
-    if (blocks.length === 0) return 100 // Default to 100% (one viewport height)
+  // Calculate canvas height in pixels based on lowest block + one screen of empty space
+  // Y coordinates are percentages where 100 = DESIGN_HEIGHT (900px)
+  const canvasHeightPx = useMemo(() => {
+    if (blocks.length === 0) return DESIGN_HEIGHT // Default to one screen height
 
     // Find the lowest block (highest y value + estimated height)
-    // Using y + 10 as rough estimate for block height in percentage
+    // Y is percentage, so y=100 means 100% of DESIGN_HEIGHT
     const lowestBottom = Math.max(...blocks.map(b => b.y + 10))
 
-    // Ensure at least one full page of empty space below lowest content
-    // 100 = one full viewport height worth of space
-    return Math.max(100, lowestBottom + 100)
+    // Convert to pixels and ensure at least one full screen of empty space below
+    // lowestBottom is percentage, convert to pixels then add DESIGN_HEIGHT
+    const minHeightPx = (lowestBottom / 100) * DESIGN_HEIGHT + DESIGN_HEIGHT
+
+    return Math.max(DESIGN_HEIGHT, minHeightPx)
   }, [blocks])
+
+  // For coordinate calculations, we need the height as a percentage (100 = one screen)
+  const canvasHeightPercent = (canvasHeightPx / DESIGN_HEIGHT) * 100
 
   // Track viewport size and update scale
   useEffect(() => {
@@ -73,9 +79,9 @@ export function Canvas() {
           if (canvas) {
             const rect = canvas.getBoundingClientRect()
             // Account for scale when converting coordinates
-            // rect.width is the scaled width, divide by scale to get design width
+            // rect dimensions are scaled, so percentages work directly
             const x = ((e.clientX - rect.left) / rect.width) * 100
-            const y = ((e.clientY - rect.top) / rect.height) * canvasHeight
+            const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
             addText(x, y)
             setIsAddTextMode(false)
             return
@@ -85,7 +91,7 @@ export function Canvas() {
         setContextMenu(null)
       }
     },
-    [selectBlock, isAddTextMode, isAdmin, canvasRef, addText, canvasHeight]
+    [selectBlock, isAddTextMode, isAdmin, canvasRef, addText, canvasHeightPercent]
   )
 
   // Start marquee selection on mouse down (available to everyone)
@@ -99,12 +105,12 @@ export function Canvas() {
       const rect = canvas.getBoundingClientRect()
       // Convert to percentage of design canvas
       const x = ((e.clientX - rect.left) / rect.width) * 100
-      const y = ((e.clientY - rect.top) / rect.height) * canvasHeight
+      const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
 
       isMarqueeActive.current = true
       setMarquee({ startX: x, startY: y, currentX: x, currentY: y })
     },
-    [canvasRef, canvasHeight]
+    [canvasRef, canvasHeightPercent]
   )
 
   // Update marquee and handle selection
@@ -118,7 +124,7 @@ export function Canvas() {
       const rect = canvas.getBoundingClientRect()
       // Convert to percentage of design canvas
       const x = ((e.clientX - rect.left) / rect.width) * 100
-      const y = ((e.clientY - rect.top) / rect.height) * canvasHeight
+      const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
       setMarquee((prev) => prev ? { ...prev, currentX: x, currentY: y } : null)
     }
 
@@ -168,7 +174,7 @@ export function Canvas() {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [marquee, blocks, selectBlocks, canvasRef, canvasHeight])
+  }, [marquee, blocks, selectBlocks, canvasRef, canvasHeightPercent])
 
   // Right-click to show context menu (admin only)
   const handleContextMenu = useCallback(
@@ -183,7 +189,7 @@ export function Canvas() {
       const rect = canvas.getBoundingClientRect()
       // Convert to percentage of design canvas
       const canvasX = ((e.clientX - rect.left) / rect.width) * 100
-      const canvasY = ((e.clientY - rect.top) / rect.height) * canvasHeight
+      const canvasY = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
 
       setContextMenu({
         x: e.clientX,
@@ -192,7 +198,7 @@ export function Canvas() {
         canvasY,
       })
     },
-    [isAdmin, canvasRef, canvasHeight]
+    [isAdmin, canvasRef, canvasHeightPercent]
   )
 
   const handleAddText = useCallback(() => {
@@ -248,9 +254,6 @@ export function Canvas() {
     )
   }
 
-  // Calculate the height of the scroll container wrapper to account for scale
-  const scaledCanvasHeight = `calc(${canvasHeight}vh * ${scale})`
-
   return (
     <>
       {/* Scroll container - wraps the scaled design canvas */}
@@ -258,13 +261,13 @@ export function Canvas() {
         ref={scrollContainerRef}
         className="min-h-screen w-full overflow-y-auto overflow-x-hidden bg-brand-dark"
       >
-        {/* Design canvas - fixed width, centered, scaled to fit viewport */}
+        {/* Design canvas - fixed pixel dimensions, centered, scaled to fit viewport */}
         <div
           ref={canvasRef}
           className={`relative mx-auto bg-brand-dark ${marquee ? 'select-none' : ''}`}
           style={{
             width: `${DESIGN_WIDTH}px`,
-            minHeight: `${canvasHeight}vh`,
+            minHeight: `${canvasHeightPx}px`,
             transform: `scale(${scale})`,
             transformOrigin: 'top center',
           }}
@@ -287,7 +290,7 @@ export function Canvas() {
 
           {/* Render all blocks */}
           {blocks.map((block) => (
-            <CanvasBlock key={block.id} block={block} canvasHeight={canvasHeight} />
+            <CanvasBlock key={block.id} block={block} canvasHeightPercent={canvasHeightPercent} />
           ))}
 
           {/* Marquee selection rectangle */}
@@ -296,9 +299,9 @@ export function Canvas() {
               className="absolute border-2 border-indigo-500 bg-indigo-500/20 pointer-events-none z-50"
               style={{
                 left: `${Math.min(marquee.startX, marquee.currentX)}%`,
-                top: `${(Math.min(marquee.startY, marquee.currentY) / canvasHeight) * 100}%`,
+                top: `${(Math.min(marquee.startY, marquee.currentY) / canvasHeightPercent) * 100}%`,
                 width: `${Math.abs(marquee.currentX - marquee.startX)}%`,
-                height: `${(Math.abs(marquee.currentY - marquee.startY) / canvasHeight) * 100}%`,
+                height: `${(Math.abs(marquee.currentY - marquee.startY) / canvasHeightPercent) * 100}%`,
               }}
             />
           )}

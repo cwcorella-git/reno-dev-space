@@ -12,8 +12,9 @@ import {
 } from 'react'
 import { CanvasBlock, TextBlock } from '@/types/canvas'
 
-// Fixed design canvas width - all positioning is relative to this
+// Fixed design canvas dimensions - all positioning is relative to these
 export const DESIGN_WIDTH = 1440
+export const DESIGN_HEIGHT = 900 // Base "one screen" height in pixels
 import {
   subscribeToCanvas,
   addTextBlock,
