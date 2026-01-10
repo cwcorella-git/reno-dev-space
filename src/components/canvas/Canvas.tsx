@@ -264,11 +264,12 @@ export function Canvas() {
         {/* Design canvas - fixed pixel dimensions, centered, scaled to fit viewport */}
         <div
           ref={canvasRef}
-          className={`relative mx-auto bg-brand-dark ${marquee ? 'select-none' : ''}`}
+          className={`relative bg-brand-dark ${marquee ? 'select-none' : ''}`}
           style={{
             width: `${DESIGN_WIDTH}px`,
             minHeight: `${canvasHeightPx}px`,
-            transform: `scale(${scale})`,
+            left: '50%',
+            transform: `translateX(-50%) scale(${scale})`,
             transformOrigin: 'top center',
           }}
           onClick={handleCanvasClick}
