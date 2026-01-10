@@ -8,7 +8,7 @@ interface UserWithStats extends UserProfile {
   stats?: UserStats
 }
 
-export function BackersTab() {
+export function MembersTab() {
   const { user } = useAuth()
   const [users, setUsers] = useState<UserWithStats[]>([])
   const [loading, setLoading] = useState(true)
@@ -42,7 +42,7 @@ export function BackersTab() {
   if (loading) {
     return (
       <div className="px-4 py-6 text-center text-gray-500 text-sm">
-        Loading backers...
+        Loading members...
       </div>
     )
   }
@@ -50,7 +50,7 @@ export function BackersTab() {
   if (users.length === 0) {
     return (
       <div className="px-4 py-6 text-center text-gray-500 text-sm">
-        No backers yet. Be the first!
+        No members yet. Be the first to join!
       </div>
     )
   }

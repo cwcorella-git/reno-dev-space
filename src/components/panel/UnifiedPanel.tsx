@@ -7,12 +7,12 @@ import { useFirestoreChat } from '@/hooks/useFirestoreChat'
 import { AuthModal } from '@/components/AuthModal'
 import { EditorTab } from './EditorTab'
 import { ChatTab } from './ChatTab'
-import { BackersTab } from './BackersTab'
+import { MembersTab } from './MembersTab'
 import { AdminTab } from './AdminTab'
 import { ProfileDropdown } from './ProfileDropdown'
 import { SettingsDropdown } from './SettingsDropdown'
 
-type TabType = 'editor' | 'chat' | 'backers' | 'admin'
+type TabType = 'editor' | 'chat' | 'members' | 'admin'
 
 export function UnifiedPanel() {
   const { user, isAdmin } = useAuth()
@@ -97,16 +97,16 @@ export function UnifiedPanel() {
             </button>
             <button
               onClick={() => {
-                setActiveTab('backers')
+                setActiveTab('members')
                 setIsMinimized(false)
               }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === 'backers'
+                activeTab === 'members'
                   ? 'bg-indigo-600 text-white'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Backers
+              Members
             </button>
             {isAdmin && (
               <button
@@ -148,7 +148,7 @@ export function UnifiedPanel() {
           <div className="transition-all">
             {activeTab === 'editor' && <EditorTab />}
             {activeTab === 'chat' && <ChatTab isConnected={isConnected} />}
-            {activeTab === 'backers' && <BackersTab />}
+            {activeTab === 'members' && <MembersTab />}
             {activeTab === 'admin' && isAdmin && <AdminTab />}
           </div>
         )}
