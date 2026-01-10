@@ -1,7 +1,7 @@
 'use client'
 
-import { useCallback, useState, useEffect, useRef } from 'react'
-import { useCanvas } from '@/contexts/CanvasContext'
+import { useCallback, useState, useEffect, useRef, useMemo } from 'react'
+import { useCanvas, DESIGN_WIDTH } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { CanvasBlock } from './CanvasBlock'
 import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
@@ -9,6 +9,9 @@ import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
 import { AdminPanel } from '@/components/AdminPanel'
 import { incrementPageViews } from '@/lib/campaignStorage'
+
+// Mobile safe zone width (for admin visual guide)
+const MOBILE_SAFE_ZONE = 375
 
 interface ContextMenuState {
   x: number // screen position
@@ -32,6 +35,36 @@ export function Canvas() {
   const [isAddTextMode, setIsAddTextMode] = useState(false)
   const isMarqueeActive = useRef(false)
 
+  // Scale factor for viewport < DESIGN_WIDTH
+  const [scale, setScale] = useState(1)
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+
+  // Calculate canvas height based on lowest block + one page of empty space
+  const canvasHeight = useMemo(() => {
+    if (blocks.length === 0) return 100 // Default to 100% (one viewport height)
+
+    // Find the lowest block (highest y value + estimated height)
+    // Using y + 10 as rough estimate for block height in percentage
+    const lowestBottom = Math.max(...blocks.map(b => b.y + 10))
+
+    // Ensure at least one full page of empty space below lowest content
+    // 100 = one full viewport height worth of space
+    return Math.max(100, lowestBottom + 100)
+  }, [blocks])
+
+  // Track viewport size and update scale
+  useEffect(() => {
+    const updateScale = () => {
+      const viewportWidth = window.innerWidth
+      const newScale = Math.min(1, viewportWidth / DESIGN_WIDTH)
+      setScale(newScale)
+    }
+
+    updateScale()
+    window.addEventListener('resize', updateScale)
+    return () => window.removeEventListener('resize', updateScale)
+  }, [])
+
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent) => {
       if (!isMarqueeActive.current) {
@@ -40,8 +73,10 @@ export function Canvas() {
           const canvas = canvasRef.current
           if (canvas) {
             const rect = canvas.getBoundingClientRect()
+            // Account for scale when converting coordinates
+            // rect.width is the scaled width, divide by scale to get design width
             const x = ((e.clientX - rect.left) / rect.width) * 100
-            const y = ((e.clientY - rect.top) / rect.height) * 100
+            const y = ((e.clientY - rect.top) / rect.height) * canvasHeight
             addText(x, y)
             setIsAddTextMode(false)
             return
@@ -51,7 +86,7 @@ export function Canvas() {
         setContextMenu(null)
       }
     },
-    [selectBlock, isAddTextMode, isAdmin, canvasRef, addText]
+    [selectBlock, isAddTextMode, isAdmin, canvasRef, addText, canvasHeight]
   )
 
   // Start marquee selection on mouse down (available to everyone)
@@ -63,13 +98,14 @@ export function Canvas() {
       if (!canvas) return
 
       const rect = canvas.getBoundingClientRect()
+      // Convert to percentage of design canvas
       const x = ((e.clientX - rect.left) / rect.width) * 100
-      const y = ((e.clientY - rect.top) / rect.height) * 100
+      const y = ((e.clientY - rect.top) / rect.height) * canvasHeight
 
       isMarqueeActive.current = true
       setMarquee({ startX: x, startY: y, currentX: x, currentY: y })
     },
-    [canvasRef]
+    [canvasRef, canvasHeight]
   )
 
   // Update marquee and handle selection
@@ -81,8 +117,9 @@ export function Canvas() {
 
     const handleMouseMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect()
+      // Convert to percentage of design canvas
       const x = ((e.clientX - rect.left) / rect.width) * 100
-      const y = ((e.clientY - rect.top) / rect.height) * 100
+      const y = ((e.clientY - rect.top) / rect.height) * canvasHeight
       setMarquee((prev) => prev ? { ...prev, currentX: x, currentY: y } : null)
     }
 
@@ -132,7 +169,7 @@ export function Canvas() {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [marquee, blocks, selectBlocks, canvasRef])
+  }, [marquee, blocks, selectBlocks, canvasRef, canvasHeight])
 
   // Right-click to show context menu (admin only)
   const handleContextMenu = useCallback(
@@ -145,8 +182,9 @@ export function Canvas() {
       if (!canvas) return
 
       const rect = canvas.getBoundingClientRect()
+      // Convert to percentage of design canvas
       const canvasX = ((e.clientX - rect.left) / rect.width) * 100
-      const canvasY = ((e.clientY - rect.top) / rect.height) * 100
+      const canvasY = ((e.clientY - rect.top) / rect.height) * canvasHeight
 
       setContextMenu({
         x: e.clientX,
@@ -155,7 +193,7 @@ export function Canvas() {
         canvasY,
       })
     },
-    [isAdmin, canvasRef]
+    [isAdmin, canvasRef, canvasHeight]
   )
 
   const handleAddText = useCallback(() => {
@@ -211,65 +249,81 @@ export function Canvas() {
     )
   }
 
+  // Calculate the height of the scroll container wrapper to account for scale
+  const scaledCanvasHeight = `calc(${canvasHeight}vh * ${scale})`
+
   return (
     <>
-      {/* Canvas */}
+      {/* Scroll container - wraps the scaled design canvas */}
       <div
-        ref={canvasRef}
-        className={`min-h-screen w-full bg-brand-dark relative overflow-hidden ${marquee ? 'select-none' : ''}`}
-        onClick={handleCanvasClick}
-        onMouseDown={handleMouseDown}
-        onContextMenu={handleContextMenu}
+        ref={scrollContainerRef}
+        className="min-h-screen w-full overflow-y-auto overflow-x-hidden bg-brand-dark"
       >
-        {/* Mobile safe zone overlay (admin only) */}
-        {isAdmin && (
-          <div
-            className="absolute top-0 left-1/2 -translate-x-1/2 h-full w-[375px] border-x-2 border-dashed border-white/15 pointer-events-none z-[5]"
-            title="Mobile safe zone (375px)"
-          >
-            <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] text-white/30 whitespace-nowrap">
-              mobile view
+        {/* Design canvas - fixed width, centered, scaled to fit viewport */}
+        <div
+          ref={canvasRef}
+          className={`relative mx-auto bg-brand-dark ${marquee ? 'select-none' : ''}`}
+          style={{
+            width: `${DESIGN_WIDTH}px`,
+            minHeight: `${canvasHeight}vh`,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top center',
+          }}
+          onClick={handleCanvasClick}
+          onMouseDown={handleMouseDown}
+          onContextMenu={handleContextMenu}
+        >
+          {/* Mobile safe zone overlay (admin only) */}
+          {isAdmin && (
+            <div
+              className="absolute top-0 left-1/2 -translate-x-1/2 h-full border-x-2 border-dashed border-white/15 pointer-events-none z-[5]"
+              style={{ width: `${MOBILE_SAFE_ZONE}px` }}
+              title="Mobile safe zone (375px)"
+            >
+              <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] text-white/30 whitespace-nowrap">
+                mobile view
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Render all blocks */}
-        {blocks.map((block) => (
-          <CanvasBlock key={block.id} block={block} />
-        ))}
+          {/* Render all blocks */}
+          {blocks.map((block) => (
+            <CanvasBlock key={block.id} block={block} canvasHeight={canvasHeight} />
+          ))}
 
-        {/* Marquee selection rectangle */}
-        {marquee && (
-          <div
-            className="absolute border-2 border-indigo-500 bg-indigo-500/20 pointer-events-none z-50"
-            style={{
-              left: `${Math.min(marquee.startX, marquee.currentX)}%`,
-              top: `${Math.min(marquee.startY, marquee.currentY)}%`,
-              width: `${Math.abs(marquee.currentX - marquee.startX)}%`,
-              height: `${Math.abs(marquee.currentY - marquee.startY)}%`,
-            }}
-          />
-        )}
+          {/* Marquee selection rectangle */}
+          {marquee && (
+            <div
+              className="absolute border-2 border-indigo-500 bg-indigo-500/20 pointer-events-none z-50"
+              style={{
+                left: `${Math.min(marquee.startX, marquee.currentX)}%`,
+                top: `${(Math.min(marquee.startY, marquee.currentY) / canvasHeight) * 100}%`,
+                width: `${Math.abs(marquee.currentX - marquee.startX)}%`,
+                height: `${(Math.abs(marquee.currentY - marquee.startY) / canvasHeight) * 100}%`,
+              }}
+            />
+          )}
 
-        {/* Empty state for admin */}
-        {isAdmin && blocks.length === 0 && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="text-center text-gray-500">
-              <p className="text-lg mb-2">Your canvas is empty</p>
-              <p className="text-sm">Tap the + button or right-click to add text</p>
+          {/* Empty state for admin */}
+          {isAdmin && blocks.length === 0 && (
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center text-gray-500">
+                <p className="text-lg mb-2">Your canvas is empty</p>
+                <p className="text-sm">Tap the + button or right-click to add text</p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Add text mode indicator */}
-        {isAddTextMode && (
-          <div className="absolute inset-0 pointer-events-none z-40">
-            <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm shadow-lg">
-              Tap anywhere to place text
+          {/* Add text mode indicator */}
+          {isAddTextMode && (
+            <div className="absolute inset-0 pointer-events-none z-40">
+              <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm shadow-lg">
+                Tap anywhere to place text
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
+        </div>
       </div>
 
       {/* Context Menu */}

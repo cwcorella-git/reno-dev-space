@@ -11,6 +11,9 @@ import {
   useRef,
 } from 'react'
 import { CanvasBlock, TextBlock } from '@/types/canvas'
+
+// Fixed design canvas width - all positioning is relative to this
+export const DESIGN_WIDTH = 1440
 import {
   subscribeToCanvas,
   addTextBlock,

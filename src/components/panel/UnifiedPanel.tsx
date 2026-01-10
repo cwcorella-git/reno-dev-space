@@ -55,8 +55,8 @@ export function UnifiedPanel() {
   }
 
   return (
-    <div className="fixed bottom-2 left-2 right-2 sm:bottom-4 sm:left-4 sm:right-4 z-50">
-      <div className="bg-gray-900/95 backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl overflow-hidden">
+    <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-auto sm:min-w-[500px] sm:max-w-[700px]">
+      <div className="bg-gray-900/95 backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl">
         {/* Tab bar */}
         <div className="flex items-center justify-between px-2 py-1.5 border-b border-white/10">
           {/* Tabs */}
