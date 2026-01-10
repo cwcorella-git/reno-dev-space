@@ -7,13 +7,15 @@ import { useFirestoreChat } from '@/hooks/useFirestoreChat'
 import { AuthModal } from '@/components/AuthModal'
 import { EditorTab } from './EditorTab'
 import { ChatTab } from './ChatTab'
+import { BackersTab } from './BackersTab'
+import { AdminTab } from './AdminTab'
 import { ProfileDropdown } from './ProfileDropdown'
 import { SettingsDropdown } from './SettingsDropdown'
 
-type TabType = 'editor' | 'chat'
+type TabType = 'editor' | 'chat' | 'backers' | 'admin'
 
 export function UnifiedPanel() {
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const { selectedBlockId } = useCanvas()
   const { isConnected } = useFirestoreChat('community')
 
@@ -93,6 +95,34 @@ export function UnifiedPanel() {
                 }`}
               />
             </button>
+            <button
+              onClick={() => {
+                setActiveTab('backers')
+                setIsMinimized(false)
+              }}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'backers'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              Backers
+            </button>
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setActiveTab('admin')
+                  setIsMinimized(false)
+                }}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  activeTab === 'admin'
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                Admin
+              </button>
+            )}
           </div>
 
           {/* Utility buttons */}
@@ -116,11 +146,10 @@ export function UnifiedPanel() {
         {/* Content area */}
         {!isMinimized && (
           <div className="transition-all">
-            {activeTab === 'editor' ? (
-              <EditorTab />
-            ) : (
-              <ChatTab isConnected={isConnected} />
-            )}
+            {activeTab === 'editor' && <EditorTab />}
+            {activeTab === 'chat' && <ChatTab isConnected={isConnected} />}
+            {activeTab === 'backers' && <BackersTab />}
+            {activeTab === 'admin' && isAdmin && <AdminTab />}
           </div>
         )}
       </div>

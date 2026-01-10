@@ -12,6 +12,7 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { getAuth, getDb } from '@/lib/firebase'
 import { isAdmin as checkIsAdmin } from '@/lib/admin'
+import { setPledge } from '@/lib/pledgeStorage'
 
 interface UserProfile {
   uid: string
@@ -26,7 +27,7 @@ interface AuthContextType {
   profile: UserProfile | null
   loading: boolean
   isAdmin: boolean
-  signup: (email: string, password: string, displayName: string) => Promise<void>
+  signup: (email: string, password: string, displayName: string, pledgeAmount: number) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>
@@ -73,7 +74,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  const signup = async (email: string, password: string, displayName: string) => {
+  const signup = async (email: string, password: string, displayName: string, pledgeAmount: number) => {
     const auth = getAuth()
     const db = getDb()
     const { user } = await createUserWithEmailAndPassword(auth, email, password)
@@ -91,6 +92,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     await setDoc(doc(db, 'users', user.uid), userProfile)
     setProfile(userProfile)
+
+    // Create initial pledge
+    if (pledgeAmount > 0) {
+      await setPledge(user.uid, displayName, pledgeAmount)
+    }
   }
 
   const login = async (email: string, password: string) => {

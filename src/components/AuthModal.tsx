@@ -13,6 +13,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [displayName, setDisplayName] = useState('')
+  const [pledgeAmount, setPledgeAmount] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -28,7 +29,13 @@ export function AuthModal({ onClose }: AuthModalProps) {
           setLoading(false)
           return
         }
-        await signup(email, password, displayName)
+        const pledge = parseInt(pledgeAmount, 10)
+        if (isNaN(pledge) || pledge < 20) {
+          setError('Please enter a pledge amount ($20 minimum)')
+          setLoading(false)
+          return
+        }
+        await signup(email, password, displayName, pledge)
       } else {
         await login(email, password)
       }
@@ -111,6 +118,27 @@ export function AuthModal({ onClose }: AuthModalProps) {
               required
             />
           </div>
+
+          {mode === 'signup' && (
+            <div>
+              <label className="block text-sm font-medium mb-1">Your Pledge</label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                <input
+                  type="number"
+                  value={pledgeAmount}
+                  onChange={(e) => setPledgeAmount(e.target.value)}
+                  className="w-full bg-white/10 border border-white/20 rounded-lg pl-7 pr-4 py-2 focus:outline-none focus:border-brand-primary"
+                  placeholder="How much will you pledge?"
+                  min={20}
+                  required
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Non-binding commitment to support our collective ($20 min)
+              </p>
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-500/20 border border-red-500/50 text-red-200 px-4 py-2 rounded-lg text-sm">
