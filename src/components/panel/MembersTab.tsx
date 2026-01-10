@@ -12,25 +12,35 @@ export function MembersTab() {
   const { user } = useAuth()
   const [users, setUsers] = useState<UserWithStats[]>([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const unsubUsers = subscribeToUsers(async (newUsers) => {
-      // Fetch stats for each user
-      const usersWithStats = await Promise.all(
-        newUsers.map(async (u) => {
-          try {
-            const stats = await getUserStats(u.uid)
-            return { ...u, stats }
-          } catch {
-            return { ...u, stats: { blocksCreated: 0, votesGiven: 0, pledgeAmount: 0 } }
-          }
-        })
-      )
-      // Sort by pledge amount descending
-      usersWithStats.sort((a, b) => (b.stats?.pledgeAmount || 0) - (a.stats?.pledgeAmount || 0))
-      setUsers(usersWithStats)
-      setLoading(false)
-    })
+    const unsubUsers = subscribeToUsers(
+      async (newUsers) => {
+        console.log('[MembersTab] Received users:', newUsers.length)
+        // Fetch stats for each user
+        const usersWithStats = await Promise.all(
+          newUsers.map(async (u) => {
+            try {
+              const stats = await getUserStats(u.uid)
+              return { ...u, stats }
+            } catch {
+              return { ...u, stats: { blocksCreated: 0, votesGiven: 0, pledgeAmount: 0 } }
+            }
+          })
+        )
+        // Sort by pledge amount descending
+        usersWithStats.sort((a, b) => (b.stats?.pledgeAmount || 0) - (a.stats?.pledgeAmount || 0))
+        setUsers(usersWithStats)
+        setLoading(false)
+        setError(null)
+      },
+      (err) => {
+        console.error('[MembersTab] Error:', err)
+        setError(err.message)
+        setLoading(false)
+      }
+    )
 
     return () => unsubUsers()
   }, [])
@@ -47,10 +57,23 @@ export function MembersTab() {
     )
   }
 
+  if (error) {
+    return (
+      <div className="px-4 py-6 text-center text-red-400 text-sm">
+        Error loading members: {error}
+      </div>
+    )
+  }
+
   if (users.length === 0) {
     return (
       <div className="px-4 py-6 text-center text-gray-500 text-sm">
         No members yet. Be the first to join!
+        {user && (
+          <p className="mt-2 text-xs text-gray-600">
+            (You&apos;re signed in but your profile may not be in the database yet)
+          </p>
+        )}
       </div>
     )
   }
