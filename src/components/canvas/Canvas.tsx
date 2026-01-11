@@ -12,6 +12,9 @@ import { incrementPageViews } from '@/lib/campaignStorage'
 // Mobile safe zone width (for admin visual guide)
 const MOBILE_SAFE_ZONE = 375
 
+// Reserved space at top for campaign banner (prevents text overlap)
+const BANNER_HEIGHT = 56 // px - matches CampaignBanner approximate height
+
 interface ContextMenuState {
   x: number // screen position
   y: number // screen position
@@ -268,6 +271,7 @@ export function Canvas() {
           style={{
             width: `${DESIGN_WIDTH}px`,
             minHeight: `${canvasHeightPx}px`,
+            paddingTop: `${BANNER_HEIGHT}px`, // Reserve space for campaign banner
             left: '50%',
             transform: `translateX(-50%) scale(${scale})`,
             transformOrigin: 'top center',
