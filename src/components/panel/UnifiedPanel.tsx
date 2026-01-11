@@ -21,7 +21,6 @@ export function UnifiedPanel() {
   const { isConnected } = useFirestoreChat('community')
 
   const [activeTab, setActiveTab] = useState<TabType>('editor')
-  const [isMinimized, setIsMinimized] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [hasPledged, setHasPledged] = useState(false)
@@ -49,7 +48,6 @@ export function UnifiedPanel() {
   useEffect(() => {
     if (selectedBlockId) {
       setActiveTab('editor')
-      setIsMinimized(false)
     }
   }, [selectedBlockId])
 
@@ -101,10 +99,7 @@ export function UnifiedPanel() {
           {/* Tabs */}
           <div className="flex gap-1">
             <button
-              onClick={() => {
-                setActiveTab('editor')
-                setIsMinimized(false)
-              }}
+              onClick={() => setActiveTab('editor')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'editor'
                   ? 'bg-indigo-600 text-white'
@@ -114,10 +109,7 @@ export function UnifiedPanel() {
               Editor
             </button>
             <button
-              onClick={() => {
-                setActiveTab('chat')
-                setIsMinimized(false)
-              }}
+              onClick={() => setActiveTab('chat')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
                 activeTab === 'chat'
                   ? 'bg-indigo-600 text-white'
@@ -128,10 +120,7 @@ export function UnifiedPanel() {
               <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`} />
             </button>
             <button
-              onClick={() => {
-                setActiveTab('members')
-                setIsMinimized(false)
-              }}
+              onClick={() => setActiveTab('members')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'members'
                   ? 'bg-indigo-600 text-white'
@@ -141,10 +130,7 @@ export function UnifiedPanel() {
               Members
             </button>
             <button
-              onClick={() => {
-                setActiveTab('donate')
-                setIsMinimized(false)
-              }}
+              onClick={() => setActiveTab('donate')}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
                 activeTab === 'donate'
                   ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
@@ -158,10 +144,7 @@ export function UnifiedPanel() {
             </button>
             {isAdmin && (
               <button
-                onClick={() => {
-                  setActiveTab('content')
-                  setIsMinimized(false)
-                }}
+                onClick={() => setActiveTab('content')}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
                   activeTab === 'content'
                     ? 'bg-amber-600 text-white'
@@ -176,33 +159,18 @@ export function UnifiedPanel() {
             )}
           </div>
 
-          {/* Utility buttons */}
-          <div className="flex items-center gap-1">
-            <AccountDropdown />
-
-            {/* Minimize/Expand button */}
-            <button
-              onClick={() => setIsMinimized(!isMinimized)}
-              className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white"
-              title={isMinimized ? 'Expand' : 'Minimize'}
-            >
-              <svg className={`w-4 h-4 transition-transform ${isMinimized ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
+          {/* Account dropdown */}
+          <AccountDropdown />
         </div>
 
         {/* Content area */}
-        {!isMinimized && (
-          <div className="transition-all">
-            {activeTab === 'editor' && <EditorTab />}
-            {activeTab === 'chat' && <ChatTab isConnected={isConnected} />}
-            {activeTab === 'members' && <MembersTab />}
-            {activeTab === 'donate' && <DonateTab />}
-            {activeTab === 'content' && isAdmin && <ContentTab />}
-          </div>
-        )}
+        <div>
+          {activeTab === 'editor' && <EditorTab />}
+          {activeTab === 'chat' && <ChatTab isConnected={isConnected} />}
+          {activeTab === 'members' && <MembersTab />}
+          {activeTab === 'donate' && <DonateTab />}
+          {activeTab === 'content' && isAdmin && <ContentTab />}
+        </div>
       </div>
     </div>
   )
