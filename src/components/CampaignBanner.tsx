@@ -87,10 +87,11 @@ export function CampaignBanner() {
 
   return (
     <div className="fixed top-0 left-0 right-0 z-40 bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-900 border-b border-white/10">
-      <div className="max-w-6xl mx-auto px-4 py-2">
-        <div className="flex items-center justify-between gap-4 text-sm">
-          {/* Timer or Complete Message */}
-          <div className="flex items-center gap-2 min-w-[140px]">
+      <div className="max-w-4xl mx-auto px-4 py-2">
+        {/* Stats row */}
+        <div className="flex items-center justify-between gap-4 text-sm mb-2">
+          {/* Timer */}
+          <div className="flex items-center gap-2">
             {isExpired ? (
               <span className="text-green-400 font-medium">Campaign Complete!</span>
             ) : (
@@ -98,39 +99,39 @@ export function CampaignBanner() {
                 <svg className="w-4 h-4 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="font-mono text-white">{formatTime()}</span>
+                <span className="font-mono text-white font-medium">{formatTime()}</span>
               </>
             )}
           </div>
 
-          {/* Progress Bar */}
-          <div className="flex-1 max-w-md">
-            <div className="h-2 bg-white/20 rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-500 ${
-                  summary.percentComplete >= 100 ? 'bg-green-500' : 'bg-indigo-500'
-                }`}
-                style={{ width: `${Math.min(summary.percentComplete, 100)}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Stats */}
-          <div className="flex items-center gap-4 text-white/80 min-w-[180px] justify-end">
-            <span className="flex items-center gap-1">
+          {/* Amount & Goal */}
+          <div className="flex items-center gap-3 text-white">
+            <span className="flex items-center gap-1 text-white/70">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
-              {summary.count}
+              <span>{summary.count}</span>
             </span>
-            <span className="font-medium text-white">
+            <span className="text-lg font-bold">
               ${summary.total.toLocaleString()}
-              <span className="text-white/60"> / ${summary.goal.toLocaleString()}</span>
+              <span className="text-white/50 font-normal text-sm"> / ${summary.goal.toLocaleString()}</span>
             </span>
             <span className={`font-bold ${summary.percentComplete >= 100 ? 'text-green-400' : 'text-indigo-300'}`}>
               {summary.percentComplete}%
             </span>
           </div>
+        </div>
+
+        {/* Full-width Progress Bar */}
+        <div className="h-3 bg-white/20 rounded-full overflow-hidden">
+          <div
+            className={`h-full transition-all duration-500 ${
+              summary.percentComplete >= 100
+                ? 'bg-gradient-to-r from-green-500 to-emerald-400'
+                : 'bg-gradient-to-r from-indigo-500 to-purple-500'
+            }`}
+            style={{ width: `${Math.min(summary.percentComplete, 100)}%` }}
+          />
         </div>
 
         {/* Public backers list */}
