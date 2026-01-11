@@ -1,10 +1,14 @@
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
 import Stripe from 'stripe'
 import cors from 'cors'
 
 // Initialize Firebase Admin
 admin.initializeApp()
+
+// Use the 'main' database (not default)
+const db = getFirestore('main')
 
 // Initialize Stripe with secret key from environment
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
@@ -106,8 +110,6 @@ export const stripeWebhook = functions.https.onRequest(async (req, res) => {
     const amountTotal = session.amount_total || 0
 
     // Record donation in Firestore
-    const db = admin.firestore()
-
     await db.collection('donations').add({
       sessionId: session.id,
       userId: userId || null,

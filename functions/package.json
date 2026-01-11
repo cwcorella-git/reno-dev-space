@@ -2,7 +2,7 @@
   "name": "reno-dev-space-functions",
   "version": "1.0.0",
   "description": "Firebase Cloud Functions for Reno Dev Space",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
     "deploy": "firebase deploy --only functions"

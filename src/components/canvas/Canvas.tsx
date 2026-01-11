@@ -283,6 +283,7 @@ export function Canvas() {
           className="relative mx-auto"
           style={{
             width: isMobileView ? `${MOBILE_SAFE_ZONE * scale}px` : '100%',
+            minHeight: isMobileView ? `${canvasHeightPx * scale}px` : undefined,
             overflow: isMobileView ? 'hidden' : 'visible',
           }}
         >
@@ -298,7 +299,7 @@ export function Canvas() {
               transform: isMobileView
                 ? `translateX(-${mobileOffset}px) scale(${scale})`
                 : `translateX(-50%) scale(${scale})`,
-              transformOrigin: 'top left',
+              transformOrigin: isMobileView ? 'top left' : 'top center',
               left: isMobileView ? '0' : '50%',
             }}
             onClick={handleCanvasClick}
@@ -355,6 +356,7 @@ export function Canvas() {
             </div>
           )}
 
+          </div>
         </div>
       </div>
 
