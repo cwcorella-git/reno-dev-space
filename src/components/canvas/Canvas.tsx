@@ -410,11 +410,11 @@ export function Canvas() {
       {/* Campaign banner at top */}
       <CampaignBanner />
 
-      {/* Add Text button for pledged members */}
+      {/* Add Text button for pledged members - floats above the panel */}
       {(isAdmin || hasPledged) && (
         <button
           onClick={() => setIsAddTextMode(!isAddTextMode)}
-          className={`fixed bottom-20 left-4 z-50 px-4 py-2 rounded-full shadow-lg transition-all hover:scale-105 flex items-center gap-2 ${
+          className={`fixed bottom-[120px] left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full shadow-lg transition-all hover:scale-105 flex items-center gap-2 ${
             isAddTextMode
               ? 'bg-indigo-600 text-white ring-2 ring-indigo-400 ring-offset-2 ring-offset-brand-dark'
               : 'bg-gray-700 hover:bg-gray-600 text-white'

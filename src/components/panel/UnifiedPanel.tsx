@@ -9,14 +9,12 @@ import { EditorTab } from './EditorTab'
 import { ChatTab } from './ChatTab'
 import { MembersTab } from './MembersTab'
 import { DonateTab } from './DonateTab'
-import { ContentTab } from './ContentTab'
-import { ProfileDropdown } from './ProfileDropdown'
-import { SettingsDropdown } from './SettingsDropdown'
+import { AccountDropdown } from './AccountDropdown'
 
-type TabType = 'editor' | 'chat' | 'members' | 'donate' | 'content'
+type TabType = 'editor' | 'chat' | 'members' | 'donate'
 
 export function UnifiedPanel() {
-  const { user, isAdmin } = useAuth()
+  const { user } = useAuth()
   const { selectedBlockId } = useCanvas()
   const { isConnected } = useFirestoreChat('community')
 
@@ -89,12 +87,7 @@ export function UnifiedPanel() {
               }`}
             >
               Chat
-              {/* Connection indicator */}
-              <span
-                className={`w-2 h-2 rounded-full ${
-                  isConnected ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'
-                }`}
-              />
+              <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`} />
             </button>
             <button
               onClick={() => {
@@ -125,30 +118,11 @@ export function UnifiedPanel() {
               </svg>
               Donate
             </button>
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  setActiveTab('content')
-                  setIsMinimized(false)
-                }}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
-                  activeTab === 'content'
-                    ? 'bg-amber-600 text-white'
-                    : 'text-amber-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                Content
-              </button>
-            )}
           </div>
 
           {/* Utility buttons */}
           <div className="flex items-center gap-1">
-            <ProfileDropdown />
-            <SettingsDropdown />
+            <AccountDropdown />
 
             {/* Minimize/Expand button */}
             <button
@@ -170,7 +144,6 @@ export function UnifiedPanel() {
             {activeTab === 'chat' && <ChatTab isConnected={isConnected} />}
             {activeTab === 'members' && <MembersTab />}
             {activeTab === 'donate' && <DonateTab />}
-            {activeTab === 'content' && isAdmin && <ContentTab />}
           </div>
         )}
       </div>
