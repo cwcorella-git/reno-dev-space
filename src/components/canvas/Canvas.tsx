@@ -39,6 +39,7 @@ export function Canvas() {
 
   // Scale factor for viewport < DESIGN_WIDTH
   const [scale, setScale] = useState(1)
+  const [isMobileView, setIsMobileView] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
   // Calculate canvas height in pixels based on lowest block + one screen of empty space
@@ -61,11 +62,20 @@ export function Canvas() {
   const canvasHeightPercent = (canvasHeightPx / DESIGN_HEIGHT) * 100
 
   // Track viewport size and update scale
+  // On mobile (viewport <= MOBILE_SAFE_ZONE), show only the safe zone at full scale
   useEffect(() => {
     const updateScale = () => {
       const viewportWidth = window.innerWidth
-      const newScale = Math.min(1, viewportWidth / DESIGN_WIDTH)
-      setScale(newScale)
+      const mobile = viewportWidth <= MOBILE_SAFE_ZONE
+      setIsMobileView(mobile)
+
+      if (mobile) {
+        // Mobile: show safe zone at 1:1 scale (or scale to fit viewport)
+        setScale(Math.min(1, viewportWidth / MOBILE_SAFE_ZONE))
+      } else {
+        // Desktop: scale entire canvas to fit viewport
+        setScale(Math.min(1, viewportWidth / DESIGN_WIDTH))
+      }
     }
 
     updateScale()
@@ -257,6 +267,10 @@ export function Canvas() {
     )
   }
 
+  // Calculate offset needed to center the safe zone in mobile view
+  // Safe zone is centered in the design canvas, so we need to shift left by half the difference
+  const mobileOffset = (DESIGN_WIDTH - MOBILE_SAFE_ZONE) / 2
+
   return (
     <>
       {/* Scroll container - wraps the scaled design canvas */}
@@ -264,22 +278,33 @@ export function Canvas() {
         ref={scrollContainerRef}
         className="min-h-screen w-full overflow-y-auto overflow-x-hidden bg-brand-dark"
       >
-        {/* Design canvas - fixed pixel dimensions, centered, scaled to fit viewport */}
+        {/* Mobile clipping container - clips to safe zone width */}
         <div
-          ref={canvasRef}
-          className={`relative bg-brand-dark ${marquee ? 'select-none' : ''}`}
+          className="relative mx-auto"
           style={{
-            width: `${DESIGN_WIDTH}px`,
-            minHeight: `${canvasHeightPx}px`,
-            paddingTop: `${BANNER_HEIGHT}px`, // Reserve space for campaign banner
-            left: '50%',
-            transform: `translateX(-50%) scale(${scale})`,
-            transformOrigin: 'top center',
+            width: isMobileView ? `${MOBILE_SAFE_ZONE * scale}px` : '100%',
+            overflow: isMobileView ? 'hidden' : 'visible',
           }}
-          onClick={handleCanvasClick}
-          onMouseDown={handleMouseDown}
-          onContextMenu={handleContextMenu}
         >
+          {/* Design canvas - fixed pixel dimensions, centered, scaled to fit viewport */}
+          {/* On mobile: offset so safe zone center aligns with container */}
+          <div
+            ref={canvasRef}
+            className={`relative bg-brand-dark ${marquee ? 'select-none' : ''}`}
+            style={{
+              width: `${DESIGN_WIDTH}px`,
+              minHeight: `${canvasHeightPx}px`,
+              paddingTop: `${BANNER_HEIGHT}px`, // Reserve space for campaign banner
+              transform: isMobileView
+                ? `translateX(-${mobileOffset}px) scale(${scale})`
+                : `translateX(-50%) scale(${scale})`,
+              transformOrigin: 'top left',
+              left: isMobileView ? '0' : '50%',
+            }}
+            onClick={handleCanvasClick}
+            onMouseDown={handleMouseDown}
+            onContextMenu={handleContextMenu}
+          >
           {/* Mobile safe zone overlay (admin only) */}
           {isAdmin && (
             <div

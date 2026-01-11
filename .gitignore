@@ -1,5 +1,11 @@
 # Dependencies
 /node_modules
+/functions/node_modules
+/functions/lib
+
+# Firebase
+firebase-debug.log
+**/firebase-debug.log
 /.pnp
 .pnp.js
 .yarn/install-state.gz
