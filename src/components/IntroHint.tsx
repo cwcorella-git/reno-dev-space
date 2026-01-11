@@ -17,7 +17,7 @@ export function IntroHint() {
           <div className="flex items-start justify-between mb-3">
             <div>
               <h2 className="text-xl font-bold text-white">Reno Dev Space</h2>
-              <p className="text-indigo-400 text-sm">A non-profit game developer collective</p>
+              <p className="text-indigo-400 text-sm">A non-profit game developer space</p>
             </div>
             <button
               onClick={() => setDismissed(true)}
