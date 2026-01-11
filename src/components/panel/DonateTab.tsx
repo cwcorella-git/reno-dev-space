@@ -73,10 +73,20 @@ export function DonateTab() {
     <div className="p-4 space-y-4">
       {/* Header */}
       <div className="text-center">
-        <h3 className="text-lg font-semibold text-white">Support Reno Dev Space</h3>
-        <p className="text-sm text-gray-400 mt-1">
-          Help fund what we&apos;re building
-        </p>
+        <EditableText
+          id="panel.donate.title"
+          defaultValue="Support Reno Dev Space"
+          category="panel"
+          as="h3"
+          className="text-lg font-semibold text-white"
+        />
+        <EditableText
+          id="panel.donate.subtitle"
+          defaultValue="Help fund what we're building"
+          category="panel"
+          as="p"
+          className="text-sm text-gray-400 mt-1"
+        />
       </div>
 
       {/* Preset amounts */}
@@ -156,9 +166,13 @@ export function DonateTab() {
       </button>
 
       {/* Secure payment note */}
-      <p className="text-center text-xs text-gray-500">
-        Secure payment via Stripe. You&apos;ll be redirected to complete payment.
-      </p>
+      <EditableText
+        id="panel.donate.secureNote"
+        defaultValue="Secure payment via Stripe. You'll be redirected to complete payment."
+        category="panel"
+        as="p"
+        className="text-center text-xs text-gray-500"
+      />
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { subscribeToUsers, getUserStats, UserProfile, UserStats } from '@/lib/userStorage'
+import { EditableText } from '../EditableText'
 
 interface UserWithStats extends UserProfile {
   stats?: UserStats
@@ -52,7 +53,11 @@ export function MembersTab() {
   if (loading) {
     return (
       <div className="px-4 py-6 text-center text-gray-500 text-sm">
-        Loading members...
+        <EditableText
+          id="panel.members.loading"
+          defaultValue="Loading members..."
+          category="panel"
+        />
       </div>
     )
   }
@@ -60,7 +65,11 @@ export function MembersTab() {
   if (error) {
     return (
       <div className="px-4 py-6 text-center text-red-400 text-sm">
-        Error loading members: {error}
+        <EditableText
+          id="panel.members.error"
+          defaultValue="Error loading members:"
+          category="panel"
+        />{' '}{error}
       </div>
     )
   }
@@ -68,11 +77,19 @@ export function MembersTab() {
   if (users.length === 0) {
     return (
       <div className="px-4 py-6 text-center text-gray-500 text-sm">
-        No members yet. Be the first to join!
+        <EditableText
+          id="panel.members.empty"
+          defaultValue="No members yet. Be the first to join!"
+          category="panel"
+        />
         {user && (
-          <p className="mt-2 text-xs text-gray-600">
-            (You&apos;re signed in but your profile may not be in the database yet)
-          </p>
+          <EditableText
+            id="panel.members.emptyHint"
+            defaultValue="(You're signed in but your profile may not be in the database yet)"
+            category="panel"
+            as="p"
+            className="mt-2 text-xs text-gray-600"
+          />
         )}
       </div>
     )
