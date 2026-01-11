@@ -34,6 +34,7 @@ interface CanvasContextType {
   selectedBlockId: string | null
   selectedBlockIds: string[]
   isEditing: boolean
+  isAddTextMode: boolean
   canvasRef: RefObject<HTMLDivElement | null>
   loading: boolean
 
@@ -41,6 +42,7 @@ interface CanvasContextType {
   selectBlock: (id: string | null) => void
   selectBlocks: (ids: string[]) => void
   setIsEditing: (editing: boolean) => void
+  setIsAddTextMode: (mode: boolean) => void
 
   // Block operations (admin only)
   addText: (x: number, y: number) => Promise<string | null>
@@ -65,6 +67,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
   const [selectedBlockId, setSelectedBlockId] = useState<string | null>(null)
   const [selectedBlockIds, setSelectedBlockIds] = useState<string[]>([])
   const [isEditing, setIsEditing] = useState(false)
+  const [isAddTextMode, setIsAddTextMode] = useState(false)
   const [loading, setLoading] = useState(true)
   const canvasRef = useRef<HTMLDivElement | null>(null)
 
@@ -254,11 +257,13 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         selectedBlockId,
         selectedBlockIds,
         isEditing,
+        isAddTextMode,
         canvasRef,
         loading,
         selectBlock,
         selectBlocks,
         setIsEditing,
+        setIsAddTextMode,
         addText,
         moveBlock,
         moveBlocks,

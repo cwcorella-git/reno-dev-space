@@ -4,28 +4,46 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useFirestoreChat } from '@/hooks/useFirestoreChat'
+import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
 import { AuthModal } from '@/components/AuthModal'
 import { EditorTab } from './EditorTab'
 import { ChatTab } from './ChatTab'
 import { MembersTab } from './MembersTab'
 import { DonateTab } from './DonateTab'
+import { ContentTab } from './ContentTab'
 import { AccountDropdown } from './AccountDropdown'
 
-type TabType = 'editor' | 'chat' | 'members' | 'donate'
+type TabType = 'editor' | 'chat' | 'members' | 'donate' | 'content'
 
 export function UnifiedPanel() {
-  const { user } = useAuth()
-  const { selectedBlockId } = useCanvas()
+  const { user, isAdmin } = useAuth()
+  const { selectedBlockId, isAddTextMode, setIsAddTextMode } = useCanvas()
   const { isConnected } = useFirestoreChat('community')
 
   const [activeTab, setActiveTab] = useState<TabType>('editor')
   const [isMinimized, setIsMinimized] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [hasPledged, setHasPledged] = useState(false)
 
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Check if user has pledged (to enable Add Text button)
+  useEffect(() => {
+    if (!user) {
+      setHasPledged(false)
+      return
+    }
+
+    const unsubscribe = subscribeToPledges((pledges: Pledge[]) => {
+      const userPledge = pledges.find(p => p.odId === user.uid)
+      setHasPledged(!!userPledge && userPledge.amount > 0)
+    })
+
+    return () => unsubscribe()
+  }, [user])
 
   // Auto-switch to editor tab when block is selected
   useEffect(() => {
@@ -57,6 +75,26 @@ export function UnifiedPanel() {
 
   return (
     <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-auto sm:min-w-[500px] sm:max-w-[700px]">
+      {/* Add Text button - positioned at top-right, above the panel */}
+      {(isAdmin || hasPledged) && (
+        <button
+          onClick={() => setIsAddTextMode(!isAddTextMode)}
+          className={`absolute -top-12 right-0 z-10 px-3 py-1.5 rounded-lg shadow-lg transition-all hover:scale-105 flex items-center gap-1.5 text-sm font-medium ${
+            isAddTextMode
+              ? 'bg-indigo-600 text-white ring-2 ring-indigo-400'
+              : 'bg-gray-800 hover:bg-gray-700 text-white border border-white/10'
+          }`}
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            {isAddTextMode ? (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            ) : (
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            )}
+          </svg>
+          {isAddTextMode ? 'Cancel' : 'Add Text'}
+        </button>
+      )}
       <div className="bg-gray-900/95 backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl">
         {/* Tab bar */}
         <div className="flex items-center justify-between px-2 py-1.5 border-b border-white/10">
@@ -118,6 +156,24 @@ export function UnifiedPanel() {
               </svg>
               Donate
             </button>
+            {isAdmin && (
+              <button
+                onClick={() => {
+                  setActiveTab('content')
+                  setIsMinimized(false)
+                }}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
+                  activeTab === 'content'
+                    ? 'bg-amber-600 text-white'
+                    : 'text-amber-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Content
+              </button>
+            )}
           </div>
 
           {/* Utility buttons */}
@@ -144,6 +200,7 @@ export function UnifiedPanel() {
             {activeTab === 'chat' && <ChatTab isConnected={isConnected} />}
             {activeTab === 'members' && <MembersTab />}
             {activeTab === 'donate' && <DonateTab />}
+            {activeTab === 'content' && isAdmin && <ContentTab />}
           </div>
         )}
       </div>

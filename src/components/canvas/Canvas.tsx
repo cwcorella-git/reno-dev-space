@@ -8,7 +8,6 @@ import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
 import { incrementPageViews } from '@/lib/campaignStorage'
-import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
 
 // Mobile safe zone width (for admin visual guide)
 const MOBILE_SAFE_ZONE = 375
@@ -35,16 +34,14 @@ interface MarqueeState {
 
 export function Canvas() {
   const { user, isAdmin, loading: authLoading } = useAuth()
-  const { blocks, canvasRef, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText } = useCanvas()
+  const { blocks, canvasRef, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText, isAddTextMode, setIsAddTextMode } = useCanvas()
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [marquee, setMarquee] = useState<MarqueeState | null>(null)
-  const [isAddTextMode, setIsAddTextMode] = useState(false)
   const isMarqueeActive = useRef(false)
 
   // Scale factor for viewport < DESIGN_WIDTH
   const [scale, setScale] = useState(1)
   const [isMobileView, setIsMobileView] = useState(false)
-  const [hasPledged, setHasPledged] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
   // Calculate canvas height in pixels based on lowest block + one screen of empty space
@@ -110,7 +107,7 @@ export function Canvas() {
         setContextMenu(null)
       }
     },
-    [selectBlock, isAddTextMode, isAdmin, canvasRef, addText, canvasHeightPercent]
+    [selectBlock, isAddTextMode, setIsAddTextMode, isAdmin, canvasRef, addText, canvasHeightPercent]
   )
 
   // Start marquee selection on mouse down (available to everyone)
@@ -254,7 +251,7 @@ export function Canvas() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [blocks, selectBlocks, selectBlock])
+  }, [blocks, selectBlocks, selectBlock, setIsAddTextMode])
 
   // Track page views (once per browser session)
   useEffect(() => {
@@ -265,20 +262,6 @@ export function Canvas() {
     }
   }, [])
 
-  // Check if user has pledged (to enable Add Text button)
-  useEffect(() => {
-    if (!user) {
-      setHasPledged(false)
-      return
-    }
-
-    const unsubscribe = subscribeToPledges((pledges: Pledge[]) => {
-      const userPledge = pledges.find(p => p.odId === user.uid)
-      setHasPledged(!!userPledge && userPledge.amount > 0)
-    })
-
-    return () => unsubscribe()
-  }, [user])
 
   if (authLoading || canvasLoading) {
     return (
@@ -409,27 +392,6 @@ export function Canvas() {
 
       {/* Campaign banner at top */}
       <CampaignBanner />
-
-      {/* Add Text button for pledged members - floats above the panel */}
-      {(isAdmin || hasPledged) && (
-        <button
-          onClick={() => setIsAddTextMode(!isAddTextMode)}
-          className={`fixed bottom-[120px] left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full shadow-lg transition-all hover:scale-105 flex items-center gap-2 ${
-            isAddTextMode
-              ? 'bg-indigo-600 text-white ring-2 ring-indigo-400 ring-offset-2 ring-offset-brand-dark'
-              : 'bg-gray-700 hover:bg-gray-600 text-white'
-          }`}
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            {isAddTextMode ? (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            ) : (
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            )}
-          </svg>
-          <span className="text-sm font-medium">{isAddTextMode ? 'Cancel' : 'Add Text'}</span>
-        </button>
-      )}
     </>
   )
 }
