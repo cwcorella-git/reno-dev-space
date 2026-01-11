@@ -7,7 +7,6 @@ import { CanvasBlock } from './CanvasBlock'
 import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
-import { VersionPopup } from '@/components/VersionPopup'
 import { incrementPageViews } from '@/lib/campaignStorage'
 
 // Mobile safe zone width (for admin visual guide)
@@ -393,9 +392,6 @@ export function Canvas() {
 
       {/* Campaign banner at top */}
       <CampaignBanner />
-
-      {/* Version popup (Ctrl+V to show) */}
-      <VersionPopup />
 
       {/* Add Text button for admin (mobile-friendly) */}
       {isAdmin && (
