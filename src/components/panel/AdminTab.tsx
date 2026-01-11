@@ -205,6 +205,7 @@ export function AdminTab() {
             <span>Progress: <span className="text-white">{summary.percentComplete}%</span></span>
           </>
         )}
+        <span>Build: <span className="text-white font-mono">{process.env.NEXT_PUBLIC_COMMIT_SHA || 'dev'}</span></span>
       </div>
     </div>
   )
