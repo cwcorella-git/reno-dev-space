@@ -70,11 +70,11 @@ export function AuthModal({ onClose }: AuthModalProps) {
 
         {/* Header */}
         <h2 className="text-2xl font-bold mb-2">
-          {mode === 'signup' ? 'Join the Collective' : 'Welcome Back'}
+          {mode === 'signup' ? 'Create Profile' : 'Welcome Back'}
         </h2>
         <p className="text-gray-400 mb-6">
           {mode === 'signup'
-            ? 'Create an account to vote, propose ideas, and chat with the community.'
+            ? 'Add your own ideas, chat with local devs, and help shape what this becomes.'
             : 'Sign in to continue.'}
         </p>
 
@@ -121,7 +121,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
 
           {mode === 'signup' && (
             <div>
-              <label className="block text-sm font-medium mb-1">Your Pledge</label>
+              <label className="block text-sm font-medium mb-1">Chip In</label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                 <input
@@ -129,13 +129,13 @@ export function AuthModal({ onClose }: AuthModalProps) {
                   value={pledgeAmount}
                   onChange={(e) => setPledgeAmount(e.target.value)}
                   className="w-full bg-white/10 border border-white/20 rounded-lg pl-7 pr-4 py-2 focus:outline-none focus:border-brand-primary"
-                  placeholder="How much will you pledge?"
+                  placeholder="How much would you pledge?"
                   min={20}
                   required
                 />
               </div>
               <p className="text-xs text-gray-400 mt-1">
-                Non-binding commitment to support our collective ($20 min)
+                You won&apos;t be charged until the countdown hits zero. Change anytime. ($20 min)
               </p>
             </div>
           )}

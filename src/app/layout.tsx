@@ -7,8 +7,8 @@ import { CanvasProvider } from '@/contexts/CanvasContext'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Reno Dev Space - Game Developer Collective',
-  description: 'A non-profit, horizontal game developer collective in Reno. Create together, keep what you make.',
+  title: 'Reno Dev Space - Local Game Developers',
+  description: 'Local game developers in Reno. Build together, keep what you make.',
 }
 
 export default function RootLayout({

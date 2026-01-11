@@ -283,6 +283,9 @@ export function Canvas() {
         ref={scrollContainerRef}
         className="min-h-screen w-full overflow-y-auto overflow-x-hidden bg-brand-dark"
       >
+        {/* Spacer for fixed banner - OUTSIDE scaled area so it doesn't get scaled */}
+        <div style={{ height: `${BANNER_HEIGHT}px` }} />
+
         {/* Mobile clipping container - clips to safe zone width */}
         <div
           className="relative mx-auto"
@@ -300,7 +303,6 @@ export function Canvas() {
             style={{
               width: `${DESIGN_WIDTH}px`,
               minHeight: `${canvasHeightPx}px`,
-              paddingTop: `${BANNER_HEIGHT}px`, // Reserve space for campaign banner
               transform: isMobileView
                 ? `scale(${scale}) translateX(-${mobileOffset}px)`
                 : `translateX(-50%) scale(${scale})`,

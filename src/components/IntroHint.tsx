@@ -8,7 +8,7 @@ export function IntroHint() {
           Reno Dev Space
         </p>
         <p className="text-gray-400 text-sm">
-          A non-profit game developer collective. Login to vote and chat.
+          Local game devs making things together. Sign in to join.
         </p>
       </div>
     </div>
