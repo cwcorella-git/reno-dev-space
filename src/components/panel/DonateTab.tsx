@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 
 const PRESET_AMOUNTS = [25, 50, 100, 250]
-const FUNCTIONS_URL = process.env.NEXT_PUBLIC_FUNCTIONS_URL || 'https://us-central1-YOUR_PROJECT.cloudfunctions.net'
+const FUNCTIONS_URL = process.env.NEXT_PUBLIC_FUNCTIONS_URL || 'https://us-central1-reno-dev-space.cloudfunctions.net'
 
 export function DonateTab() {
   const { user, profile } = useAuth()
