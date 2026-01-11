@@ -93,19 +93,25 @@ export function MembersTab() {
         <tbody className="divide-y divide-white/5">
           {users.map((u) => {
             const isCurrentUser = u.uid === user?.uid
+            const hasPledge = (u.stats?.pledgeAmount || 0) > 0
             return (
               <tr
                 key={u.uid}
-                className={`text-white ${isCurrentUser ? 'bg-indigo-600/20' : 'hover:bg-white/5'}`}
+                className={`${isCurrentUser ? 'bg-indigo-600/20 text-white' : hasPledge ? 'text-white hover:bg-white/5' : 'text-gray-500 hover:bg-white/5'}`}
               >
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium truncate max-w-[100px]">
+                    <span className={`font-medium truncate max-w-[100px] ${!hasPledge && !isCurrentUser ? 'text-gray-400' : ''}`}>
                       {u.displayName}
                     </span>
                     {isCurrentUser && (
                       <span className="text-[10px] bg-indigo-600 px-1.5 py-0.5 rounded text-white">
                         you
+                      </span>
+                    )}
+                    {hasPledge && !isCurrentUser && (
+                      <span className="text-[10px] bg-emerald-600/50 px-1.5 py-0.5 rounded text-emerald-200">
+                        backer
                       </span>
                     )}
                   </div>

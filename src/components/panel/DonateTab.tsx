@@ -74,7 +74,7 @@ export function DonateTab() {
       <div className="text-center">
         <h3 className="text-lg font-semibold text-white">Support Reno Dev Space</h3>
         <p className="text-sm text-gray-400 mt-1">
-          Help fund our game developer collective
+          Help fund what we&apos;re building
         </p>
       </div>
 
