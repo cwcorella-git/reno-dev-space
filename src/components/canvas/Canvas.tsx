@@ -8,6 +8,7 @@ import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
 import { incrementPageViews } from '@/lib/campaignStorage'
+import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
 
 // Mobile safe zone width (for admin visual guide)
 const MOBILE_SAFE_ZONE = 375
@@ -43,6 +44,7 @@ export function Canvas() {
   // Scale factor for viewport < DESIGN_WIDTH
   const [scale, setScale] = useState(1)
   const [isMobileView, setIsMobileView] = useState(false)
+  const [hasPledged, setHasPledged] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
   // Calculate canvas height in pixels based on lowest block + one screen of empty space
@@ -263,6 +265,21 @@ export function Canvas() {
     }
   }, [])
 
+  // Check if user has pledged (to enable Add Text button)
+  useEffect(() => {
+    if (!user) {
+      setHasPledged(false)
+      return
+    }
+
+    const unsubscribe = subscribeToPledges((pledges: Pledge[]) => {
+      const userPledge = pledges.find(p => p.odId === user.uid)
+      setHasPledged(!!userPledge && userPledge.amount > 0)
+    })
+
+    return () => unsubscribe()
+  }, [user])
+
   if (authLoading || canvasLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-brand-dark">
@@ -393,24 +410,24 @@ export function Canvas() {
       {/* Campaign banner at top */}
       <CampaignBanner />
 
-      {/* Add Text button for admin (mobile-friendly) */}
-      {isAdmin && (
+      {/* Add Text button for pledged members */}
+      {(isAdmin || hasPledged) && (
         <button
           onClick={() => setIsAddTextMode(!isAddTextMode)}
-          className={`fixed bottom-20 left-4 z-50 p-3 rounded-full shadow-lg transition-all hover:scale-105 ${
+          className={`fixed bottom-20 left-4 z-50 px-4 py-2 rounded-full shadow-lg transition-all hover:scale-105 flex items-center gap-2 ${
             isAddTextMode
               ? 'bg-indigo-600 text-white ring-2 ring-indigo-400 ring-offset-2 ring-offset-brand-dark'
               : 'bg-gray-700 hover:bg-gray-600 text-white'
           }`}
-          title={isAddTextMode ? 'Cancel' : 'Add Text'}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             {isAddTextMode ? (
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             ) : (
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             )}
           </svg>
+          <span className="text-sm font-medium">{isAddTextMode ? 'Cancel' : 'Add Text'}</span>
         </button>
       )}
     </>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { EditableText } from './EditableText'
 
 interface AuthModalProps {
   onClose: () => void
@@ -70,19 +71,47 @@ export function AuthModal({ onClose }: AuthModalProps) {
 
         {/* Header */}
         <h2 className="text-2xl font-bold mb-2">
-          {mode === 'signup' ? 'Create Profile' : 'Welcome Back'}
+          {mode === 'signup' ? (
+            <EditableText
+              id="auth.modal.signupHeader"
+              defaultValue="Create Profile"
+              category="auth"
+            />
+          ) : (
+            <EditableText
+              id="auth.modal.loginHeader"
+              defaultValue="Welcome Back"
+              category="auth"
+            />
+          )}
         </h2>
         <p className="text-gray-400 mb-6">
-          {mode === 'signup'
-            ? 'Add your own ideas, chat with local devs, and help shape what this becomes.'
-            : 'Sign in to continue.'}
+          {mode === 'signup' ? (
+            <EditableText
+              id="auth.modal.signupSubtitle"
+              defaultValue="Add your own ideas, chat with local devs, and help shape what this becomes."
+              category="auth"
+            />
+          ) : (
+            <EditableText
+              id="auth.modal.loginSubtitle"
+              defaultValue="Sign in to continue."
+              category="auth"
+            />
+          )}
         </p>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && (
             <div>
-              <label className="block text-sm font-medium mb-1">Display Name</label>
+              <label className="block text-sm font-medium mb-1">
+                <EditableText
+                  id="auth.modal.displayNameLabel"
+                  defaultValue="Display Name"
+                  category="auth"
+                />
+              </label>
               <input
                 type="text"
                 value={displayName}
@@ -121,7 +150,13 @@ export function AuthModal({ onClose }: AuthModalProps) {
 
           {mode === 'signup' && (
             <div>
-              <label className="block text-sm font-medium mb-1">Chip In</label>
+              <label className="block text-sm font-medium mb-1">
+                <EditableText
+                  id="auth.modal.pledgeLabel"
+                  defaultValue="Chip In"
+                  category="auth"
+                />
+              </label>
               <div className="relative">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
                 <input
@@ -134,9 +169,13 @@ export function AuthModal({ onClose }: AuthModalProps) {
                   required
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">
-                You won&apos;t be charged until the countdown hits zero. Change anytime. ($20 min)
-              </p>
+              <EditableText
+                id="auth.modal.pledgeHelper"
+                defaultValue="You won't be charged until the countdown hits zero. Change anytime. ($20 min)"
+                category="auth"
+                as="p"
+                className="text-xs text-gray-400 mt-1"
+              />
             </div>
           )}
 

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { EditableText } from '../EditableText'
 
 const PRESET_AMOUNTS = [25, 50, 100, 250]
 const FUNCTIONS_URL = process.env.NEXT_PUBLIC_FUNCTIONS_URL || 'https://us-central1-reno-dev-space.cloudfunctions.net'

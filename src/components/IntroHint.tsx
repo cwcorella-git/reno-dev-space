@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { AuthModal } from './AuthModal'
+import { EditableText } from './EditableText'
 
 export function IntroHint() {
   const [showAuth, setShowAuth] = useState(false)
@@ -16,8 +17,20 @@ export function IntroHint() {
           {/* Header */}
           <div className="flex items-start justify-between mb-3">
             <div>
-              <h2 className="text-xl font-bold text-white">Reno Dev Space</h2>
-              <p className="text-indigo-400 text-sm">A non-profit game developer space</p>
+              <EditableText
+                id="intro.hint.title"
+                defaultValue="Reno Dev Space"
+                category="intro"
+                as="h2"
+                className="text-xl font-bold text-white"
+              />
+              <EditableText
+                id="intro.hint.subtitle"
+                defaultValue="A non-profit game developer space"
+                category="intro"
+                as="p"
+                className="text-indigo-400 text-sm"
+              />
             </div>
             <button
               onClick={() => setDismissed(true)}
@@ -31,23 +44,46 @@ export function IntroHint() {
           </div>
 
           {/* Description */}
-          <p className="text-gray-300 text-sm mb-4">
-            A community space for indie game developers in Reno to collaborate, share ideas, and build games together. No managers, no gatekeepers—just creators.
-          </p>
+          <EditableText
+            id="intro.hint.description"
+            defaultValue="A community space for indie game developers in Reno to collaborate, share ideas, and build games together. No managers, no gatekeepers—just creators."
+            category="intro"
+            as="p"
+            className="text-gray-300 text-sm mb-4"
+            multiline
+          />
 
           {/* Features */}
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="text-center p-2 bg-white/5 rounded-lg">
               <div className="text-2xl mb-1">💬</div>
-              <p className="text-xs text-gray-400">Community Chat</p>
+              <EditableText
+                id="intro.hint.feature1"
+                defaultValue="Community Chat"
+                category="intro"
+                as="p"
+                className="text-xs text-gray-400"
+              />
             </div>
             <div className="text-center p-2 bg-white/5 rounded-lg">
               <div className="text-2xl mb-1">✨</div>
-              <p className="text-xs text-gray-400">Vote on Content</p>
+              <EditableText
+                id="intro.hint.feature2"
+                defaultValue="Vote on Content"
+                category="intro"
+                as="p"
+                className="text-xs text-gray-400"
+              />
             </div>
             <div className="text-center p-2 bg-white/5 rounded-lg">
               <div className="text-2xl mb-1">🎮</div>
-              <p className="text-xs text-gray-400">Project Driven</p>
+              <EditableText
+                id="intro.hint.feature3"
+                defaultValue="Project Driven"
+                category="intro"
+                as="p"
+                className="text-xs text-gray-400"
+              />
             </div>
           </div>
 
@@ -57,13 +93,21 @@ export function IntroHint() {
               onClick={() => setShowAuth(true)}
               className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2.5 px-4 rounded-lg transition-colors"
             >
-              Join the Community
+              <EditableText
+                id="intro.hint.joinButton"
+                defaultValue="Join the Community"
+                category="intro"
+              />
             </button>
             <button
               onClick={() => setDismissed(true)}
               className="px-4 py-2.5 text-gray-400 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
             >
-              Browse First
+              <EditableText
+                id="intro.hint.browseButton"
+                defaultValue="Browse First"
+                category="intro"
+              />
             </button>
           </div>
         </div>

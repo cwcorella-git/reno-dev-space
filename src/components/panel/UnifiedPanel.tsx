@@ -8,15 +8,14 @@ import { AuthModal } from '@/components/AuthModal'
 import { EditorTab } from './EditorTab'
 import { ChatTab } from './ChatTab'
 import { MembersTab } from './MembersTab'
-import { AdminTab } from './AdminTab'
 import { DonateTab } from './DonateTab'
 import { ProfileDropdown } from './ProfileDropdown'
 import { SettingsDropdown } from './SettingsDropdown'
 
-type TabType = 'editor' | 'chat' | 'members' | 'donate' | 'admin'
+type TabType = 'editor' | 'chat' | 'members' | 'donate'
 
 export function UnifiedPanel() {
-  const { user, isAdmin } = useAuth()
+  const { user } = useAuth()
   const { selectedBlockId } = useCanvas()
   const { isConnected } = useFirestoreChat('community')
 
@@ -125,21 +124,6 @@ export function UnifiedPanel() {
               </svg>
               Donate
             </button>
-            {isAdmin && (
-              <button
-                onClick={() => {
-                  setActiveTab('admin')
-                  setIsMinimized(false)
-                }}
-                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
-                  activeTab === 'admin'
-                    ? 'bg-indigo-600 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                Admin
-              </button>
-            )}
           </div>
 
           {/* Utility buttons */}
@@ -167,7 +151,6 @@ export function UnifiedPanel() {
             {activeTab === 'chat' && <ChatTab isConnected={isConnected} />}
             {activeTab === 'members' && <MembersTab />}
             {activeTab === 'donate' && <DonateTab />}
-            {activeTab === 'admin' && isAdmin && <AdminTab />}
           </div>
         )}
       </div>
