@@ -20,6 +20,8 @@ export function AdminTab() {
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
   const [goalInput, setGoalInput] = useState('5000')
   const [loading, setLoading] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<string | null>(null)
+  const [statusMessage, setStatusMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (!isAdmin) return
@@ -78,12 +80,19 @@ export function AdminTab() {
   }
 
   const handleResetBrightness = async () => {
-    if (!confirm('Reset brightness for all blocks to default (50)?')) return
+    if (confirmAction !== 'resetBrightness') {
+      setConfirmAction('resetBrightness')
+      return
+    }
+    setConfirmAction(null)
     setLoading(true)
     const count = await resetAllBrightness()
-    alert(`Reset brightness for ${count} block(s)`)
+    setStatusMessage(`Reset brightness for ${count} block(s)`)
+    setTimeout(() => setStatusMessage(null), 3000)
     setLoading(false)
   }
+
+  const cancelConfirm = () => setConfirmAction(null)
 
   return (
     <div className="p-3 space-y-3">
@@ -119,14 +128,39 @@ export function AdminTab() {
           {settings?.isLocked ? 'Unlock Pledges' : 'Lock Pledges'}
         </button>
 
-        <button
-          onClick={handleResetBrightness}
-          disabled={loading}
-          className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-sm disabled:opacity-50"
-        >
-          Reset Brightness
-        </button>
+        {confirmAction === 'resetBrightness' ? (
+          <div className="flex items-center gap-2 px-2 py-1 bg-yellow-600/20 border border-yellow-600/50 rounded">
+            <span className="text-xs text-yellow-200">Reset all brightness?</span>
+            <button
+              onClick={handleResetBrightness}
+              className="px-2 py-0.5 bg-yellow-600 hover:bg-yellow-700 text-white rounded text-xs"
+            >
+              Yes
+            </button>
+            <button
+              onClick={cancelConfirm}
+              className="px-2 py-0.5 bg-white/10 hover:bg-white/20 text-white rounded text-xs"
+            >
+              No
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={handleResetBrightness}
+            disabled={loading}
+            className="px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-sm disabled:opacity-50"
+          >
+            Reset Brightness
+          </button>
+        )}
       </div>
+
+      {/* Status message */}
+      {statusMessage && (
+        <div className="px-3 py-1.5 bg-green-600/20 border border-green-600/50 rounded text-sm text-green-200">
+          {statusMessage}
+        </div>
+      )}
 
       {/* Funding Goal */}
       <div className="flex flex-wrap items-center gap-2">

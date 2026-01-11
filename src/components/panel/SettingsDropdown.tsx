@@ -9,6 +9,7 @@ export function SettingsDropdown() {
   const [isOpen, setIsOpen] = useState(false)
   const [confirmAction, setConfirmAction] = useState<'votes' | 'content' | 'account' | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
   // Close on click outside
@@ -27,15 +28,20 @@ export function SettingsDropdown() {
 
   if (!user) return null
 
+  const showStatus = (type: 'success' | 'error', text: string) => {
+    setStatusMessage({ type, text })
+    setTimeout(() => setStatusMessage(null), 3000)
+  }
+
   const handleClearVotes = async () => {
     setActionLoading(true)
     try {
       const count = await clearUserVotes(user.uid)
-      alert(`Cleared ${count} vote(s)`)
+      showStatus('success', `Cleared ${count} vote(s)`)
       setConfirmAction(null)
     } catch (error) {
       console.error('Failed to clear votes:', error)
-      alert('Failed to clear votes')
+      showStatus('error', 'Failed to clear votes')
     }
     setActionLoading(false)
   }
@@ -44,11 +50,11 @@ export function SettingsDropdown() {
     setActionLoading(true)
     try {
       const count = await deleteUserBlocks(user.uid)
-      alert(`Deleted ${count} block(s)`)
+      showStatus('success', `Deleted ${count} block(s)`)
       setConfirmAction(null)
     } catch (error) {
       console.error('Failed to delete content:', error)
-      alert('Failed to delete content')
+      showStatus('error', 'Failed to delete content')
     }
     setActionLoading(false)
   }
@@ -61,7 +67,7 @@ export function SettingsDropdown() {
       setIsOpen(false)
     } catch (error) {
       console.error('Failed to delete account:', error)
-      alert('Failed to delete account. You may need to re-authenticate.')
+      showStatus('error', 'Failed to delete account. Re-authenticate and try again.')
     }
     setActionLoading(false)
   }
@@ -85,6 +91,16 @@ export function SettingsDropdown() {
       {/* Dropdown */}
       {isOpen && (
         <div className="absolute bottom-full right-0 mb-2 w-56 bg-gray-900 border border-white/20 rounded-xl shadow-2xl overflow-hidden">
+          {/* Status message */}
+          {statusMessage && (
+            <div className={`px-3 py-2 text-sm ${
+              statusMessage.type === 'success'
+                ? 'bg-green-600/20 text-green-200'
+                : 'bg-red-600/20 text-red-200'
+            }`}>
+              {statusMessage.text}
+            </div>
+          )}
           {confirmAction ? (
             <div className="p-3 bg-red-900/30">
               <p className="text-sm text-white mb-3">

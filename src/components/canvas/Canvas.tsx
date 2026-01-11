@@ -7,10 +7,14 @@ import { CanvasBlock } from './CanvasBlock'
 import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
+import { VersionPopup } from '@/components/VersionPopup'
 import { incrementPageViews } from '@/lib/campaignStorage'
 
 // Mobile safe zone width (for admin visual guide)
 const MOBILE_SAFE_ZONE = 375
+
+// Viewport width threshold for mobile view (tablets and phones)
+const MOBILE_BREAKPOINT = 768
 
 // Reserved space at top for campaign banner (prevents text overlap)
 const BANNER_HEIGHT = 56 // px - matches CampaignBanner approximate height
@@ -62,16 +66,17 @@ export function Canvas() {
   const canvasHeightPercent = (canvasHeightPx / DESIGN_HEIGHT) * 100
 
   // Track viewport size and update scale
-  // On mobile (viewport <= MOBILE_SAFE_ZONE), show only the safe zone at full scale
+  // On mobile/tablet (viewport < MOBILE_BREAKPOINT), zoom into safe zone only
   useEffect(() => {
     const updateScale = () => {
       const viewportWidth = window.innerWidth
-      const mobile = viewportWidth <= MOBILE_SAFE_ZONE
+      const mobile = viewportWidth < MOBILE_BREAKPOINT
       setIsMobileView(mobile)
 
       if (mobile) {
-        // Mobile: show safe zone at 1:1 scale (or scale to fit viewport)
-        setScale(Math.min(1, viewportWidth / MOBILE_SAFE_ZONE))
+        // Mobile: scale safe zone to fill viewport width
+        // This zooms in so 375px of content fills the viewport
+        setScale(viewportWidth / MOBILE_SAFE_ZONE)
       } else {
         // Desktop: scale entire canvas to fit viewport
         setScale(Math.min(1, viewportWidth / DESIGN_WIDTH))
@@ -297,7 +302,7 @@ export function Canvas() {
               minHeight: `${canvasHeightPx}px`,
               paddingTop: `${BANNER_HEIGHT}px`, // Reserve space for campaign banner
               transform: isMobileView
-                ? `translateX(-${mobileOffset}px) scale(${scale})`
+                ? `scale(${scale}) translateX(-${mobileOffset}px)`
                 : `translateX(-50%) scale(${scale})`,
               transformOrigin: isMobileView ? 'top left' : 'top center',
               left: isMobileView ? '0' : '50%',
@@ -386,6 +391,9 @@ export function Canvas() {
 
       {/* Campaign banner at top */}
       <CampaignBanner />
+
+      {/* Version popup (Ctrl+V to show) */}
+      <VersionPopup />
 
       {/* Add Text button for admin (mobile-friendly) */}
       {isAdmin && (

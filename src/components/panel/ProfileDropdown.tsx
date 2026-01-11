@@ -15,6 +15,7 @@ export function ProfileDropdown() {
   const [campaignSettings, setCampaignSettings] = useState<CampaignSettings | null>(null)
   const [pledgeAmount, setPledgeAmount] = useState('')
   const [pledgeLoading, setPledgeLoading] = useState(false)
+  const [pledgeError, setPledgeError] = useState<string | null>(null)
 
   // Subscribe to pledges and campaign settings
   useEffect(() => {
@@ -63,9 +64,10 @@ export function ProfileDropdown() {
 
   const handleUpdatePledge = async () => {
     if (!user || !profile) return
+    setPledgeError(null)
     const amount = parseInt(pledgeAmount, 10)
     if (isNaN(amount) || amount < 0) {
-      alert('Please enter a valid amount')
+      setPledgeError('Please enter a valid amount')
       return
     }
     setPledgeLoading(true)
@@ -77,7 +79,7 @@ export function ProfileDropdown() {
       }
     } catch (error) {
       console.error('Failed to update pledge:', error)
-      alert('Failed to update pledge')
+      setPledgeError('Failed to update pledge')
     }
     setPledgeLoading(false)
   }
@@ -158,6 +160,10 @@ export function ProfileDropdown() {
                       {pledgeLoading ? '...' : userPledge ? 'Update' : 'Pledge'}
                     </button>
                   </div>
+
+                  {pledgeError && (
+                    <p className="text-xs text-red-400 mb-1">{pledgeError}</p>
+                  )}
 
                   {userPledge && (
                     <button
