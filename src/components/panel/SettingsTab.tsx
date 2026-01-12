@@ -12,35 +12,48 @@ import {
   CampaignSettings,
 } from '@/lib/campaignStorage'
 import { resetAllBrightness } from '@/lib/canvasStorage'
+import { clearUserVotes, deleteUserBlocks, deleteUserAccount } from '@/lib/userStorage'
+import { subscribeToPledges, setPledge, deletePledge, calculatePledgeSummary, Pledge } from '@/lib/pledgeStorage'
 import { ContentTab } from './ContentTab'
 
 export function SettingsTab() {
-  const { user, isAdmin } = useAuth()
+  const { user, profile, isAdmin, logout } = useAuth()
 
+  const [pledges, setPledges] = useState<Pledge[]>([])
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [confirmAction, setConfirmAction] = useState<string | null>(null)
   const [goalInput, setGoalInput] = useState('5000')
+  const [pledgeAmount, setPledgeAmount] = useState('')
 
-  // Subscribe to campaign settings
+  // Subscribe to data
   useEffect(() => {
+    const unsubPledges = subscribeToPledges((p) => setPledges(p))
     const unsubSettings = subscribeToCampaignSettings((s) => {
       setSettings(s)
       setGoalInput(s.fundingGoal.toString())
     })
-    return () => unsubSettings()
+    return () => {
+      unsubPledges()
+      unsubSettings()
+    }
   }, [])
 
-  // Only render for admin
-  if (!user || !isAdmin) {
-    return (
-      <div className="p-4 text-center text-gray-400 text-sm">
-        Admin access required
-      </div>
-    )
-  }
+  // Set initial pledge amount
+  useEffect(() => {
+    if (user && pledges.length > 0) {
+      const userPledge = pledges.find((p) => p.odId === user.uid)
+      if (userPledge) setPledgeAmount(userPledge.amount.toString())
+    }
+  }, [user, pledges])
 
+  if (!user) return null
+
+  const displayName = profile?.displayName || user?.displayName || user?.email?.split('@')[0] || 'User'
+  const userPledge = pledges.find((p) => p.odId === user.uid)
+  const summary = settings ? calculatePledgeSummary(pledges, settings.fundingGoal) : null
+  const isLocked = settings?.isLocked || false
   const timerActive = !!settings?.timerStartedAt
 
   const showStatus = (type: 'success' | 'error', text: string) => {
@@ -48,6 +61,63 @@ export function SettingsTab() {
     setTimeout(() => setStatusMessage(null), 3000)
   }
 
+  // User actions
+  const handleLogout = async () => {
+    await logout()
+  }
+
+  const handleUpdatePledge = async () => {
+    if (!user || !profile) return
+    const amount = parseInt(pledgeAmount, 10)
+    if (isNaN(amount) || amount < 0) return
+    setActionLoading(true)
+    try {
+      if (amount === 0) await deletePledge(user.uid)
+      else await setPledge(user.uid, profile.displayName || displayName, amount)
+      showStatus('success', 'Pledge updated')
+    } catch (error) {
+      console.error('Failed to update pledge:', error)
+      showStatus('error', 'Failed to update pledge')
+    }
+    setActionLoading(false)
+  }
+
+  const handleClearVotes = async () => {
+    setActionLoading(true)
+    try {
+      const count = await clearUserVotes(user.uid)
+      showStatus('success', `Cleared ${count} vote(s)`)
+      setConfirmAction(null)
+    } catch {
+      showStatus('error', 'Failed to clear votes')
+    }
+    setActionLoading(false)
+  }
+
+  const handleDeleteContent = async () => {
+    setActionLoading(true)
+    try {
+      const count = await deleteUserBlocks(user.uid)
+      showStatus('success', `Deleted ${count} block(s)`)
+      setConfirmAction(null)
+    } catch {
+      showStatus('error', 'Failed to delete content')
+    }
+    setActionLoading(false)
+  }
+
+  const handleDeleteAccount = async () => {
+    setActionLoading(true)
+    try {
+      await deleteUserAccount(user.uid)
+      setConfirmAction(null)
+    } catch {
+      showStatus('error', 'Failed to delete account')
+    }
+    setActionLoading(false)
+  }
+
+  // Admin actions
   const handleStartTimer = async () => {
     setActionLoading(true)
     await startCampaignTimer()
@@ -95,12 +165,26 @@ export function SettingsTab() {
       )}
 
       {/* Confirmation dialog */}
-      {confirmAction === 'brightness' && (
+      {confirmAction && (
         <div className="p-4 bg-red-900/30">
-          <p className="text-sm text-white mb-3">Reset brightness for all blocks?</p>
+          <p className="text-sm text-white mb-3">
+            {confirmAction === 'votes' && 'Clear all your votes?'}
+            {confirmAction === 'content' && 'Delete all content you created?'}
+            {confirmAction === 'account' && 'Permanently delete your account?'}
+            {confirmAction === 'brightness' && 'Reset brightness for all blocks?'}
+          </p>
           <div className="flex gap-2">
             <button onClick={() => setConfirmAction(null)} disabled={actionLoading} className="flex-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-sm">Cancel</button>
-            <button onClick={handleResetBrightness} disabled={actionLoading} className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-sm">
+            <button
+              onClick={() => {
+                if (confirmAction === 'votes') handleClearVotes()
+                if (confirmAction === 'content') handleDeleteContent()
+                if (confirmAction === 'account') handleDeleteAccount()
+                if (confirmAction === 'brightness') handleResetBrightness()
+              }}
+              disabled={actionLoading}
+              className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
+            >
               {actionLoading ? '...' : 'Confirm'}
             </button>
           </div>
@@ -109,34 +193,115 @@ export function SettingsTab() {
 
       {!confirmAction && (
         <div className="p-4 space-y-4">
-          {/* Campaign Controls */}
-          <div>
-            <p className="text-xs font-medium text-amber-400 uppercase tracking-wide mb-2">Campaign</p>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {timerActive ? (
-                <button onClick={handleResetTimer} disabled={actionLoading} className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium disabled:opacity-50">Reset Timer</button>
-              ) : (
-                <button onClick={handleStartTimer} disabled={actionLoading} className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50">Start Timer</button>
-              )}
-              <button onClick={handleToggleLock} disabled={actionLoading} className={`px-2 py-1 rounded text-xs font-medium disabled:opacity-50 ${settings?.isLocked ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
-                {settings?.isLocked ? 'Unlock' : 'Lock'}
-              </button>
-              <button onClick={() => setConfirmAction('brightness')} disabled={actionLoading} className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-xs disabled:opacity-50">Reset Brightness</button>
+          {/* User info */}
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="font-medium text-white">{displayName}</p>
+              <p className="text-xs text-gray-400">{user.email}</p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">Goal: $</span>
-              <input type="number" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs" />
-              <button onClick={handleUpdateGoal} disabled={actionLoading} className="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs disabled:opacity-50">Set</button>
+            {isAdmin && <span className="text-xs bg-amber-600/50 text-amber-200 px-2 py-0.5 rounded">Admin</span>}
+          </div>
+
+          {/* Pledge Section */}
+          {settings?.timerStartedAt && (
+            <div className="pt-3 border-t border-white/10">
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">My Pledge</p>
+              {isLocked ? (
+                <div className="text-sm text-gray-400">
+                  {userPledge ? <p>Your pledge: <span className="text-white font-medium">${userPledge.amount}</span></p> : <p>Campaign ended</p>}
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
+                    <input type="number" min="0" value={pledgeAmount} onChange={(e) => setPledgeAmount(e.target.value)} placeholder="0" className="w-full pl-7 pr-3 py-1.5 bg-white/10 border border-white/20 rounded text-white text-sm" />
+                  </div>
+                  <button onClick={handleUpdatePledge} disabled={actionLoading} className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium disabled:opacity-50">
+                    {userPledge ? 'Update' : 'Pledge'}
+                  </button>
+                </div>
+              )}
+              {summary && summary.count > 0 && (
+                <p className="mt-2 text-xs text-gray-400">Fair share: ${summary.fairShare} ({summary.count} backers)</p>
+              )}
+            </div>
+          )}
+
+          {/* Account Actions */}
+          <div className="pt-3 border-t border-white/10">
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Account</p>
+            <div className="flex flex-wrap gap-2">
+              <button onClick={() => setConfirmAction('votes')} className="px-3 py-1.5 text-sm text-gray-300 bg-white/5 hover:bg-white/10 rounded">Clear Votes</button>
+              <button onClick={() => setConfirmAction('content')} className="px-3 py-1.5 text-sm text-gray-300 bg-white/5 hover:bg-white/10 rounded">Delete Content</button>
+              <button onClick={() => setConfirmAction('account')} className="px-3 py-1.5 text-sm text-red-400 bg-white/5 hover:bg-white/10 rounded">Delete Account</button>
             </div>
           </div>
 
-          {/* Content Management */}
-          <div className="pt-3 border-t border-white/10">
-            <p className="text-xs font-medium text-amber-400 uppercase tracking-wide mb-2">Content</p>
-            <div className="-mx-4 -mb-4">
-              <ContentTab />
-            </div>
-          </div>
+          {/* Admin Section */}
+          {isAdmin && (
+            <>
+              {/* Campaign Controls */}
+              <div className="pt-3 border-t border-amber-600/30">
+                <p className="text-xs font-medium text-amber-400 uppercase tracking-wide mb-2">Campaign</p>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {timerActive ? (
+                    <button onClick={handleResetTimer} disabled={actionLoading} className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium disabled:opacity-50">Reset Timer</button>
+                  ) : (
+                    <button onClick={handleStartTimer} disabled={actionLoading} className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50">Start Timer</button>
+                  )}
+                  <button onClick={handleToggleLock} disabled={actionLoading} className={`px-2 py-1 rounded text-xs font-medium disabled:opacity-50 ${settings?.isLocked ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
+                    {settings?.isLocked ? 'Unlock' : 'Lock'}
+                  </button>
+                  <button onClick={() => setConfirmAction('brightness')} disabled={actionLoading} className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-xs disabled:opacity-50">Reset Brightness</button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">Goal: $</span>
+                  <input type="number" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs" />
+                  <button onClick={handleUpdateGoal} disabled={actionLoading} className="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs disabled:opacity-50">Set</button>
+                </div>
+              </div>
+
+              {/* Admin Stats */}
+              <div className="pt-3 border-t border-white/10">
+                <p className="text-xs font-medium text-amber-400 uppercase tracking-wide mb-2">Stats</p>
+                <div className="text-xs text-gray-400 grid grid-cols-3 gap-2">
+                  <div><span className="block text-white font-medium">{settings?.pageViews || 0}</span>Views</div>
+                  {summary && <div><span className="block text-white font-medium">${summary.total}</span>Pledged</div>}
+                  <div><span className="block text-white font-mono">{process.env.NEXT_PUBLIC_COMMIT_SHA || 'dev'}</span>Build</div>
+                </div>
+              </div>
+
+              {/* Content Management */}
+              <div className="pt-3 border-t border-white/10">
+                <p className="text-xs font-medium text-amber-400 uppercase tracking-wide mb-2">Content</p>
+                <div className="-mx-4 -mb-4">
+                  <ContentTab />
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Sign out - only show if not inside admin content section */}
+          {!isAdmin && (
+            <button onClick={handleLogout} className="w-full px-3 py-2 text-sm text-red-400 hover:bg-white/5 rounded flex items-center justify-center gap-2 border-t border-white/10 pt-3">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+              </svg>
+              Sign Out
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Sign out for admin (outside the content section) */}
+      {!confirmAction && isAdmin && (
+        <div className="p-4 pt-0">
+          <button onClick={handleLogout} className="w-full px-3 py-2 text-sm text-red-400 hover:bg-white/5 rounded flex items-center justify-center gap-2 border-t border-white/10 pt-3">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+            Sign Out
+          </button>
         </div>
       )}
     </div>

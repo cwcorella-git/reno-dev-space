@@ -56,8 +56,7 @@ src/
 │   │   ├── ChatTab.tsx         # Real-time chat messages
 │   │   ├── MembersTab.tsx      # User directory with stats
 │   │   ├── DonateTab.tsx       # Stripe donation flow
-│   │   ├── SettingsTab.tsx     # Admin-only: campaign controls + content CMS
-│   │   ├── ProfileTab.tsx      # User info, pledge, account actions, sign out
+│   │   ├── SettingsTab.tsx     # User profile + admin campaign/content (combined)
 │   │   └── ContentTab.tsx      # CMS for UI text (embedded in Settings)
 │   ├── chat/
 │   │   ├── MessageList.tsx     # Chat message display
@@ -220,18 +219,18 @@ git push         # GitHub Actions deploys to Pages
 
 ## Panel Structure
 
-The bottom panel has tabs + collapse/expand button:
+The bottom panel has 4 tabs + collapse/expand button (same for all users):
 
-**Regular users**: Editor | Community | Donate | Profile
-**Admin**: Editor | Community | Donate | Settings | Profile
+```
+[ Editor ] [ Community ] [ Donate ] [ Settings ]
+```
 
 | Tab | Content |
 |-----|---------|
 | **Editor** | Block styling (font, size, color, alignment) |
 | **Community** | Chat + Members subtabs |
 | **Donate** | Stripe one-time donations |
-| **Settings** | Admin-only: Campaign controls, content CMS |
-| **Profile** | User info, pledge, account actions, admin stats, sign out |
+| **Settings** | User profile, pledge, account actions, sign out. Admin sees additional: campaign controls, stats, content CMS (with amber separator) |
 
 ## Inline Content Editing
 
