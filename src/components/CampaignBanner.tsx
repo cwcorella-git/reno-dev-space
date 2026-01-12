@@ -8,10 +8,8 @@ import {
   CampaignSettings,
 } from '@/lib/campaignStorage'
 import { subscribeToPledges, calculatePledgeSummary, Pledge } from '@/lib/pledgeStorage'
-import { DonateModal } from './DonateModal'
 
 export function CampaignBanner() {
-  const [showDonateModal, setShowDonateModal] = useState(false)
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
   const [pledges, setPledges] = useState<Pledge[]>([])
   const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining({
@@ -106,7 +104,7 @@ export function CampaignBanner() {
             )}
           </div>
 
-          {/* Amount & Goal + Donate */}
+          {/* Amount & Goal */}
           <div className="flex items-center gap-3 text-white">
             <span className="flex items-center gap-1 text-white/70">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -121,15 +119,6 @@ export function CampaignBanner() {
             <span className={`font-bold ${summary.percentComplete >= 100 ? 'text-green-400' : 'text-indigo-300'}`}>
               {summary.percentComplete}%
             </span>
-            <button
-              onClick={() => setShowDonateModal(true)}
-              className="ml-2 px-3 py-1 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white text-sm font-medium rounded-lg transition-all flex items-center gap-1"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              Donate
-            </button>
           </div>
         </div>
 
@@ -164,9 +153,6 @@ export function CampaignBanner() {
           </div>
         )}
       </div>
-
-      {/* Donate Modal */}
-      {showDonateModal && <DonateModal onClose={() => setShowDonateModal(false)} />}
     </div>
   )
 }
