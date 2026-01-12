@@ -8,6 +8,7 @@ import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
 import { incrementPageViews } from '@/lib/campaignStorage'
+import { wouldOverlap } from '@/lib/overlapDetection'
 
 // Mobile safe zone width (for admin visual guide)
 const MOBILE_SAFE_ZONE = 375
@@ -43,6 +44,9 @@ export function Canvas() {
   const [scale, setScale] = useState(1)
   const [isMobileView, setIsMobileView] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+
+  // Cursor position for Add Text mode preview (canvas percentage coordinates)
+  const [cursorPos, setCursorPos] = useState<{ x: number; y: number } | null>(null)
 
   // Calculate canvas height in pixels based on lowest block + one screen of empty space
   // Y coordinates are percentages where 100 = DESIGN_HEIGHT (900px)
@@ -98,6 +102,12 @@ export function Canvas() {
             // rect dimensions are scaled, so percentages work directly
             const x = ((e.clientX - rect.left) / rect.width) * 100
             const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
+
+            // Check for overlap - don't place if overlapping
+            if (wouldOverlap(x, y, blocks)) {
+              return // Silent rejection - preview already shows it's invalid
+            }
+
             addText(x, y)
             setIsAddTextMode(false)
             return
@@ -107,7 +117,7 @@ export function Canvas() {
         setContextMenu(null)
       }
     },
-    [selectBlock, isAddTextMode, setIsAddTextMode, isAdmin, canvasRef, addText, canvasHeightPercent]
+    [selectBlock, isAddTextMode, setIsAddTextMode, isAdmin, canvasRef, addText, canvasHeightPercent, blocks]
   )
 
   // Start marquee selection on mouse down (available to everyone)
@@ -262,6 +272,40 @@ export function Canvas() {
     }
   }, [])
 
+  // Track cursor position for Add Text mode preview
+  useEffect(() => {
+    if (!isAddTextMode) {
+      setCursorPos(null)
+      return
+    }
+
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * 100
+      const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
+      setCursorPos({ x, y })
+    }
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 0) return
+      const touch = e.touches[0]
+      const rect = canvas.getBoundingClientRect()
+      const x = ((touch.clientX - rect.left) / rect.width) * 100
+      const y = ((touch.clientY - rect.top) / rect.height) * canvasHeightPercent
+      setCursorPos({ x, y })
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('touchmove', handleTouchMove)
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('touchmove', handleTouchMove)
+    }
+  }, [isAddTextMode, canvasRef, canvasHeightPercent])
+
 
   if (authLoading || canvasLoading) {
     return (
@@ -353,12 +397,29 @@ export function Canvas() {
             </div>
           )}
 
-          {/* Add text mode indicator */}
-          {isAddTextMode && (
-            <div className="absolute inset-0 pointer-events-none z-40">
-              <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm shadow-lg">
-                Tap anywhere to place text
-              </div>
+          {/* Cursor-following preview when in Add Text mode */}
+          {isAddTextMode && cursorPos && (
+            <div
+              className={`absolute pointer-events-none z-40 px-3 py-2 rounded-lg border-2 border-dashed transition-colors ${
+                wouldOverlap(cursorPos.x, cursorPos.y, blocks)
+                  ? 'border-red-500 bg-red-500/20'
+                  : 'border-green-500 bg-green-500/20'
+              }`}
+              style={{
+                left: `${cursorPos.x}%`,
+                top: `${(cursorPos.y / canvasHeightPercent) * 100}%`,
+                minWidth: '120px',
+                transform: 'translate(-50%, -50%)',
+              }}
+            >
+              <span className={`text-sm font-medium whitespace-nowrap ${
+                wouldOverlap(cursorPos.x, cursorPos.y, blocks) ? 'text-red-400' : 'text-green-400'
+              }`}>
+                {wouldOverlap(cursorPos.x, cursorPos.y, blocks)
+                  ? 'Spot taken'
+                  : `${isMobileView ? 'Tap' : 'Click'} to place`
+                }
+              </span>
             </div>
           )}
 
