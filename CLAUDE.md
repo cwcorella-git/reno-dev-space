@@ -32,7 +32,7 @@ Admin can:
 - Toggle blocks as "voteable"
 - Style text (font family, size, color, alignment, bold)
 - Ctrl+click any EditableText to edit site content inline
-- Access Settings > Admin tab for campaign controls and content CMS
+- Access Settings tab for campaign controls and content CMS
 
 **Note**: Pledged users (backers) can also add text blocks via the "Add Text" button.
 
@@ -50,14 +50,15 @@ src/
 │   │   ├── TextBlockRenderer.tsx # Text display + voting UI
 │   │   └── BlockToolbar.tsx    # Style controls when block selected
 │   ├── panel/
-│   │   ├── UnifiedPanel.tsx    # Main panel with 4 tabs
+│   │   ├── UnifiedPanel.tsx    # Main panel with tabs + collapse button
 │   │   ├── EditorTab.tsx       # Block styling controls
 │   │   ├── CommunityTab.tsx    # Chat/Members subtab toggle
 │   │   ├── ChatTab.tsx         # Real-time chat messages
 │   │   ├── MembersTab.tsx      # User directory with stats
 │   │   ├── DonateTab.tsx       # Stripe donation flow
-│   │   ├── SettingsTab.tsx     # Account/Admin subtabs
-│   │   └── ContentTab.tsx      # CMS for UI text (admin)
+│   │   ├── SettingsTab.tsx     # Admin-only: campaign controls + content CMS
+│   │   ├── ProfileTab.tsx      # User info, pledge, account actions, sign out
+│   │   └── ContentTab.tsx      # CMS for UI text (embedded in Settings)
 │   ├── chat/
 │   │   ├── MessageList.tsx     # Chat message display
 │   │   └── MessageInput.tsx    # Chat input field
@@ -219,17 +220,18 @@ git push         # GitHub Actions deploys to Pages
 
 ## Panel Structure
 
-The bottom panel has 4 main tabs:
+The bottom panel has tabs + collapse/expand button:
+
+**Regular users**: Editor | Community | Donate | Profile
+**Admin**: Editor | Community | Donate | Settings | Profile
 
 | Tab | Content |
 |-----|---------|
 | **Editor** | Block styling (font, size, color, alignment) |
 | **Community** | Chat + Members subtabs |
 | **Donate** | Stripe one-time donations |
-| **Settings** | Account + Admin subtabs |
-
-**Settings > Account**: User info, pledge management, clear votes, delete content, sign out
-**Settings > Admin** (admin only): Campaign controls, stats, content CMS
+| **Settings** | Admin-only: Campaign controls, content CMS |
+| **Profile** | User info, pledge, account actions, admin stats, sign out |
 
 ## Inline Content Editing
 
