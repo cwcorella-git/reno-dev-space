@@ -67,7 +67,8 @@ src/
 │   ├── firebase.ts             # Firebase init (uses 'main' database)
 │   ├── admin.ts                # Admin email check
 │   ├── canvasStorage.ts        # Firestore ops for canvas blocks
-│   └── chatStorage.ts          # Firestore ops for chat messages
+│   ├── chatStorage.ts          # Firestore ops for chat messages
+│   └── overlapDetection.ts     # Block collision detection for Add Text
 └── types/
     └── canvas.ts               # TextBlock, CanvasBlock types
 ```
@@ -154,6 +155,7 @@ git push         # GitHub Actions deploys to Pages
 ## Features
 
 - **Canvas Editor**: Admin/pledged users can add text blocks, drag to reposition, resize via handles
+- **Add Text Mode**: Cursor-following preview shows placement validity (green = valid, red = overlapping). Shows "Click to place" on desktop, "Tap to place" on mobile. Blocks cannot overlap existing text.
 - **Voting**: Any text block can be made voteable; logged-in users vote with thumbs up/down
 - **Chat**: Persistent community chat using Firestore (no relay server)
 - **Real-time**: All changes sync instantly across clients via Firestore listeners
