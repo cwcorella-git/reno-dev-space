@@ -21,12 +21,15 @@ Everything is Firestore-based with real-time updates via `onSnapshot`:
 Admin is identified by email: `christopher@corella.com` (hardcoded in `src/lib/admin.ts`)
 
 Admin can:
-- **Right-click** anywhere on canvas to open context menu → "Add Text"
+- Use "Add Text" button (or right-click context menu) to add text blocks
 - Double-click text to edit
 - Drag blocks to reposition (real-time visual feedback)
 - Resize blocks via corner handles
 - Toggle blocks as "voteable"
 - Style text (font family, size, color, alignment, bold)
+- Access Settings > Admin tab for campaign controls and content CMS
+
+**Note**: Pledged users (backers) can also add text blocks via the "Add Text" button.
 
 ## Key Files
 
@@ -41,10 +44,18 @@ src/
 │   │   ├── CanvasBlock.tsx     # Draggable/resizable block wrapper
 │   │   ├── TextBlockRenderer.tsx # Text display + voting UI
 │   │   └── BlockToolbar.tsx    # Style controls when block selected
+│   ├── panel/
+│   │   ├── UnifiedPanel.tsx    # Main panel with 4 tabs
+│   │   ├── EditorTab.tsx       # Block styling controls
+│   │   ├── CommunityTab.tsx    # Chat/Members subtab toggle
+│   │   ├── ChatTab.tsx         # Real-time chat messages
+│   │   ├── MembersTab.tsx      # User directory with stats
+│   │   ├── DonateTab.tsx       # Stripe donation flow
+│   │   ├── SettingsTab.tsx     # Account/Admin subtabs
+│   │   └── ContentTab.tsx      # CMS for UI text (admin)
 │   ├── chat/
 │   │   ├── MessageList.tsx     # Chat message display
 │   │   └── MessageInput.tsx    # Chat input field
-│   ├── FloatingChat.tsx        # Floating chat widget
 │   ├── AuthModal.tsx           # Login/signup modal
 │   └── IntroHint.tsx           # Intro text for visitors
 ├── contexts/
@@ -142,7 +153,21 @@ git push         # GitHub Actions deploys to Pages
 
 ## Features
 
-- **Canvas Editor**: Admin right-clicks to add text, drags to reposition, resizes via handles
+- **Canvas Editor**: Admin/pledged users can add text blocks, drag to reposition, resize via handles
 - **Voting**: Any text block can be made voteable; logged-in users vote with thumbs up/down
 - **Chat**: Persistent community chat using Firestore (no relay server)
 - **Real-time**: All changes sync instantly across clients via Firestore listeners
+
+## Panel Structure
+
+The bottom panel has 4 main tabs:
+
+| Tab | Content |
+|-----|---------|
+| **Editor** | Block styling (font, size, color, alignment) |
+| **Community** | Chat + Members subtabs |
+| **Donate** | Stripe one-time donations |
+| **Settings** | Account + Admin subtabs |
+
+**Settings > Account**: User info, pledge management, clear votes, delete content, sign out
+**Settings > Admin** (admin only): Campaign controls, stats, content CMS
