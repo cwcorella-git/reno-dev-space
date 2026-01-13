@@ -211,7 +211,7 @@ git push         # GitHub Actions deploys to Pages
 ## Features
 
 - **Canvas Editor**: Admin/pledged users can add text blocks, drag to reposition, resize via handles
-- **Add Text Mode**: Cursor-following preview shows placement validity (green = valid, red = overlapping)
+- **Add Text Mode**: Cursor-following preview shows placement validity (green = valid, red = overlapping). Shows "Click to place" on desktop, "Tap to place" on mobile. Text cannot overlap existing blocks.
 - **Voting**: Brightness-based voting; votes affect block visibility (dim to 0 = deleted)
 - **Chat**: Persistent community chat using Firestore (no relay server)
 - **Real-time**: All changes sync instantly across clients via Firestore listeners
