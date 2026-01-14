@@ -32,7 +32,7 @@ Admin can:
 - Toggle blocks as "voteable"
 - Style text (font family, size, color, alignment, bold)
 - Ctrl+click any EditableText to edit site content inline
-- Access Admin panel (⚙️ icon) for campaign controls and content CMS
+- Access Content panel (📝 icon) for CMS and Campaign panel (📊 icon) for controls
 
 **Note**: Pledged users (backers) can also add text blocks via the "Add Text" button.
 
@@ -57,8 +57,9 @@ src/
 │   │   ├── MembersTab.tsx      # User directory with stats
 │   │   ├── DonateTab.tsx       # Stripe donation flow
 │   │   ├── ProfilePanel.tsx    # User info, pledge, account actions, sign out
-│   │   ├── AdminPanel.tsx      # Campaign controls, stats, content CMS (admin-only)
-│   │   └── ContentTab.tsx      # CMS for UI text (embedded in AdminPanel)
+│   │   ├── ContentPanel.tsx    # Content CMS wrapper (admin-only)
+│   │   ├── CampaignPanel.tsx   # Campaign controls + stats (admin-only)
+│   │   └── ContentTab.tsx      # CMS for UI text
 │   ├── chat/
 │   │   ├── MessageList.tsx     # Chat message display
 │   │   └── MessageInput.tsx    # Chat input field
@@ -223,8 +224,8 @@ git push         # GitHub Actions deploys to Pages
 The bottom panel has 3 tabs on left + icon buttons on right:
 
 ```
-[ Editor ] [ Community ● ] [ ♡ Donate ]     [👤] [⚙️] [˅]
-←──────── tabs ──────────→                  ←─ icons ─→
+[ Editor ] [ Community ● ] [ ♡ Donate ]    [👤] [📝] [📊] [˅]
+←──────── tabs ──────────→                 ←── icons ───→
 ```
 
 **Left side (tabs):**
@@ -238,7 +239,8 @@ The bottom panel has 3 tabs on left + icon buttons on right:
 | Icon | Content |
 |------|---------|
 | **Profile** (👤) | User info, pledge, account actions, sign out |
-| **Admin** (⚙️, amber) | Campaign controls, stats, content CMS (admin-only) |
+| **Content** (📝, amber) | Content CMS for UI text (admin-only) |
+| **Campaign** (📊, amber) | Timer, lock, goal, stats (admin-only) |
 | **Collapse** (˅) | Minimize/expand panel |
 
 ## Inline Content Editing

@@ -13,9 +13,8 @@ import {
 } from '@/lib/campaignStorage'
 import { resetAllBrightness } from '@/lib/canvasStorage'
 import { subscribeToPledges, calculatePledgeSummary, Pledge } from '@/lib/pledgeStorage'
-import { ContentTab } from './ContentTab'
 
-export function AdminPanel() {
+export function CampaignPanel() {
   const { user, isAdmin } = useAuth()
 
   const [pledges, setPledges] = useState<Pledge[]>([])
@@ -122,7 +121,7 @@ export function AdminPanel() {
         <div className="p-4 space-y-4">
           {/* Campaign Controls */}
           <div>
-            <p className="text-xs font-medium text-amber-400 uppercase tracking-wide mb-2">Campaign</p>
+            <p className="text-xs font-medium text-amber-400 uppercase tracking-wide mb-2">Controls</p>
             <div className="flex flex-wrap gap-2 mb-3">
               {timerActive ? (
                 <button onClick={handleResetTimer} disabled={actionLoading} className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium disabled:opacity-50">Reset Timer</button>
@@ -148,14 +147,6 @@ export function AdminPanel() {
               <div><span className="block text-white font-medium">{settings?.pageViews || 0}</span>Views</div>
               {summary && <div><span className="block text-white font-medium">${summary.total}</span>Pledged</div>}
               <div><span className="block text-white font-mono">{process.env.NEXT_PUBLIC_COMMIT_SHA || 'dev'}</span>Build</div>
-            </div>
-          </div>
-
-          {/* Content Management */}
-          <div className="pt-3 border-t border-white/10">
-            <p className="text-xs font-medium text-amber-400 uppercase tracking-wide mb-2">Content</p>
-            <div className="-mx-4 -mb-4">
-              <ContentTab />
             </div>
           </div>
         </div>
