@@ -32,7 +32,7 @@ Admin can:
 - Toggle blocks as "voteable"
 - Style text (font family, size, color, alignment, bold)
 - Ctrl+click any EditableText to edit site content inline
-- Access Settings tab for campaign controls and content CMS
+- Access Admin panel (⚙️ icon) for campaign controls and content CMS
 
 **Note**: Pledged users (backers) can also add text blocks via the "Add Text" button.
 
@@ -56,8 +56,9 @@ src/
 │   │   ├── ChatTab.tsx         # Real-time chat messages
 │   │   ├── MembersTab.tsx      # User directory with stats
 │   │   ├── DonateTab.tsx       # Stripe donation flow
-│   │   ├── SettingsTab.tsx     # User profile + admin campaign/content (combined)
-│   │   └── ContentTab.tsx      # CMS for UI text (embedded in Settings)
+│   │   ├── ProfilePanel.tsx    # User info, pledge, account actions, sign out
+│   │   ├── AdminPanel.tsx      # Campaign controls, stats, content CMS (admin-only)
+│   │   └── ContentTab.tsx      # CMS for UI text (embedded in AdminPanel)
 │   ├── chat/
 │   │   ├── MessageList.tsx     # Chat message display
 │   │   └── MessageInput.tsx    # Chat input field
@@ -219,18 +220,26 @@ git push         # GitHub Actions deploys to Pages
 
 ## Panel Structure
 
-The bottom panel has 4 tabs + collapse/expand button (same for all users):
+The bottom panel has 3 tabs on left + icon buttons on right:
 
 ```
-[ Editor ] [ Community ] [ Donate ] [ Settings ]
+[ Editor ] [ Community ● ] [ ♡ Donate ]     [👤] [⚙️] [˅]
+←──────── tabs ──────────→                  ←─ icons ─→
 ```
 
+**Left side (tabs):**
 | Tab | Content |
 |-----|---------|
 | **Editor** | Block styling (font, size, color, alignment) |
 | **Community** | Chat + Members subtabs |
 | **Donate** | Stripe one-time donations |
-| **Settings** | User profile, pledge, account actions, sign out. Admin sees additional: campaign controls, stats, content CMS (with amber separator) |
+
+**Right side (icons):**
+| Icon | Content |
+|------|---------|
+| **Profile** (👤) | User info, pledge, account actions, sign out |
+| **Admin** (⚙️, amber) | Campaign controls, stats, content CMS (admin-only) |
+| **Collapse** (˅) | Minimize/expand panel |
 
 ## Inline Content Editing
 
