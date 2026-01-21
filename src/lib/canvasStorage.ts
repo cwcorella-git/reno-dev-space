@@ -21,6 +21,7 @@ import {
   DEFAULT_BRIGHTNESS,
   VOTE_BRIGHTNESS_CHANGE,
   getRandomColor,
+  getRandomFont,
 } from '@/types/canvas'
 import { arrayUnion } from 'firebase/firestore'
 
@@ -78,7 +79,7 @@ export async function addTextBlock(
     height: 0, // auto height
     zIndex: maxZIndex + 1,
     content,
-    style: { ...DEFAULT_TEXT_STYLE, color: getRandomColor() },
+    style: { ...DEFAULT_TEXT_STYLE, color: getRandomColor(), fontFamily: getRandomFont() },
     createdBy,
     brightness: DEFAULT_BRIGHTNESS,
     voters: [],

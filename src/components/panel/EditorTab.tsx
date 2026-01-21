@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useState, useEffect } from 'react'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { isTextBlock, TextBlock, TEXT_COLORS } from '@/types/canvas'
@@ -17,6 +17,13 @@ const FONTS = [
   { value: 'Monaco', label: 'Monaco' },
   { value: 'Comic Sans MS', label: 'Comic' },
   { value: 'Impact', label: 'Impact' },
+  { value: 'Courier New', label: 'Courier' },
+  { value: 'Times New Roman', label: 'Times' },
+  { value: 'Arial Black', label: 'Arial Blk' },
+  { value: 'Trebuchet MS', label: 'Trebuchet' },
+  { value: 'Verdana', label: 'Verdana' },
+  { value: 'Palatino', label: 'Palatino' },
+  { value: 'Garamond', label: 'Garamond' },
 ]
 
 export function EditorTab() {
@@ -33,6 +40,17 @@ export function EditorTab() {
   const selectedBlock = selectedBlockId ? blocks.find((b) => b.id === selectedBlockId) : null
   const isText = selectedBlock ? isTextBlock(selectedBlock) : false
   const textBlock = isText ? (selectedBlock as TextBlock) : null
+
+  // Local state for font size input to allow clearing while typing
+  const [fontSizeInput, setFontSizeInput] = useState(textBlock?.style.fontSize?.toString() || '1')
+
+  // Sync local state when block changes
+  const currentFontSize = textBlock?.style.fontSize
+  useEffect(() => {
+    if (currentFontSize !== undefined) {
+      setFontSizeInput(currentFontSize.toString())
+    }
+  }, [currentFontSize, selectedBlockId])
 
   // Get editable block IDs
   const editableBlockIds = filterEditableBlocks(
@@ -154,8 +172,24 @@ export function EditorTab() {
           step="0.25"
           min="0.5"
           max="8"
-          value={textBlock.style.fontSize}
-          onChange={(e) => applyStyle({ fontSize: parseFloat(e.target.value) || 1 })}
+          value={fontSizeInput}
+          onChange={(e) => {
+            setFontSizeInput(e.target.value)
+            const val = parseFloat(e.target.value)
+            if (!isNaN(val) && val >= 0.5 && val <= 8) {
+              applyStyle({ fontSize: val })
+            }
+          }}
+          onBlur={() => {
+            const val = parseFloat(fontSizeInput)
+            if (isNaN(val) || val < 0.5) {
+              setFontSizeInput('0.5')
+              applyStyle({ fontSize: 0.5 })
+            } else if (val > 8) {
+              setFontSizeInput('8')
+              applyStyle({ fontSize: 8 })
+            }
+          }}
           className="w-14 h-8 px-2 bg-white/10 border border-white/20 rounded text-sm text-center"
         />
 

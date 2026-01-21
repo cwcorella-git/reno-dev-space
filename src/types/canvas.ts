@@ -34,9 +34,30 @@ export const TEXT_COLORS = [
   '#ffffff', // white
 ]
 
+// Available fonts for random selection
+export const TEXT_FONTS = [
+  'Inter',
+  'Georgia',
+  'Monaco',
+  'Comic Sans MS',
+  'Impact',
+  'Courier New',
+  'Times New Roman',
+  'Arial Black',
+  'Trebuchet MS',
+  'Verdana',
+  'Palatino',
+  'Garamond',
+]
+
 // Get a random color from the palette
 export function getRandomColor(): string {
   return TEXT_COLORS[Math.floor(Math.random() * TEXT_COLORS.length)]
+}
+
+// Get a random font from the palette
+export function getRandomFont(): string {
+  return TEXT_FONTS[Math.floor(Math.random() * TEXT_FONTS.length)]
 }
 
 export interface BaseBlock {
