@@ -63,6 +63,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
   const [isHolding, setIsHolding] = useState(false)
   const touchHoldTimer = useRef<NodeJS.Timeout | null>(null)
   const touchStartPos = useRef<{ x: number; y: number } | null>(null)
+  const touchStartBlockPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const isTouchDragging = useRef(false)
 
   const handleClick = useCallback(
@@ -289,90 +290,41 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     [isAdmin, isSelected, isEditing, canvasRef, block, resizeBlock]
   )
 
-  // Clear touch hold timer on unmount
-  useEffect(() => {
-    return () => {
-      if (touchHoldTimer.current) {
-        clearTimeout(touchHoldTimer.current)
-      }
-    }
-  }, [])
-
-  // Touch start - begin hold timer
-  const handleTouchStart = useCallback(
-    (e: React.TouchEvent) => {
-      if (!isAdmin || !isSelected || isEditing) return
-
-      const touch = e.touches[0]
-      touchStartPos.current = { x: touch.clientX, y: touch.clientY }
-      isTouchDragging.current = false
-
-      // Start hold timer
-      touchHoldTimer.current = setTimeout(() => {
-        setIsHolding(true)
-        isTouchDragging.current = true
-
-        // Vibrate if supported (haptic feedback)
-        if (navigator.vibrate) {
-          navigator.vibrate(50)
-        }
-      }, TOUCH_HOLD_DURATION)
-    },
-    [isAdmin, isSelected, isEditing]
-  )
-
-  // Touch move - drag if hold completed
+  // Touch move handler (document-level for smooth dragging)
   const handleTouchMove = useCallback(
-    (e: React.TouchEvent) => {
-      if (!touchStartPos.current) return
+    (e: TouchEvent) => {
+      if (!touchStartPos.current || !isTouchDragging.current) return
+
+      e.preventDefault() // Prevent scrolling while dragging
 
       const touch = e.touches[0]
-      const deltaX = Math.abs(touch.clientX - touchStartPos.current.x)
-      const deltaY = Math.abs(touch.clientY - touchStartPos.current.y)
+      const canvas = canvasRef.current
+      if (!canvas) return
 
-      // If moved too much before hold completed, cancel the hold
-      if (!isTouchDragging.current && (deltaX > 10 || deltaY > 10)) {
-        if (touchHoldTimer.current) {
-          clearTimeout(touchHoldTimer.current)
-          touchHoldTimer.current = null
-        }
-        setIsHolding(false)
-        return
-      }
+      const rect = canvas.getBoundingClientRect()
 
-      // If drag mode is active, handle the drag
-      if (isTouchDragging.current) {
-        e.preventDefault() // Prevent scrolling while dragging
+      // Calculate delta from original touch position (not updating reference)
+      const deltaXPercent = ((touch.clientX - touchStartPos.current.x) / rect.width) * 100
+      const deltaYPercent = ((touch.clientY - touchStartPos.current.y) / rect.height) * canvasHeightPercent
 
-        const canvas = canvasRef.current
-        if (!canvas) return
+      // Apply delta to original block position
+      const newX = Math.max(-OVERFLOW_LEFT, Math.min(100 + OVERFLOW_RIGHT - 5, touchStartBlockPos.current.x + deltaXPercent))
+      const newY = Math.max(0, Math.min(canvasHeightPercent - 5, touchStartBlockPos.current.y + deltaYPercent))
 
-        const rect = canvas.getBoundingClientRect()
-        const startX = touchStartPos.current.x
-        const startY = touchStartPos.current.y
-
-        // x is percentage of width (0-100)
-        // y is percentage of canvasHeightPercent (which may be > 100)
-        const deltaXPercent = ((touch.clientX - startX) / rect.width) * 100
-        const deltaYPercent = ((touch.clientY - startY) / rect.height) * canvasHeightPercent
-
-        // Allow X to overflow past edges by threshold amounts
-        const newX = Math.max(-OVERFLOW_LEFT, Math.min(100 + OVERFLOW_RIGHT - 5, block.x + deltaXPercent))
-        const newY = Math.max(0, Math.min(canvasHeightPercent - 5, block.y + deltaYPercent))
-
-        setDragPos({ x: newX, y: newY })
-        setIsDragging(true)
-
-        // Update start position for continuous dragging
-        touchStartPos.current = { x: touch.clientX, y: touch.clientY }
-      }
+      setDragPos({ x: newX, y: newY })
+      setIsDragging(true)
     },
-    [canvasRef, block.x, block.y, canvasHeightPercent]
+    [canvasRef, canvasHeightPercent]
   )
 
-  // Touch end - complete drag or cancel
+  // Touch end handler (document-level)
   const handleTouchEnd = useCallback(
-    (e: React.TouchEvent) => {
+    () => {
+      // Remove document-level listeners
+      document.removeEventListener('touchmove', handleTouchMove)
+      document.removeEventListener('touchend', handleTouchEnd)
+      document.removeEventListener('touchcancel', handleTouchEnd)
+
       // Clear hold timer
       if (touchHoldTimer.current) {
         clearTimeout(touchHoldTimer.current)
@@ -382,17 +334,100 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       setIsHolding(false)
 
       // If was dragging, save position
-      if (isTouchDragging.current && dragPos) {
-        moveBlock(block.id, dragPos.x, dragPos.y)
-        setDragPos(null)
+      if (isTouchDragging.current) {
+        setDragPos((currentPos) => {
+          if (currentPos) {
+            moveBlock(block.id, currentPos.x, currentPos.y)
+          }
+          return null
+        })
         setIsDragging(false)
       }
 
       isTouchDragging.current = false
       touchStartPos.current = null
     },
-    [block.id, dragPos, moveBlock]
+    [block.id, moveBlock, handleTouchMove]
   )
+
+  // Touch start - begin hold timer
+  const handleTouchStart = useCallback(
+    (e: React.TouchEvent) => {
+      if (!isAdmin || !isSelected || isEditing) return
+
+      const touch = e.touches[0]
+      touchStartPos.current = { x: touch.clientX, y: touch.clientY }
+      touchStartBlockPos.current = { x: block.x, y: block.y }
+      isTouchDragging.current = false
+
+      // Start hold timer
+      touchHoldTimer.current = setTimeout(() => {
+        setIsHolding(true)
+        isTouchDragging.current = true
+
+        // Add document-level listeners for smooth dragging
+        document.addEventListener('touchmove', handleTouchMove, { passive: false })
+        document.addEventListener('touchend', handleTouchEnd)
+        document.addEventListener('touchcancel', handleTouchEnd)
+
+        // Vibrate if supported (haptic feedback)
+        if (navigator.vibrate) {
+          navigator.vibrate(50)
+        }
+      }, TOUCH_HOLD_DURATION)
+    },
+    [isAdmin, isSelected, isEditing, block.x, block.y, handleTouchMove, handleTouchEnd]
+  )
+
+  // Cancel hold if user moves too much before hold completes
+  const handleTouchMoveBeforeHold = useCallback(
+    (e: React.TouchEvent) => {
+      if (!touchStartPos.current || isTouchDragging.current) return
+
+      const touch = e.touches[0]
+      const deltaX = Math.abs(touch.clientX - touchStartPos.current.x)
+      const deltaY = Math.abs(touch.clientY - touchStartPos.current.y)
+
+      // If moved too much before hold completed, cancel the hold
+      if (deltaX > 10 || deltaY > 10) {
+        if (touchHoldTimer.current) {
+          clearTimeout(touchHoldTimer.current)
+          touchHoldTimer.current = null
+        }
+        setIsHolding(false)
+        touchStartPos.current = null
+      }
+    },
+    []
+  )
+
+  // Cancel hold on touch end before hold completes
+  const handleTouchEndBeforeHold = useCallback(
+    () => {
+      if (touchHoldTimer.current) {
+        clearTimeout(touchHoldTimer.current)
+        touchHoldTimer.current = null
+      }
+      setIsHolding(false)
+      touchStartPos.current = null
+    },
+    []
+  )
+
+  // Clear touch hold timer and document listeners on unmount
+  useEffect(() => {
+    const moveHandler = handleTouchMove
+    const endHandler = handleTouchEnd
+    return () => {
+      if (touchHoldTimer.current) {
+        clearTimeout(touchHoldTimer.current)
+      }
+      // Clean up document-level listeners if component unmounts during drag
+      document.removeEventListener('touchmove', moveHandler)
+      document.removeEventListener('touchend', endHandler)
+      document.removeEventListener('touchcancel', endHandler)
+    }
+  }, [handleTouchMove, handleTouchEnd])
 
   // Render block content based on type
   const renderContent = () => {
@@ -451,8 +486,8 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       onKeyDown={handleKeyDown}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
+      onTouchMove={handleTouchMoveBeforeHold}
+      onTouchEnd={handleTouchEndBeforeHold}
       tabIndex={user ? 0 : -1}
     >
       {renderContent()}
