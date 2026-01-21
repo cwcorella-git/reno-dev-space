@@ -3,7 +3,7 @@
 import { useCallback, useState, useEffect, useRef, useMemo } from 'react'
 import { useCanvas, DESIGN_WIDTH, DESIGN_HEIGHT } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
-import { CanvasBlock } from './CanvasBlock'
+import { CanvasBlock, OVERFLOW_LEFT, OVERFLOW_RIGHT } from './CanvasBlock'
 import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
@@ -12,8 +12,13 @@ import { incrementPageViews } from '@/lib/campaignStorage'
 // Mobile safe zone width (for admin visual guide)
 const MOBILE_SAFE_ZONE = 375
 
-// Viewport width threshold for mobile view (tablets and phones)
-const MOBILE_BREAKPOINT = 768
+// Desktop focus width - the portion of canvas that fills desktop viewport
+// Smaller than DESIGN_WIDTH to make text more readable (centered on mobile safe zone)
+const DESKTOP_FOCUS_WIDTH = 900
+
+// Viewport width thresholds for responsive scaling
+const MOBILE_BREAKPOINT = 500   // Below this: pure mobile (zoom to safe zone)
+const TABLET_BREAKPOINT = 900   // Below this: transitional scaling
 
 // Reserved space at top for campaign banner (prevents text overlap)
 const BANNER_HEIGHT = 56 // px - matches CampaignBanner approximate height
@@ -63,21 +68,28 @@ export function Canvas() {
   // For coordinate calculations, we need the height as a percentage (100 = one screen)
   const canvasHeightPercent = (canvasHeightPx / DESIGN_HEIGHT) * 100
 
-  // Track viewport size and update scale
-  // On mobile/tablet (viewport < MOBILE_BREAKPOINT), zoom into safe zone only
+  // Track viewport size and update scale with smooth transitions
+  // Uses three zones: mobile (safe zone), tablet (transitional), desktop (focus width)
   useEffect(() => {
     const updateScale = () => {
       const viewportWidth = window.innerWidth
-      const mobile = viewportWidth < MOBILE_BREAKPOINT
-      setIsMobileView(mobile)
 
-      if (mobile) {
-        // Mobile: scale safe zone to fill viewport width
-        // This zooms in so 375px of content fills the viewport
+      if (viewportWidth < MOBILE_BREAKPOINT) {
+        // Mobile: zoom to show just the safe zone (375px)
+        setIsMobileView(true)
         setScale(viewportWidth / MOBILE_SAFE_ZONE)
+      } else if (viewportWidth < TABLET_BREAKPOINT) {
+        // Tablet/transitional: smoothly interpolate between safe zone and focus width
+        // At MOBILE_BREAKPOINT, show safe zone; at TABLET_BREAKPOINT, show focus width
+        setIsMobileView(false)
+        const progress = (viewportWidth - MOBILE_BREAKPOINT) / (TABLET_BREAKPOINT - MOBILE_BREAKPOINT)
+        const targetWidth = MOBILE_SAFE_ZONE + progress * (DESKTOP_FOCUS_WIDTH - MOBILE_SAFE_ZONE)
+        setScale(viewportWidth / targetWidth)
       } else {
-        // Desktop: scale entire canvas to fit viewport
-        setScale(Math.min(1, viewportWidth / DESIGN_WIDTH))
+        // Desktop: scale to show focus width (900px of content centered)
+        // This keeps text readable while showing more than just mobile zone
+        setIsMobileView(false)
+        setScale(Math.min(1.2, viewportWidth / DESKTOP_FOCUS_WIDTH))
       }
     }
 
@@ -253,6 +265,28 @@ export function Canvas() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [blocks, selectBlocks, selectBlock, setIsAddTextMode])
 
+  // Dismiss context menu when clicking anywhere (outside the menu)
+  useEffect(() => {
+    if (!contextMenu) return
+
+    const handleClick = () => {
+      setContextMenu(null)
+    }
+
+    // Use capture phase to catch clicks before they're handled by other elements
+    // Small delay to avoid immediately closing on the same click that opened it
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClick, true)
+      document.addEventListener('contextmenu', handleClick, true)
+    }, 0)
+
+    return () => {
+      clearTimeout(timeoutId)
+      document.removeEventListener('click', handleClick, true)
+      document.removeEventListener('contextmenu', handleClick, true)
+    }
+  }, [contextMenu])
+
   // Track page views (once per browser session)
   useEffect(() => {
     const viewKey = 'reno-dev-space-viewed'
@@ -312,6 +346,19 @@ export function Canvas() {
             onMouseDown={handleMouseDown}
             onContextMenu={handleContextMenu}
           >
+          {/* Desktop focus zone overlay (admin only) - shows 900px content area */}
+          {isAdmin && (
+            <div
+              className="absolute top-0 left-1/2 -translate-x-1/2 h-full border-x border-dashed border-indigo-500/20 pointer-events-none z-[4]"
+              style={{ width: `${DESKTOP_FOCUS_WIDTH}px` }}
+              title="Desktop focus zone (900px)"
+            >
+              <div className="absolute top-2 right-2 text-[10px] text-indigo-400/40 whitespace-nowrap">
+                desktop view
+              </div>
+            </div>
+          )}
+
           {/* Mobile safe zone overlay (admin only) */}
           {isAdmin && (
             <div
@@ -323,6 +370,35 @@ export function Canvas() {
                 mobile view
               </div>
             </div>
+          )}
+
+          {/* Canvas boundary guides - shows overflow zones */}
+          {/* Visible to signed-in users when editing (has selection or in add text mode) */}
+          {user && (selectedBlockIds.length > 0 || isAddTextMode) && (
+            <>
+              {/* Left edge line (0%) */}
+              <div
+                className="absolute top-0 h-full w-0.5 bg-amber-500/30 pointer-events-none z-[4]"
+                style={{ left: '0%' }}
+              />
+              {/* Right edge line (100%) */}
+              <div
+                className="absolute top-0 h-full w-0.5 bg-amber-500/30 pointer-events-none z-[4]"
+                style={{ left: '100%' }}
+              />
+              {/* Left overflow zone (shaded) */}
+              <div
+                className="absolute top-0 h-full bg-amber-500/5 border-r border-dashed border-amber-500/20 pointer-events-none z-[3]"
+                style={{ left: `-${OVERFLOW_LEFT}%`, width: `${OVERFLOW_LEFT}%` }}
+                title={`Left overflow zone (${OVERFLOW_LEFT}%)`}
+              />
+              {/* Right overflow zone (shaded) */}
+              <div
+                className="absolute top-0 h-full bg-amber-500/5 border-l border-dashed border-amber-500/20 pointer-events-none z-[3]"
+                style={{ left: '100%', width: `${OVERFLOW_RIGHT}%` }}
+                title={`Right overflow zone (${OVERFLOW_RIGHT}%)`}
+              />
+            </>
           )}
 
           {/* Render all blocks */}

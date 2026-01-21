@@ -23,6 +23,11 @@ interface ResizeState {
 
 const TOUCH_HOLD_DURATION = 300 // ms to hold before drag activates
 
+// Overflow thresholds - allow blocks to extend past canvas edges
+// Positive values = percentage past 0% (left) and 100% (right)
+export const OVERFLOW_LEFT = 10   // Allow blocks to go 10% past left edge
+export const OVERFLOW_RIGHT = 10  // Allow blocks to go 10% past right edge (110% total)
+
 export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
   const { user, isAdmin } = useAuth()
   const {
@@ -186,7 +191,8 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         const deltaX = ((moveEvent.clientX - startX) / rect.width) * 100
         const deltaY = ((moveEvent.clientY - startY) / rect.height) * canvasHeightPercent
 
-        const newX = Math.max(0, Math.min(95, startBlockX + deltaX))
+        // Allow X to overflow past edges by threshold amounts
+        const newX = Math.max(-OVERFLOW_LEFT, Math.min(100 + OVERFLOW_RIGHT - 5, startBlockX + deltaX))
         // Allow y to go up to canvasHeightPercent - 5 (leaving some margin)
         const newY = Math.max(0, Math.min(canvasHeightPercent - 5, startBlockY + deltaY))
 
@@ -211,7 +217,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
                 const startPos = startPositions.get(id) ?? { x: 0, y: 0 }
                 return {
                   id,
-                  x: Math.max(0, Math.min(95, startPos.x + deltaX)),
+                  x: Math.max(-OVERFLOW_LEFT, Math.min(100 + OVERFLOW_RIGHT - 5, startPos.x + deltaX)),
                   y: Math.max(0, Math.min(canvasHeightPercent - 5, startPos.y + deltaY)),
                 }
               })
@@ -350,7 +356,8 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         const deltaXPercent = ((touch.clientX - startX) / rect.width) * 100
         const deltaYPercent = ((touch.clientY - startY) / rect.height) * canvasHeightPercent
 
-        const newX = Math.max(0, Math.min(95, block.x + deltaXPercent))
+        // Allow X to overflow past edges by threshold amounts
+        const newX = Math.max(-OVERFLOW_LEFT, Math.min(100 + OVERFLOW_RIGHT - 5, block.x + deltaXPercent))
         const newY = Math.max(0, Math.min(canvasHeightPercent - 5, block.y + deltaYPercent))
 
         setDragPos({ x: newX, y: newY })
