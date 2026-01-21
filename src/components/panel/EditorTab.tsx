@@ -5,6 +5,11 @@ import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { isTextBlock, TextBlock, TEXT_COLORS } from '@/types/canvas'
 import { filterEditableBlocks } from '@/lib/permissions'
+import {
+  getSelectedBlockElement,
+  wrapSelectionWithTag,
+  wrapSelectionWithStyle,
+} from '@/lib/selectionFormat'
 
 const FONTS = [
   { value: 'Inter', label: 'Inter' },
@@ -23,6 +28,11 @@ export function EditorTab() {
     updateStyle,
     removeBlock,
   } = useCanvas()
+
+  // Get selected block info first (needed for callbacks)
+  const selectedBlock = selectedBlockId ? blocks.find((b) => b.id === selectedBlockId) : null
+  const isText = selectedBlock ? isTextBlock(selectedBlock) : false
+  const textBlock = isText ? (selectedBlock as TextBlock) : null
 
   // Get editable block IDs
   const editableBlockIds = filterEditableBlocks(
@@ -44,25 +54,48 @@ export function EditorTab() {
     [editableTextBlockIds, updateStyle]
   )
 
+  // Apply inline formatting with tag (b, i, u) to selection, or fall back to block style
+  const applyInlineTag = useCallback(
+    (tag: 'b' | 'i' | 'u', blockStyleKey: keyof TextBlock['style'], activeValue: string, normalValue: string) => {
+      const container = getSelectedBlockElement()
+      if (container && wrapSelectionWithTag(tag, container)) {
+        // Inline formatting applied
+        return true
+      }
+      // No selection, apply block-level style
+      const currentValue = textBlock?.style[blockStyleKey]
+      applyStyle({ [blockStyleKey]: currentValue === activeValue ? normalValue : activeValue })
+      return false
+    },
+    [applyStyle, textBlock]
+  )
+
+  // Apply inline color to selection, or fall back to block style
+  const applyInlineColor = useCallback(
+    (color: string) => {
+      const container = getSelectedBlockElement()
+      if (container && wrapSelectionWithStyle({ color }, container)) {
+        return true
+      }
+      applyStyle({ color })
+      return false
+    },
+    [applyStyle]
+  )
+
   // Handle delete
   const handleDelete = useCallback(() => {
     editableBlockIds.forEach(id => removeBlock(id))
   }, [editableBlockIds, removeBlock])
 
   // No block selected
-  if (!selectedBlockId) {
+  if (!selectedBlockId || !selectedBlock) {
     return (
       <div className="px-4 py-6 text-center text-gray-500 text-sm">
         Select a text block to edit
       </div>
     )
   }
-
-  const selectedBlock = blocks.find((b) => b.id === selectedBlockId)
-  if (!selectedBlock) return null
-
-  const isText = isTextBlock(selectedBlock)
-  const textBlock = isText ? (selectedBlock as TextBlock) : null
 
   // Can't edit this block
   const canEdit = isAdmin || (user && selectedBlock.createdBy === user.uid)
@@ -128,10 +161,13 @@ export function EditorTab() {
 
         <div className="w-px h-6 bg-white/20" />
 
-        {/* B I U S */}
+        {/* B I U S - use onMouseDown to preserve text selection */}
         <div className="flex gap-0.5">
           <button
-            onClick={() => applyStyle({ fontWeight: textBlock.style.fontWeight === 'bold' ? 'normal' : 'bold' })}
+            onMouseDown={(e) => {
+              e.preventDefault() // Prevent losing selection
+              applyInlineTag('b', 'fontWeight', 'bold', 'normal')
+            }}
             className={`w-7 h-7 rounded flex items-center justify-center text-sm font-bold ${
               textBlock.style.fontWeight === 'bold' ? 'bg-indigo-600' : 'bg-white/10 hover:bg-white/20'
             }`}
@@ -139,7 +175,10 @@ export function EditorTab() {
             B
           </button>
           <button
-            onClick={() => applyStyle({ fontStyle: textBlock.style.fontStyle === 'italic' ? 'normal' : 'italic' })}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              applyInlineTag('i', 'fontStyle', 'italic', 'normal')
+            }}
             className={`w-7 h-7 rounded flex items-center justify-center text-sm italic ${
               textBlock.style.fontStyle === 'italic' ? 'bg-indigo-600' : 'bg-white/10 hover:bg-white/20'
             }`}
@@ -147,7 +186,10 @@ export function EditorTab() {
             I
           </button>
           <button
-            onClick={() => applyStyle({ textDecoration: textBlock.style.textDecoration === 'underline' ? 'none' : 'underline' })}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              applyInlineTag('u', 'textDecoration', 'underline', 'none')
+            }}
             className={`w-7 h-7 rounded flex items-center justify-center text-sm underline ${
               textBlock.style.textDecoration === 'underline' ? 'bg-indigo-600' : 'bg-white/10 hover:bg-white/20'
             }`}
@@ -155,7 +197,15 @@ export function EditorTab() {
             U
           </button>
           <button
-            onClick={() => applyStyle({ textDecoration: textBlock.style.textDecoration === 'line-through' ? 'none' : 'line-through' })}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              // Strikethrough uses <s> tag but we'll use style for consistency
+              const container = getSelectedBlockElement()
+              if (container && wrapSelectionWithStyle({ 'text-decoration': 'line-through' }, container)) {
+                return
+              }
+              applyStyle({ textDecoration: textBlock.style.textDecoration === 'line-through' ? 'none' : 'line-through' })
+            }}
             className={`w-7 h-7 rounded flex items-center justify-center text-sm line-through ${
               textBlock.style.textDecoration === 'line-through' ? 'bg-indigo-600' : 'bg-white/10 hover:bg-white/20'
             }`}
@@ -199,12 +249,15 @@ export function EditorTab() {
         </button>
       </div>
 
-      {/* Row 2: Color swatches */}
+      {/* Row 2: Color swatches - use onMouseDown to preserve text selection */}
       <div className="flex gap-1 px-3 pb-2 flex-wrap">
         {TEXT_COLORS.map((color) => (
           <button
             key={color}
-            onClick={() => applyStyle({ color })}
+            onMouseDown={(e) => {
+              e.preventDefault()
+              applyInlineColor(color)
+            }}
             className={`w-5 h-5 rounded-full border-2 transition-transform ${
               textBlock.style.color === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
             }`}

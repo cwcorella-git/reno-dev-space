@@ -2,6 +2,7 @@
 
 import { useRef, useEffect } from 'react'
 import { TextBlock, DEFAULT_BRIGHTNESS } from '@/types/canvas'
+import { sanitizeHtml } from '@/lib/sanitize'
 
 const PLACEHOLDER_TEXT = 'Click to edit'
 
@@ -19,7 +20,9 @@ export function TextBlockRenderer({
   onEditComplete,
 }: TextBlockRendererProps) {
   const editorRef = useRef<HTMLDivElement>(null)
-  const isEmpty = !block.content || block.content.trim() === ''
+  // Check if empty (strip HTML tags to check for actual text content)
+  const textContent = block.content?.replace(/<[^>]*>/g, '').trim() || ''
+  const isEmpty = !textContent
 
   // Calculate opacity from brightness (0-100 -> 0.2-1.0)
   const brightness = block.brightness ?? DEFAULT_BRIGHTNESS
@@ -37,12 +40,21 @@ export function TextBlockRenderer({
     opacity,
   }
 
-  // Focus when entering edit mode (cursor positioned naturally by browser)
+  // Focus and set initial content when entering edit mode
   useEffect(() => {
     if (isEditing && editorRef.current) {
+      // Set innerHTML to preserve any existing formatting
+      editorRef.current.innerHTML = block.content || ''
       editorRef.current.focus()
+      // Move cursor to end
+      const selection = window.getSelection()
+      const range = document.createRange()
+      range.selectNodeContents(editorRef.current)
+      range.collapse(false)
+      selection?.removeAllRanges()
+      selection?.addRange(range)
     }
-  }, [isEditing])
+  }, [isEditing, block.content])
 
   if (isEditing) {
     return (
@@ -53,8 +65,10 @@ export function TextBlockRenderer({
         className="w-full h-full outline-none min-h-[1.5em] whitespace-pre-wrap break-words"
         style={style}
         onBlur={(e) => {
-          const newContent = e.currentTarget.textContent || ''
-          onContentChange?.(newContent.trim())
+          // Get innerHTML and sanitize to keep only safe formatting
+          const rawHtml = e.currentTarget.innerHTML || ''
+          const newContent = sanitizeHtml(rawHtml)
+          onContentChange?.(newContent)
           onEditComplete?.()
         }}
         onKeyDown={(e) => {
@@ -62,9 +76,7 @@ export function TextBlockRenderer({
             e.currentTarget.blur()
           }
         }}
-      >
-        {block.content}
-      </div>
+      />
     )
   }
 
@@ -84,8 +96,7 @@ export function TextBlockRenderer({
     <div
       className="whitespace-pre-wrap break-words"
       style={style}
-    >
-      {block.content}
-    </div>
+      dangerouslySetInnerHTML={{ __html: block.content }}
+    />
   )
 }
