@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useFirestoreChat } from '@/hooks/useFirestoreChat'
 import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
+import { subscribeToCampaignSettings, CampaignSettings } from '@/lib/campaignStorage'
 import { AuthModal } from '@/components/AuthModal'
 import { EditorTab } from './EditorTab'
 import { CommunityTab } from './CommunityTab'
@@ -25,9 +26,16 @@ export function UnifiedPanel() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [mounted, setMounted] = useState(false)
   const [hasPledged, setHasPledged] = useState(false)
+  const [campaignSettings, setCampaignSettings] = useState<CampaignSettings | null>(null)
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  // Subscribe to campaign settings to determine if campaign is active
+  useEffect(() => {
+    const unsubscribe = subscribeToCampaignSettings(setCampaignSettings)
+    return () => unsubscribe()
   }, [])
 
   // Check if user has pledged (to enable Add Text button)
@@ -54,6 +62,9 @@ export function UnifiedPanel() {
   }, [selectedBlockId])
 
   if (!mounted) return null
+
+  // Campaign is active if timer has started
+  const hasCampaign = campaignSettings?.timerStartedAt != null
 
   // Not logged in - show sign in button only
   if (!user) {
@@ -123,36 +134,39 @@ export function UnifiedPanel() {
               Community
               <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`} />
             </button>
-            <button
-              onClick={() => { setActiveTab('donate'); setIsMinimized(false) }}
-              className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
-                activeTab === 'donate'
-                  ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-              </svg>
-              <span className="hidden sm:inline">Donate</span>
-            </button>
+            {/* Only show Donate tab when no active campaign */}
+            {!hasCampaign && (
+              <button
+                onClick={() => { setActiveTab('donate'); setIsMinimized(false) }}
+                className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
+                  activeTab === 'donate'
+                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                <span className="hidden sm:inline">Donate</span>
+              </button>
+            )}
           </div>
 
           {/* Right side - icon buttons */}
           <div className="flex gap-1 items-center">
-            {/* Profile icon */}
+            {/* Profile button with text */}
             <button
               onClick={() => { setActiveTab('profile'); setIsMinimized(false) }}
-              className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+              className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
                 activeTab === 'profile'
                   ? 'bg-white/20 text-white'
                   : 'text-gray-400 hover:text-white hover:bg-white/10'
               }`}
-              title="Profile"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
+              <span className="hidden sm:inline">Profile</span>
             </button>
 
             {/* Content icon - only for admin */}
