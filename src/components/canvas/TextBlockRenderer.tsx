@@ -28,25 +28,40 @@ export function TextBlockRenderer({
   const brightness = block.brightness ?? DEFAULT_BRIGHTNESS
   const opacity = 0.2 + (brightness / 100) * 0.8
 
-  // Map legacy font names to CSS variables for backwards compatibility
+  // Map legacy font names and old CSS variables to new ones for backwards compatibility
   const getFontFamily = (font: string | undefined): string => {
     if (!font) return 'var(--font-inter)'
-    // Already a CSS variable
-    if (font.startsWith('var(')) return font
-    // Legacy font name mapping
+
+    // Map old CSS variable names to new ones
+    const variableMap: Record<string, string> = {
+      'var(--font-roboto-mono)': 'var(--font-jetbrains-mono)',
+      'var(--font-press-start)': 'var(--font-exo-2)',
+      'var(--font-pixelify-sans)': 'var(--font-exo-2)',
+      'var(--font-silkscreen)': 'var(--font-exo-2)',
+      'var(--font-vt323)': 'var(--font-jetbrains-mono)',
+      'var(--font-russo-one)': 'var(--font-oswald)',
+      'var(--font-bangers)': 'var(--font-anton)',
+      'var(--font-permanent-marker)': 'var(--font-caveat)',
+      'var(--font-creepster)': 'var(--font-playfair)',
+    }
+    if (font.startsWith('var(')) {
+      return variableMap[font] || font
+    }
+
+    // Legacy system font name mapping
     const legacyMap: Record<string, string> = {
       'Inter': 'var(--font-inter)',
-      'Monaco': 'var(--font-roboto-mono)',
-      'Courier New': 'var(--font-roboto-mono)',
-      'Georgia': 'var(--font-inter)', // fallback to Inter
-      'Comic Sans MS': 'var(--font-bangers)',
+      'Monaco': 'var(--font-jetbrains-mono)',
+      'Courier New': 'var(--font-jetbrains-mono)',
+      'Georgia': 'var(--font-lora)',
+      'Comic Sans MS': 'var(--font-quicksand)',
       'Impact': 'var(--font-bebas-neue)',
-      'Times New Roman': 'var(--font-inter)',
-      'Arial Black': 'var(--font-bebas-neue)',
-      'Trebuchet MS': 'var(--font-inter)',
+      'Times New Roman': 'var(--font-playfair)',
+      'Arial Black': 'var(--font-anton)',
+      'Trebuchet MS': 'var(--font-space-grotesk)',
       'Verdana': 'var(--font-inter)',
-      'Palatino': 'var(--font-inter)',
-      'Garamond': 'var(--font-inter)',
+      'Palatino': 'var(--font-lora)',
+      'Garamond': 'var(--font-playfair)',
     }
     return legacyMap[font] || 'var(--font-inter)'
   }

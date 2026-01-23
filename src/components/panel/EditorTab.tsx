@@ -15,17 +15,17 @@ import {
 // Using CSS variable names that resolve to the actual font-family
 const FONTS = [
   { value: 'var(--font-inter)', label: 'Inter' },
-  { value: 'var(--font-roboto-mono)', label: 'Mono' },
-  { value: 'var(--font-press-start)', label: 'Pixel' },
-  { value: 'var(--font-pixelify-sans)', label: 'Pixelify' },
-  { value: 'var(--font-silkscreen)', label: 'Silkscreen' },
-  { value: 'var(--font-vt323)', label: 'Terminal' },
+  { value: 'var(--font-jetbrains-mono)', label: 'JetBrains' },
+  { value: 'var(--font-space-grotesk)', label: 'Space' },
+  { value: 'var(--font-exo-2)', label: 'Exo' },
   { value: 'var(--font-orbitron)', label: 'Orbitron' },
-  { value: 'var(--font-russo-one)', label: 'Russo' },
+  { value: 'var(--font-quicksand)', label: 'Quicksand' },
+  { value: 'var(--font-playfair)', label: 'Playfair' },
+  { value: 'var(--font-lora)', label: 'Lora' },
+  { value: 'var(--font-oswald)', label: 'Oswald' },
+  { value: 'var(--font-anton)', label: 'Anton' },
   { value: 'var(--font-bebas-neue)', label: 'Bebas' },
-  { value: 'var(--font-bangers)', label: 'Bangers' },
-  { value: 'var(--font-permanent-marker)', label: 'Marker' },
-  { value: 'var(--font-creepster)', label: 'Creepster' },
+  { value: 'var(--font-caveat)', label: 'Caveat' },
 ]
 
 export function EditorTab() {
