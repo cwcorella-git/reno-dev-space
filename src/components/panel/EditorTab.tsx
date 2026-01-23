@@ -141,10 +141,10 @@ export function EditorTab() {
   const hasMultiple = selectedBlockIds.length > 1
 
   return (
-    <div className="space-y-2">
+    <div className="px-3 py-2">
       {/* Selection count */}
       {hasMultiple && (
-        <div className="px-3 pt-2 text-xs text-gray-400">
+        <div className="text-xs text-gray-400 mb-2">
           {selectedBlockIds.length} selected
           {editableTextBlockIds.length < selectedBlockIds.length && (
             <span className="text-gray-500"> ({editableTextBlockIds.length} editable)</span>
@@ -152,48 +152,50 @@ export function EditorTab() {
         </div>
       )}
 
-      {/* Row 1: Controls */}
-      <div className="flex items-center gap-2 px-3 py-2">
-        {/* Font dropdown + Size */}
-        <select
-          value={textBlock.style.fontFamily || 'Inter'}
-          onChange={(e) => applyStyle({ fontFamily: e.target.value })}
-          className="h-8 px-2 bg-white/10 border border-white/20 rounded text-sm w-24"
-        >
-          {FONTS.map((font) => (
-            <option key={font.value} value={font.value}>
-              {font.label}
-            </option>
-          ))}
-        </select>
+      {/* Single responsive row with flex-wrap */}
+      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+        {/* Font + Size group */}
+        <div className="flex items-center gap-1.5">
+          <select
+            value={textBlock.style.fontFamily || 'Inter'}
+            onChange={(e) => applyStyle({ fontFamily: e.target.value })}
+            className="h-7 px-1.5 bg-white/10 border border-white/20 rounded text-sm w-20 sm:w-24"
+          >
+            {FONTS.map((font) => (
+              <option key={font.value} value={font.value}>
+                {font.label}
+              </option>
+            ))}
+          </select>
 
-        <input
-          type="number"
-          step="0.25"
-          min="0.5"
-          max="8"
-          value={fontSizeInput}
-          onChange={(e) => {
-            setFontSizeInput(e.target.value)
-            const val = parseFloat(e.target.value)
-            if (!isNaN(val) && val >= 0.5 && val <= 8) {
-              applyStyle({ fontSize: val })
-            }
-          }}
-          onBlur={() => {
-            const val = parseFloat(fontSizeInput)
-            if (isNaN(val) || val < 0.5) {
-              setFontSizeInput('0.5')
-              applyStyle({ fontSize: 0.5 })
-            } else if (val > 8) {
-              setFontSizeInput('8')
-              applyStyle({ fontSize: 8 })
-            }
-          }}
-          className="w-14 h-8 px-2 bg-white/10 border border-white/20 rounded text-sm text-center"
-        />
+          <input
+            type="number"
+            step="0.25"
+            min="0.5"
+            max="8"
+            value={fontSizeInput}
+            onChange={(e) => {
+              setFontSizeInput(e.target.value)
+              const val = parseFloat(e.target.value)
+              if (!isNaN(val) && val >= 0.5 && val <= 8) {
+                applyStyle({ fontSize: val })
+              }
+            }}
+            onBlur={() => {
+              const val = parseFloat(fontSizeInput)
+              if (isNaN(val) || val < 0.5) {
+                setFontSizeInput('0.5')
+                applyStyle({ fontSize: 0.5 })
+              } else if (val > 8) {
+                setFontSizeInput('8')
+                applyStyle({ fontSize: 8 })
+              }
+            }}
+            className="w-12 h-7 px-1.5 bg-white/10 border border-white/20 rounded text-sm text-center"
+          />
+        </div>
 
-        <div className="w-px h-6 bg-white/20" />
+        <div className="w-px h-6 bg-white/20 hidden sm:block" />
 
         {/* B I U S - use onMouseDown to preserve text selection */}
         <div className="flex gap-0.5">
@@ -248,7 +250,7 @@ export function EditorTab() {
           </button>
         </div>
 
-        <div className="w-px h-6 bg-white/20" />
+        <div className="w-px h-6 bg-white/20 hidden sm:block" />
 
         {/* Alignment */}
         <div className="flex border border-white/20 rounded overflow-hidden">
@@ -269,33 +271,38 @@ export function EditorTab() {
           ))}
         </div>
 
-        {/* Delete */}
-        <button
-          onClick={handleDelete}
-          className="w-8 h-8 rounded flex items-center justify-center bg-red-600/30 hover:bg-red-600/60 text-red-300 hover:text-white ml-2"
-          title="Delete"
-        >
-          <svg className="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
-        </button>
-      </div>
+        <div className="w-px h-6 bg-white/20 hidden sm:block" />
 
-      {/* Row 2: Color swatches - use onMouseDown to preserve text selection */}
-      <div className="flex gap-1 px-3 pb-2 flex-wrap">
-        {TEXT_COLORS.map((color) => (
+        {/* Colors + Delete group */}
+        <div className="flex items-center gap-2">
+          {/* Color swatches - use onMouseDown to preserve text selection */}
+          <div className="flex gap-1">
+            {TEXT_COLORS.map((color) => (
+              <button
+                key={color}
+                onMouseDown={(e) => {
+                  e.preventDefault()
+                  applyInlineColor(color)
+                }}
+                className={`w-5 h-5 rounded-full border-2 transition-transform ${
+                  textBlock.style.color === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
+                }`}
+                style={{ backgroundColor: color }}
+              />
+            ))}
+          </div>
+
+          {/* Delete */}
           <button
-            key={color}
-            onMouseDown={(e) => {
-              e.preventDefault()
-              applyInlineColor(color)
-            }}
-            className={`w-5 h-5 rounded-full border-2 transition-transform ${
-              textBlock.style.color === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
-            }`}
-            style={{ backgroundColor: color }}
-          />
-        ))}
+            onClick={handleDelete}
+            className="w-7 h-7 rounded flex items-center justify-center bg-red-600/30 hover:bg-red-600/60 text-red-300 hover:text-white"
+            title="Delete"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   )
