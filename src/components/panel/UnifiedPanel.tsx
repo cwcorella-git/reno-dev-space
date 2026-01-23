@@ -109,10 +109,13 @@ export function UnifiedPanel() {
         </button>
       )}
       <div className="bg-gray-900/95 backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl">
-        {/* Tab bar */}
-        <div className="flex items-center justify-between px-2 py-1.5 border-b border-white/10">
-          {/* Left side - content tabs */}
-          <div className="flex gap-1">
+        {/* Tab bar - use grid for true centering independent of side icons */}
+        <div className="relative grid grid-cols-[1fr_auto_1fr] items-center px-2 py-1.5 border-b border-white/10">
+          {/* Left spacer (empty) */}
+          <div />
+
+          {/* Centered main tabs */}
+          <div className="flex gap-1 items-center justify-center">
             <button
               onClick={() => { setActiveTab('editor'); setIsMinimized(false) }}
               className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -150,11 +153,7 @@ export function UnifiedPanel() {
                 <span className="hidden sm:inline">Donate</span>
               </button>
             )}
-          </div>
-
-          {/* Right side - icon buttons */}
-          <div className="flex gap-1 items-center">
-            {/* Profile button with text */}
+            {/* Profile button */}
             <button
               onClick={() => { setActiveTab('profile'); setIsMinimized(false) }}
               className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
@@ -168,7 +167,10 @@ export function UnifiedPanel() {
               </svg>
               <span className="hidden sm:inline">Profile</span>
             </button>
+          </div>
 
+          {/* Right side - admin icons + collapse */}
+          <div className="flex gap-1 items-center justify-end">
             {/* Content icon - only for admin */}
             {isAdmin && (
               <button

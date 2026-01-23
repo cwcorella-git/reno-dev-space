@@ -28,12 +28,35 @@ export function TextBlockRenderer({
   const brightness = block.brightness ?? DEFAULT_BRIGHTNESS
   const opacity = 0.2 + (brightness / 100) * 0.8
 
+  // Map legacy font names to CSS variables for backwards compatibility
+  const getFontFamily = (font: string | undefined): string => {
+    if (!font) return 'var(--font-inter)'
+    // Already a CSS variable
+    if (font.startsWith('var(')) return font
+    // Legacy font name mapping
+    const legacyMap: Record<string, string> = {
+      'Inter': 'var(--font-inter)',
+      'Monaco': 'var(--font-roboto-mono)',
+      'Courier New': 'var(--font-roboto-mono)',
+      'Georgia': 'var(--font-inter)', // fallback to Inter
+      'Comic Sans MS': 'var(--font-bangers)',
+      'Impact': 'var(--font-bebas-neue)',
+      'Times New Roman': 'var(--font-inter)',
+      'Arial Black': 'var(--font-bebas-neue)',
+      'Trebuchet MS': 'var(--font-inter)',
+      'Verdana': 'var(--font-inter)',
+      'Palatino': 'var(--font-inter)',
+      'Garamond': 'var(--font-inter)',
+    }
+    return legacyMap[font] || 'var(--font-inter)'
+  }
+
   const style = {
     fontSize: `${block.style.fontSize}rem`,
     fontWeight: block.style.fontWeight,
     fontStyle: block.style.fontStyle || 'normal',
     textDecoration: block.style.textDecoration || 'none',
-    fontFamily: block.style.fontFamily || 'Inter',
+    fontFamily: getFontFamily(block.style.fontFamily),
     color: block.style.color,
     textAlign: block.style.textAlign as 'left' | 'center' | 'right',
     backgroundColor: block.style.backgroundColor || 'transparent',

@@ -11,19 +11,21 @@ import {
   wrapSelectionWithStyle,
 } from '@/lib/selectionFormat'
 
+// Fonts loaded via Next.js Google Fonts (see layout.tsx)
+// Using CSS variable names that resolve to the actual font-family
 const FONTS = [
-  { value: 'Inter', label: 'Inter' },
-  { value: 'Georgia', label: 'Georgia' },
-  { value: 'Monaco', label: 'Monaco' },
-  { value: 'Comic Sans MS', label: 'Comic' },
-  { value: 'Impact', label: 'Impact' },
-  { value: 'Courier New', label: 'Courier' },
-  { value: 'Times New Roman', label: 'Times' },
-  { value: 'Arial Black', label: 'Arial Blk' },
-  { value: 'Trebuchet MS', label: 'Trebuchet' },
-  { value: 'Verdana', label: 'Verdana' },
-  { value: 'Palatino', label: 'Palatino' },
-  { value: 'Garamond', label: 'Garamond' },
+  { value: 'var(--font-inter)', label: 'Inter' },
+  { value: 'var(--font-roboto-mono)', label: 'Mono' },
+  { value: 'var(--font-press-start)', label: 'Pixel' },
+  { value: 'var(--font-pixelify-sans)', label: 'Pixelify' },
+  { value: 'var(--font-silkscreen)', label: 'Silkscreen' },
+  { value: 'var(--font-vt323)', label: 'Terminal' },
+  { value: 'var(--font-orbitron)', label: 'Orbitron' },
+  { value: 'var(--font-russo-one)', label: 'Russo' },
+  { value: 'var(--font-bebas-neue)', label: 'Bebas' },
+  { value: 'var(--font-bangers)', label: 'Bangers' },
+  { value: 'var(--font-permanent-marker)', label: 'Marker' },
+  { value: 'var(--font-creepster)', label: 'Creepster' },
 ]
 
 export function EditorTab() {

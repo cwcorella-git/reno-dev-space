@@ -183,19 +183,23 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
 
   const updateStyle = useCallback(
     async (id: string, style: Partial<TextBlock['style']>): Promise<void> => {
-      if (!isAdmin) return
+      const block = blocks.find((b) => b.id === id)
+      const canEdit = isAdmin || (user && block?.createdBy === user.uid)
+      if (!canEdit) return
       try {
         await updateTextStyle(id, style)
       } catch (error) {
         console.error('[CanvasContext] Failed to update style:', error)
       }
     },
-    [isAdmin]
+    [isAdmin, user, blocks]
   )
 
   const removeBlock = useCallback(
     async (id: string): Promise<void> => {
-      if (!isAdmin) return
+      const block = blocks.find((b) => b.id === id)
+      const canEdit = isAdmin || (user && block?.createdBy === user.uid)
+      if (!canEdit) return
       try {
         await deleteBlock(id)
         if (selectedBlockId === id) {
@@ -205,7 +209,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         console.error('[CanvasContext] Failed to remove block:', error)
       }
     },
-    [isAdmin, selectedBlockId]
+    [isAdmin, user, blocks, selectedBlockId]
   )
 
   const bringBlockToFront = useCallback(

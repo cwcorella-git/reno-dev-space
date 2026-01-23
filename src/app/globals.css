@@ -8,6 +8,11 @@
   --background-end-rgb: 30, 27, 75;
 }
 
+/* Font family utilities using CSS variables from Next.js font loader */
+.font-sans {
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
 body {
   color: rgb(var(--foreground-rgb));
   background: linear-gradient(
