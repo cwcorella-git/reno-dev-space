@@ -126,6 +126,7 @@ export function Canvas() {
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (e.button !== 0) return // Only left click
+      if (isAddTextMode) return // Don't start marquee when placing text
 
       const canvas = canvasRef.current
       if (!canvas) return
@@ -138,7 +139,7 @@ export function Canvas() {
       isMarqueeActive.current = true
       setMarquee({ startX: x, startY: y, currentX: x, currentY: y })
     },
-    [canvasRef, canvasHeightPercent]
+    [canvasRef, canvasHeightPercent, isAddTextMode]
   )
 
   // Update marquee and handle selection

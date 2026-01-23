@@ -1,17 +1,17 @@
 import type { Metadata } from 'next'
 import {
   Inter,
-  Roboto_Mono,
-  Press_Start_2P,
+  JetBrains_Mono,
+  Exo_2,
+  Anton,
+  Oswald,
+  Space_Grotesk,
+  Playfair_Display,
+  Lora,
+  Quicksand,
+  Caveat,
   Orbitron,
-  Bangers,
-  Creepster,
-  Permanent_Marker,
   Bebas_Neue,
-  Russo_One,
-  VT323,
-  Pixelify_Sans,
-  Silkscreen,
 } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
@@ -19,17 +19,17 @@ import { CanvasProvider } from '@/contexts/CanvasContext'
 import { ContentProvider } from '@/contexts/ContentContext'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
-const robotoMono = Roboto_Mono({ subsets: ['latin'], variable: '--font-roboto-mono' })
-const pressStart2P = Press_Start_2P({ weight: '400', subsets: ['latin'], variable: '--font-press-start' })
+const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono' })
+const exo2 = Exo_2({ subsets: ['latin'], variable: '--font-exo-2' })
+const anton = Anton({ weight: '400', subsets: ['latin'], variable: '--font-anton' })
+const oswald = Oswald({ subsets: ['latin'], variable: '--font-oswald' })
+const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' })
+const playfairDisplay = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' })
+const lora = Lora({ subsets: ['latin'], variable: '--font-lora' })
+const quicksand = Quicksand({ subsets: ['latin'], variable: '--font-quicksand' })
+const caveat = Caveat({ subsets: ['latin'], variable: '--font-caveat' })
 const orbitron = Orbitron({ subsets: ['latin'], variable: '--font-orbitron' })
-const bangers = Bangers({ weight: '400', subsets: ['latin'], variable: '--font-bangers' })
-const creepster = Creepster({ weight: '400', subsets: ['latin'], variable: '--font-creepster' })
-const permanentMarker = Permanent_Marker({ weight: '400', subsets: ['latin'], variable: '--font-permanent-marker' })
 const bebasNeue = Bebas_Neue({ weight: '400', subsets: ['latin'], variable: '--font-bebas-neue' })
-const russoOne = Russo_One({ weight: '400', subsets: ['latin'], variable: '--font-russo-one' })
-const vt323 = VT323({ weight: '400', subsets: ['latin'], variable: '--font-vt323' })
-const pixelifySans = Pixelify_Sans({ subsets: ['latin'], variable: '--font-pixelify-sans' })
-const silkscreen = Silkscreen({ weight: '400', subsets: ['latin'], variable: '--font-silkscreen' })
 
 export const metadata: Metadata = {
   title: 'Reno Dev Space - Local Game Developers',
@@ -43,7 +43,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} ${robotoMono.variable} ${pressStart2P.variable} ${orbitron.variable} ${bangers.variable} ${creepster.variable} ${permanentMarker.variable} ${bebasNeue.variable} ${russoOne.variable} ${vt323.variable} ${pixelifySans.variable} ${silkscreen.variable} font-sans`}>
+      <body className={`${inter.variable} ${jetbrainsMono.variable} ${exo2.variable} ${anton.variable} ${oswald.variable} ${spaceGrotesk.variable} ${playfairDisplay.variable} ${lora.variable} ${quicksand.variable} ${caveat.variable} ${orbitron.variable} ${bebasNeue.variable} font-sans`}>
         <AuthProvider>
           <ContentProvider>
             <CanvasProvider>
