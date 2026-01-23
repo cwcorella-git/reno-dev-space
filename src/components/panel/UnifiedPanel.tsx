@@ -109,13 +109,10 @@ export function UnifiedPanel() {
         </button>
       )}
       <div className="bg-gray-900/95 backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl">
-        {/* Tab bar - use grid for true centering independent of side icons */}
-        <div className="relative grid grid-cols-[1fr_auto_1fr] items-center px-2 py-1.5 border-b border-white/10">
-          {/* Left spacer (empty) */}
-          <div />
-
-          {/* Centered main tabs */}
-          <div className="flex gap-1 items-center justify-center">
+        {/* Tab bar */}
+        <div className="flex items-center justify-between px-2 py-1.5 border-b border-white/10">
+          {/* Left - main tabs */}
+          <div className="flex gap-1 items-center">
             <button
               onClick={() => { setActiveTab('editor'); setIsMinimized(false) }}
               className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${

@@ -492,6 +492,22 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     >
       {renderContent()}
 
+      {/* Delete button (shown when selected and user can edit) */}
+      {isSelected && !isEditing && (isAdmin || (user && block.createdBy === user.uid)) && (
+        <button
+          className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white shadow-md transition-colors z-10"
+          onClick={(e) => {
+            e.stopPropagation()
+            removeBlock(block.id)
+          }}
+          title="Delete"
+        >
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      )}
+
       {/* Resize handles (admin only, selected) */}
       {isAdmin && isSelected && !isEditing && (
         <>

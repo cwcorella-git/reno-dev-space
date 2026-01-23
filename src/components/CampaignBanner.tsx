@@ -98,58 +98,60 @@ export function CampaignBanner() {
           : 'from-indigo-900 via-purple-900 to-indigo-900'
       }`}>
         <div className="max-w-4xl mx-auto px-3 sm:px-4 py-2">
-          {/* Desktop layout: single row with centered stats */}
-          <div className="hidden sm:block relative text-sm mb-2">
-            {/* Left - Timer or Status (absolute) */}
-            <div className="absolute left-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              {isExpired ? (
-                isSuccess ? (
-                  <span className="flex items-center gap-1.5 text-green-300 font-medium">
-                    <span className="text-lg">🏆</span>
-                    GOAL REACHED!
-                  </span>
+          {/* Desktop layout: two rows like mobile for consistency */}
+          <div className="hidden sm:block space-y-2 mb-2">
+            {/* Row 1: Timer + Donate */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {isExpired ? (
+                  isSuccess ? (
+                    <span className="flex items-center gap-1.5 text-green-300 font-medium">
+                      <span className="text-lg">🏆</span>
+                      GOAL REACHED!
+                    </span>
+                  ) : (
+                    <span className="text-purple-300 font-medium">Campaign Complete</span>
+                  )
                 ) : (
-                  <span className="text-purple-300 font-medium">Campaign Complete</span>
-                )
-              ) : (
-                <>
-                  <svg className="w-4 h-4 text-indigo-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <>
+                    <svg className="w-4 h-4 text-indigo-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="font-mono text-white font-medium whitespace-nowrap">{formatTime()}</span>
+                  </>
+                )}
+              </div>
+              {!isExpired && (
+                <button
+                  onClick={() => setShowDonateModal(true)}
+                  className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-medium rounded-full transition-all hover:scale-105"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                   </svg>
-                  <span className="font-mono text-white font-medium whitespace-nowrap">{formatTime()}</span>
-                </>
+                  Donate
+                </button>
               )}
             </div>
 
-            {/* Center - Stats */}
-            <div className="flex items-center justify-center gap-4 text-white">
+            {/* Row 2: Stats centered (matching mobile style) */}
+            <div className="flex items-center justify-center gap-3 text-sm text-white">
               <span className="flex items-center gap-1.5 text-white/70">
                 <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
-                <span>{summary.count}</span>
+                {summary.count}
               </span>
+              <span className="text-white/40">·</span>
               <span className="font-bold whitespace-nowrap">
-                <span className="text-lg">${summary.total.toLocaleString()}</span>
-                <span className="text-white/50 font-normal text-sm"> / ${summary.goal.toLocaleString()}</span>
+                ${summary.total.toLocaleString()}
+                <span className="text-white/50 font-normal"> / ${summary.goal.toLocaleString()}</span>
               </span>
+              <span className="text-white/40">·</span>
               <span className={`font-bold ${isSuccess ? 'text-green-300' : summary.percentComplete >= 100 ? 'text-green-400' : 'text-indigo-300'}`}>
                 {summary.percentComplete}%
               </span>
             </div>
-
-            {/* Right - Donate button (absolute) */}
-            {!isExpired && (
-              <button
-                onClick={() => setShowDonateModal(true)}
-                className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-sm font-medium rounded-full transition-all hover:scale-105"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                Donate
-              </button>
-            )}
           </div>
 
           {/* Mobile layout: two rows */}
