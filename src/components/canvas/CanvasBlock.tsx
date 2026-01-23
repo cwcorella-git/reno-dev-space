@@ -6,6 +6,7 @@ import { TextBlockRenderer } from './TextBlockRenderer'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { filterEditableBlocks } from '@/lib/permissions'
+import { wouldBlockOverlap } from '@/lib/overlapDetection'
 
 interface CanvasBlockProps {
   block: CanvasBlockType
@@ -54,6 +55,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
   // Local drag state for immediate visual feedback
   const [dragPos, setDragPos] = useState<DragState | null>(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [isOverlapping, setIsOverlapping] = useState(false)
 
   // Local resize state for immediate visual feedback
   const [resizeWidth, setResizeWidth] = useState<ResizeState | null>(null)
@@ -185,6 +187,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
 
       setIsDragging(true)
       setDragPos({ x: block.x, y: block.y })
+      setIsOverlapping(false)
 
       const handleMouseMove = (moveEvent: MouseEvent) => {
         // x is percentage of width (0-100)
@@ -196,6 +199,10 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         const newX = Math.max(-OVERFLOW_LEFT, Math.min(100 + OVERFLOW_RIGHT - 5, startBlockX + deltaX))
         // Allow y to go up to canvasHeightPercent - 5 (leaving some margin)
         const newY = Math.max(0, Math.min(canvasHeightPercent - 5, startBlockY + deltaY))
+
+        // Check if this position would overlap other blocks
+        const overlaps = wouldBlockOverlap(block.id, newX, newY, block.width || 12, blocks)
+        setIsOverlapping(overlaps)
 
         setDragPos({ x: newX, y: newY })
       }
@@ -209,6 +216,15 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         // Get current drag position and calculate delta
         setDragPos((currentPos) => {
           if (currentPos && (currentPos.x !== block.x || currentPos.y !== block.y)) {
+            // Check for overlap before saving
+            const overlaps = wouldBlockOverlap(block.id, currentPos.x, currentPos.y, block.width || 12, blocks)
+
+            if (overlaps) {
+              // Don't save - position will revert when dragPos is cleared
+              setIsOverlapping(false)
+              return null
+            }
+
             const deltaX = currentPos.x - startBlockX
             const deltaY = currentPos.y - startBlockY
 
@@ -228,6 +244,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
               moveBlock(block.id, currentPos.x, currentPos.y)
             }
           }
+          setIsOverlapping(false)
           return null
         })
       }
@@ -475,9 +492,13 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       style={blockStyle}
       className={`
         ${isAdmin ? 'cursor-move' : ''}
-        ${isSelected ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-transparent' : ''}
-        ${isInSelection && !isSelected ? 'ring-2 ring-indigo-400/50 ring-offset-1 ring-offset-transparent' : ''}
-        ${isInteracting ? 'shadow-lg shadow-indigo-500/30' : ''}
+        ${isOverlapping
+          ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-transparent'
+          : isSelected
+            ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-transparent'
+            : ''}
+        ${isInSelection && !isSelected && !isOverlapping ? 'ring-2 ring-indigo-400/50 ring-offset-1 ring-offset-transparent' : ''}
+        ${isOverlapping ? 'shadow-lg shadow-red-500/40' : isInteracting ? 'shadow-lg shadow-indigo-500/30' : ''}
         ${isHolding ? 'animate-pulse scale-105' : ''}
         touch-none
       `}
@@ -491,6 +512,13 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       tabIndex={user ? 0 : -1}
     >
       {renderContent()}
+
+      {/* Overlap warning message */}
+      {isOverlapping && isDragging && (
+        <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg z-20">
+          Can&apos;t place here – overlapping
+        </div>
+      )}
 
       {/* Delete button (shown when selected and user can edit) */}
       {isSelected && !isEditing && (isAdmin || (user && block.createdBy === user.uid)) && (

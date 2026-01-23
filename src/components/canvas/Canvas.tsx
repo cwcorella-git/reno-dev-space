@@ -8,6 +8,7 @@ import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
 import { incrementPageViews } from '@/lib/campaignStorage'
+import { wouldOverlap } from '@/lib/overlapDetection'
 
 // Mobile safe zone width (for admin visual guide)
 const MOBILE_SAFE_ZONE = 375
@@ -43,6 +44,9 @@ export function Canvas() {
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [marquee, setMarquee] = useState<MarqueeState | null>(null)
   const isMarqueeActive = useRef(false)
+
+  // Add Text mode cursor preview
+  const [addTextPreview, setAddTextPreview] = useState<{ x: number; y: number; isValid: boolean } | null>(null)
 
   // Scale factor for viewport < DESIGN_WIDTH
   const [scale, setScale] = useState(1)
@@ -110,6 +114,13 @@ export function Canvas() {
             // rect dimensions are scaled, so percentages work directly
             const x = ((e.clientX - rect.left) / rect.width) * 100
             const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
+
+            // Check for overlap before placing
+            if (wouldOverlap(x, y, blocks)) {
+              // Don't place - just show feedback (preview already shows red)
+              return
+            }
+
             addText(x, y)
             setIsAddTextMode(false)
             return
@@ -119,7 +130,7 @@ export function Canvas() {
         setContextMenu(null)
       }
     },
-    [selectBlock, isAddTextMode, setIsAddTextMode, isAdmin, canvasRef, addText, canvasHeightPercent]
+    [selectBlock, isAddTextMode, setIsAddTextMode, isAdmin, canvasRef, addText, canvasHeightPercent, blocks]
   )
 
   // Start marquee selection on mouse down (available to everyone)
@@ -297,6 +308,45 @@ export function Canvas() {
     }
   }, [])
 
+  // Track mouse position for Add Text mode preview
+  useEffect(() => {
+    if (!isAddTextMode || !isAdmin) {
+      setAddTextPreview(null)
+      return
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+
+      const rect = canvas.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * 100
+      const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
+
+      // Check if placement would be valid (not overlapping)
+      const isValid = !wouldOverlap(x, y, blocks)
+
+      setAddTextPreview({ x, y, isValid })
+    }
+
+    const handleMouseLeave = () => {
+      setAddTextPreview(null)
+    }
+
+    const canvas = canvasRef.current
+    if (canvas) {
+      canvas.addEventListener('mousemove', handleMouseMove)
+      canvas.addEventListener('mouseleave', handleMouseLeave)
+    }
+
+    return () => {
+      if (canvas) {
+        canvas.removeEventListener('mousemove', handleMouseMove)
+        canvas.removeEventListener('mouseleave', handleMouseLeave)
+      }
+    }
+  }, [isAddTextMode, isAdmin, blocks, canvasRef, canvasHeightPercent])
+
 
   if (authLoading || canvasLoading) {
     return (
@@ -430,12 +480,36 @@ export function Canvas() {
             </div>
           )}
 
-          {/* Add text mode indicator */}
+          {/* Add text mode indicator and cursor preview */}
           {isAddTextMode && (
             <div className="absolute inset-0 pointer-events-none z-40">
-              <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm shadow-lg">
-                Tap anywhere to place text
+              <div className={`absolute top-20 left-1/2 -translate-x-1/2 px-4 py-2 rounded-lg text-sm shadow-lg ${
+                addTextPreview && !addTextPreview.isValid
+                  ? 'bg-red-600 text-white'
+                  : 'bg-indigo-600 text-white'
+              }`}>
+                {addTextPreview && !addTextPreview.isValid
+                  ? 'Can\'t place here – overlapping'
+                  : 'Click to place text'}
               </div>
+
+              {/* Cursor-following preview box */}
+              {addTextPreview && (
+                <div
+                  className={`absolute border-2 border-dashed rounded transition-colors ${
+                    addTextPreview.isValid
+                      ? 'border-green-500 bg-green-500/10'
+                      : 'border-red-500 bg-red-500/10'
+                  }`}
+                  style={{
+                    left: `${addTextPreview.x}%`,
+                    top: `${(addTextPreview.y / canvasHeightPercent) * 100}%`,
+                    width: '12%',
+                    height: `${(6 / canvasHeightPercent) * 100}%`,
+                    minHeight: '30px',
+                  }}
+                />
+              )}
             </div>
           )}
 
