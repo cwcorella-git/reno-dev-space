@@ -403,3 +403,10 @@ stripe listen --forward-to ...  # Forward webhooks to local dev
 stripe trigger checkout.session.completed  # Test webhook events
 stripe open settings            # Open Stripe Dashboard settings
 ```
+
+### Stripe Connect (Separate Branding)
+
+To show "Reno Dev Space" instead of "Veritable Games" on checkout:
+- See detailed instructions: `~/Desktop/STRIPE_CONNECT_SETUP.md`
+- Creates Reno Dev Space as a "Connected Account" under Veritable Games
+- Allows fully separate branding while using same Stripe infrastructure

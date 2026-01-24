@@ -92,15 +92,14 @@ export function CampaignBanner() {
 
   return (
     <>
-      <div className="fixed top-2 left-1/2 -translate-x-1/2 z-40 w-[calc(100%-1rem)] sm:w-auto sm:min-w-[500px] sm:max-w-[700px]">
-        <div className={`rounded-xl border border-white/10 bg-gradient-to-r shadow-xl ${
+      <div className={`fixed top-0 left-0 right-0 z-40 border-b border-white/10 bg-gradient-to-r ${
           isSuccess
             ? 'from-emerald-900 via-green-800 to-emerald-900'
             : 'from-indigo-900 via-purple-900 to-indigo-900'
         }`}>
-        <div className="px-4 sm:px-5 py-3">
-          {/* Clean single-row layout */}
-          <div className="flex items-center justify-between gap-4 mb-3">
+        <div className="max-w-4xl mx-auto px-4 py-3">
+          {/* Row 1: Timer + Donate */}
+          <div className="flex items-center justify-between gap-4 mb-2">
             {/* Left: Timer */}
             <div className="flex items-center gap-2">
               {isExpired ? (
@@ -122,40 +121,38 @@ export function CampaignBanner() {
               )}
             </div>
 
-            {/* Center: Amount raised */}
-            <div className="text-base sm:text-lg text-white font-bold whitespace-nowrap">
-              ${summary.total.toLocaleString()}
-              <span className="text-white/50 font-normal text-sm sm:text-base"> / ${summary.goal.toLocaleString()}</span>
-            </div>
-
             {/* Right: Donate button */}
-            <div className="flex justify-end">
-              {!isExpired && (
-                <button
-                  onClick={() => setShowDonateModal(true)}
-                  className="flex items-center gap-2 px-5 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white text-sm sm:text-base font-bold rounded-full transition-all hover:scale-105 shadow-lg shadow-purple-500/30"
-                >
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
-                  </svg>
-                  Donate
-                </button>
-              )}
-            </div>
+            {!isExpired && (
+              <button
+                onClick={() => setShowDonateModal(true)}
+                className="flex items-center gap-2 px-5 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white text-sm sm:text-base font-bold rounded-full transition-all hover:scale-105 shadow-lg shadow-purple-500/30"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+                </svg>
+                Donate
+              </button>
+            )}
           </div>
 
-          {/* Progress Bar - larger */}
-          <div className="h-3 sm:h-4 bg-white/20 rounded-full overflow-hidden">
-            <div
-              className={`h-full transition-all duration-500 ${
-                isSuccess
-                  ? 'bg-gradient-to-r from-green-400 to-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.5)]'
-                  : summary.percentComplete >= 100
-                    ? 'bg-gradient-to-r from-green-500 to-emerald-400'
-                    : 'bg-gradient-to-r from-indigo-500 to-purple-500'
-              }`}
-              style={{ width: `${Math.min(summary.percentComplete, 100)}%` }}
-            />
+          {/* Row 2: Progress Bar + Goal */}
+          <div className="flex items-center gap-3">
+            <div className="flex-1 h-3 sm:h-4 bg-white/20 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${
+                  isSuccess
+                    ? 'bg-gradient-to-r from-green-400 to-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.5)]'
+                    : summary.percentComplete >= 100
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-400'
+                      : 'bg-gradient-to-r from-indigo-500 to-purple-500'
+                }`}
+                style={{ width: `${Math.min(summary.percentComplete, 100)}%` }}
+              />
+            </div>
+            <div className="text-sm sm:text-base text-white font-bold whitespace-nowrap">
+              ${summary.total.toLocaleString()}
+              <span className="text-white/50 font-normal"> / ${summary.goal.toLocaleString()}</span>
+            </div>
           </div>
 
           {/* Public backers list */}
@@ -176,7 +173,6 @@ export function CampaignBanner() {
               </div>
             </div>
           )}
-        </div>
         </div>
       </div>
 
