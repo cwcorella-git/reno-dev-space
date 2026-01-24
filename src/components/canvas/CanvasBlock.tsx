@@ -36,10 +36,12 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     selectedBlockId,
     selectedBlockIds,
     isEditing,
+    isGroupDragging,
     canvasRef,
     selectBlock,
     selectBlocks,
     setIsEditing,
+    setIsGroupDragging,
     moveBlock,
     moveBlocks,
     resizeBlock,
@@ -118,26 +120,11 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         return
       }
 
-      // Delete - remove all selected blocks user can edit
-      if (e.key === 'Delete' || e.key === 'Backspace') {
-        if (!isEditing && selectedBlockIds.length > 0) {
-          e.preventDefault()
-          // Only delete blocks user owns (admin can delete all)
-          const deletableIds = filterEditableBlocks(
-            selectedBlockIds,
-            blocks,
-            user?.uid,
-            isAdmin
-          )
-          deletableIds.forEach(id => removeBlock(id))
-        }
-      }
-
       if (e.key === 'Escape') {
         selectBlock(null)
       }
     },
-    [isAdmin, isSelected, isInSelection, isEditing, selectedBlockIds, blocks, removeBlock, selectBlock, user, vote, block.id]
+    [isSelected, isInSelection, isEditing, selectBlock, user, vote, block.id]
   )
 
   const handleContentChange = useCallback(
@@ -189,6 +176,11 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       setDragPos({ x: block.x, y: block.y })
       setIsOverlapping(false)
 
+      // Signal group dragging when multiple blocks selected
+      if (movableBlockIds.length > 1) {
+        setIsGroupDragging(true)
+      }
+
       const handleMouseMove = (moveEvent: MouseEvent) => {
         // x is percentage of width (0-100)
         // y is percentage of canvasHeightPercent (which may be > 100)
@@ -212,6 +204,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         document.removeEventListener('mouseup', handleMouseUp)
 
         setIsDragging(false)
+        setIsGroupDragging(false)
 
         // Get current drag position and calculate delta
         setDragPos((currentPos) => {
@@ -252,7 +245,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
     },
-    [isAdmin, isSelected, isEditing, canvasRef, block, moveBlock, moveBlocks, selectedBlockIds, blocks, user?.uid, canvasHeightPercent]
+    [isAdmin, isSelected, isEditing, canvasRef, block, moveBlock, moveBlocks, selectedBlockIds, blocks, user?.uid, canvasHeightPercent, setIsGroupDragging]
   )
 
   // Handle resize with local state for immediate feedback
@@ -497,8 +490,12 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
           : isSelected
             ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-transparent'
             : ''}
-        ${isInSelection && !isSelected && !isOverlapping ? 'ring-2 ring-indigo-400/50 ring-offset-1 ring-offset-transparent' : ''}
-        ${isOverlapping ? 'shadow-lg shadow-red-500/40' : isInteracting ? 'shadow-lg shadow-indigo-500/30' : ''}
+        ${isInSelection && !isSelected && !isOverlapping
+          ? isGroupDragging
+            ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-transparent'
+            : 'ring-2 ring-indigo-400/50 ring-offset-1 ring-offset-transparent'
+          : ''}
+        ${isOverlapping ? 'shadow-lg shadow-red-500/40' : (isInteracting || (isGroupDragging && isInSelection)) ? 'shadow-lg shadow-indigo-500/30' : ''}
         ${isHolding ? 'animate-pulse scale-105' : ''}
         touch-none
       `}

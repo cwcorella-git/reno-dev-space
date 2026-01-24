@@ -34,20 +34,20 @@ export const TEXT_COLORS = [
   '#ffffff', // white
 ]
 
-// Available fonts for random selection
+// Available fonts for random selection (CSS variables)
 export const TEXT_FONTS = [
-  'Inter',
-  'Georgia',
-  'Monaco',
-  'Comic Sans MS',
-  'Impact',
-  'Courier New',
-  'Times New Roman',
-  'Arial Black',
-  'Trebuchet MS',
-  'Verdana',
-  'Palatino',
-  'Garamond',
+  'var(--font-inter)',
+  'var(--font-jetbrains-mono)',
+  'var(--font-space-grotesk)',
+  'var(--font-exo-2)',
+  'var(--font-orbitron)',
+  'var(--font-quicksand)',
+  'var(--font-playfair)',
+  'var(--font-lora)',
+  'var(--font-oswald)',
+  'var(--font-anton)',
+  'var(--font-bebas-neue)',
+  'var(--font-caveat)',
 ]
 
 // Get a random color from the palette
@@ -103,7 +103,7 @@ export const DEFAULT_TEXT_STYLE: TextStyle = {
   fontWeight: 'normal',
   fontStyle: 'normal',
   textDecoration: 'none',
-  fontFamily: 'Inter',
+  fontFamily: 'var(--font-inter)',
   color: '#ffffff', // Will be overridden with random color on creation
   textAlign: 'left',
   marquee: false,

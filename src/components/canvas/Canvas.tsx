@@ -9,6 +9,7 @@ import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
 import { incrementPageViews } from '@/lib/campaignStorage'
 import { wouldOverlap } from '@/lib/overlapDetection'
+import { filterEditableBlocks } from '@/lib/permissions'
 
 // Mobile safe zone width (for admin visual guide)
 const MOBILE_SAFE_ZONE = 375
@@ -40,13 +41,16 @@ interface MarqueeState {
 
 export function Canvas() {
   const { user, isAdmin, loading: authLoading } = useAuth()
-  const { blocks, canvasRef, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText, isAddTextMode, setIsAddTextMode } = useCanvas()
+  const { blocks, canvasRef, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText, isAddTextMode, setIsAddTextMode, removeBlock, undo, redo, copyBlocks, pasteBlocks } = useCanvas()
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [marquee, setMarquee] = useState<MarqueeState | null>(null)
   const isMarqueeActive = useRef(false)
 
   // Add Text mode cursor preview
   const [addTextPreview, setAddTextPreview] = useState<{ x: number; y: number; isValid: boolean } | null>(null)
+
+  // Track cursor position for paste operations
+  const cursorPosRef = useRef<{ x: number; y: number }>({ x: 50, y: 50 })
 
   // Scale factor for viewport < DESIGN_WIDTH
   const [scale, setScale] = useState(1)
@@ -104,28 +108,27 @@ export function Canvas() {
 
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent) => {
-      if (!isMarqueeActive.current) {
-        // If in add text mode, place text at click position
-        if (isAddTextMode && isAdmin) {
-          const canvas = canvasRef.current
-          if (canvas) {
-            const rect = canvas.getBoundingClientRect()
-            // Account for scale when converting coordinates
-            // rect dimensions are scaled, so percentages work directly
-            const x = ((e.clientX - rect.left) / rect.width) * 100
-            const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
+      // If in add text mode, place text at click position
+      if (isAddTextMode && isAdmin) {
+        const canvas = canvasRef.current
+        if (canvas) {
+          const rect = canvas.getBoundingClientRect()
+          const x = ((e.clientX - rect.left) / rect.width) * 100
+          const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
 
-            // Check for overlap before placing
-            if (wouldOverlap(x, y, blocks)) {
-              // Don't place - just show feedback (preview already shows red)
-              return
-            }
-
-            addText(x, y)
-            setIsAddTextMode(false)
+          if (wouldOverlap(x, y, blocks)) {
             return
           }
+
+          addText(x, y)
+          setIsAddTextMode(false)
+          return
         }
+      }
+
+      // Click on canvas background always deselects (unless marquee is selecting blocks)
+      // The marquee handlers will handle selection, this catches direct clicks
+      if (!isMarqueeActive.current) {
         selectBlock(null)
         setContextMenu(null)
       }
@@ -177,10 +180,15 @@ export function Canvas() {
       const top = Math.min(marquee.startY, marquee.currentY)
       const bottom = Math.max(marquee.startY, marquee.currentY)
 
-      // Only select if dragged a meaningful distance
+      // Check if this was a meaningful drag or just a click
       const width = right - left
       const height = bottom - top
-      if (width > 2 || height > 2) {
+      const isTinyDrag = width <= 2 && height <= 2
+
+      if (isTinyDrag) {
+        // Tiny drag = click on empty canvas → clear selection
+        selectBlock(null)
+      } else {
         // Find blocks within the selection rectangle
         const selectedIds = blocks
           .filter((block) => {
@@ -197,14 +205,15 @@ export function Canvas() {
 
         if (selectedIds.length > 0) {
           selectBlocks(selectedIds)
+        } else {
+          // No blocks in marquee → clear selection
+          selectBlock(null)
         }
       }
 
       setMarquee(null)
-      // Reset after a short delay to prevent click handler from deselecting
-      setTimeout(() => {
-        isMarqueeActive.current = false
-      }, 50)
+      // Reset immediately - we've already handled deselection in mouseup
+      isMarqueeActive.current = false
     }
 
     document.addEventListener('mousemove', handleMouseMove)
@@ -214,7 +223,7 @@ export function Canvas() {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [marquee, blocks, selectBlocks, canvasRef, canvasHeightPercent])
+  }, [marquee, blocks, selectBlock, selectBlocks, canvasRef, canvasHeightPercent])
 
   // Right-click to show context menu (admin only)
   const handleContextMenu = useCallback(
@@ -248,20 +257,74 @@ export function Canvas() {
     }
   }, [contextMenu, addText])
 
-  // Keyboard shortcuts: Escape, Ctrl+A
+  // Keyboard shortcuts: Delete, Escape, Ctrl+A/Z/Y/C/V
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+A or Cmd+A - select all blocks
-      if ((e.ctrlKey || e.metaKey) && e.key === 'a') {
-        // Only intercept if not in a text input
-        const target = e.target as HTMLElement
-        if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) {
+      // Skip if in a text input
+      const target = e.target as HTMLElement
+      const isTextInput = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable
+
+      // Ctrl/Cmd shortcuts
+      if (e.ctrlKey || e.metaKey) {
+        // Ctrl+A - select all blocks
+        if (e.key === 'a') {
+          if (isTextInput) return
+          e.preventDefault()
+          const allIds = blocks.map((b) => b.id)
+          if (allIds.length > 0) {
+            selectBlocks(allIds)
+          }
           return
         }
-        e.preventDefault()
-        const allIds = blocks.map((b) => b.id)
-        if (allIds.length > 0) {
-          selectBlocks(allIds)
+
+        // Ctrl+Z - undo
+        if (e.key === 'z' && !e.shiftKey) {
+          if (isTextInput) return
+          e.preventDefault()
+          undo()
+          return
+        }
+
+        // Ctrl+Y or Ctrl+Shift+Z - redo
+        if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
+          if (isTextInput) return
+          e.preventDefault()
+          redo()
+          return
+        }
+
+        // Ctrl+C - copy selected blocks
+        if (e.key === 'c') {
+          if (isTextInput) return
+          if (selectedBlockIds.length > 0) {
+            e.preventDefault()
+            copyBlocks()
+          }
+          return
+        }
+
+        // Ctrl+V - paste blocks at cursor position
+        if (e.key === 'v') {
+          if (isTextInput) return
+          e.preventDefault()
+          pasteBlocks(cursorPosRef.current.x, cursorPosRef.current.y)
+          return
+        }
+      }
+
+      // Delete/Backspace - remove all selected blocks user can edit
+      if (e.key === 'Delete' || e.key === 'Backspace') {
+        if (isTextInput) return
+        if (selectedBlockIds.length > 0) {
+          e.preventDefault()
+          // Only delete blocks user owns (admin can delete all)
+          const deletableIds = filterEditableBlocks(
+            selectedBlockIds,
+            blocks,
+            user?.uid,
+            isAdmin
+          )
+          deletableIds.forEach(id => removeBlock(id))
         }
         return
       }
@@ -275,7 +338,7 @@ export function Canvas() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [blocks, selectBlocks, selectBlock, setIsAddTextMode])
+  }, [blocks, selectBlocks, selectBlock, setIsAddTextMode, selectedBlockIds, removeBlock, user?.uid, isAdmin, undo, redo, copyBlocks, pasteBlocks])
 
   // Dismiss context menu when clicking anywhere (outside the menu)
   useEffect(() => {
@@ -298,6 +361,26 @@ export function Canvas() {
       document.removeEventListener('contextmenu', handleClick, true)
     }
   }, [contextMenu])
+
+  // Track cursor position for paste operations
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+
+      const rect = canvas.getBoundingClientRect()
+      const x = ((e.clientX - rect.left) / rect.width) * 100
+      const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
+
+      // Only update if cursor is within canvas bounds
+      if (x >= 0 && x <= 100 && y >= 0) {
+        cursorPosRef.current = { x, y }
+      }
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    return () => document.removeEventListener('mousemove', handleMouseMove)
+  }, [canvasRef, canvasHeightPercent])
 
   // Track page views (once per browser session)
   useEffect(() => {
@@ -366,6 +449,12 @@ export function Canvas() {
       <div
         ref={scrollContainerRef}
         className="min-h-screen w-full overflow-y-auto overflow-x-hidden bg-brand-dark"
+        onClick={(e) => {
+          // Click on page background (not canvas) also deselects
+          if (e.target === e.currentTarget || e.target === scrollContainerRef.current) {
+            selectBlock(null)
+          }
+        }}
       >
         {/* Spacer for fixed banner - OUTSIDE scaled area so it doesn't get scaled */}
         <div style={{ height: `${BANNER_HEIGHT}px` }} />

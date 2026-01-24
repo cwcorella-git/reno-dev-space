@@ -349,3 +349,57 @@ Full cascade when user deletes account (via ProfilePanel):
 - Regular users can only edit blocks they created (`createdBy` matches their UID)
 - Multi-select filters to only show editable blocks in count
 - Locked campaign prevents all block modifications
+
+## Stripe Integration
+
+### Current Status: Test Mode (Sandbox)
+
+Using Veritable Games Stripe account (`acct_1SVgXvFEu0YOwlhj`) for Reno Dev Space donations.
+
+### Go-Live Checklist
+
+When ready to accept real payments:
+
+1. **Stripe Dashboard Setup**
+   - [ ] Toggle OFF "Test mode" in Stripe Dashboard (top-right)
+   - [ ] Complete account verification (business details, bank account, identity)
+   - [ ] Update public business name to "Reno Dev Space" (Settings → Public details)
+   - [ ] Configure branding colors to match site theme
+
+2. **Get Live API Keys**
+   - Go to Stripe Dashboard → Developers → API keys (with Test mode OFF)
+   - Copy the live secret key (`sk_live_...`)
+
+3. **Update Firebase Secrets**
+   ```bash
+   # Set live secret key (no trailing newlines!)
+   printf "sk_live_YOUR_KEY" | firebase functions:secrets:set STRIPE_SECRET_KEY
+
+   # Redeploy functions
+   firebase deploy --only functions
+   ```
+
+4. **Set Up Live Webhook**
+   - Stripe Dashboard → Developers → Webhooks → Add endpoint
+   - URL: `https://us-central1-reno-dev-space.cloudfunctions.net/stripeWebhook`
+   - Events: `checkout.session.completed`
+   - Copy signing secret, then:
+   ```bash
+   printf "whsec_YOUR_WEBHOOK_SECRET" | firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
+   firebase deploy --only functions
+   ```
+
+5. **Test with Real Card**
+   - Make a small donation ($1) to verify the full flow
+   - Check Stripe Dashboard for the payment
+   - Verify webhook fires and donation appears in Firestore
+
+### Stripe CLI Commands
+
+```bash
+stripe login                    # Authenticate
+stripe logs tail                # Live API logs (great for debugging)
+stripe listen --forward-to ...  # Forward webhooks to local dev
+stripe trigger checkout.session.completed  # Test webhook events
+stripe open settings            # Open Stripe Dashboard settings
+```

@@ -225,6 +225,35 @@ export async function sendToBack(
   await updateBlockZIndex(id, minZ - 1)
 }
 
+// Restore a deleted block with its original data (for undo)
+export async function restoreBlock(block: CanvasBlock): Promise<void> {
+  const db = getDb()
+  const { id, ...data } = block
+  // Use setDoc to restore with original ID
+  const { setDoc } = await import('firebase/firestore')
+  await setDoc(doc(db, COLLECTION_NAME, id), {
+    ...data,
+    updatedAt: Date.now(),
+  })
+}
+
+// Restore multiple blocks at once (for undo of multi-delete)
+export async function restoreBlocks(blocks: CanvasBlock[]): Promise<void> {
+  await Promise.all(blocks.map(block => restoreBlock(block)))
+}
+
+// Update a block with full data (for undo/redo)
+export async function updateBlockFull(
+  id: string,
+  data: Partial<CanvasBlock>
+): Promise<void> {
+  const db = getDb()
+  await updateDoc(doc(db, COLLECTION_NAME, id), {
+    ...data,
+    updatedAt: Date.now(),
+  })
+}
+
 // Reset brightness for all blocks to default (admin only)
 export async function resetAllBrightness(): Promise<number> {
   const db = getDb()

@@ -1,11 +1,11 @@
 import { CanvasBlock } from '@/types/canvas'
 
 // Approximate dimensions for a new text block (percentages of canvas)
-const NEW_BLOCK_WIDTH = 12  // ~12% of canvas width
-const NEW_BLOCK_HEIGHT = 6  // ~6% of canvas height (one screen = 100)
+const NEW_BLOCK_WIDTH = 5   // ~5% of canvas width (tight estimate)
+const NEW_BLOCK_HEIGHT = 1  // ~1% of canvas height (single line of text)
 
-// Padding between blocks (percentage)
-const OVERLAP_PADDING = 1
+// Padding between blocks (percentage) - zero to only flag true overlaps
+const OVERLAP_PADDING = 0
 
 /**
  * Check if placing a new block at (newX, newY) would overlap existing blocks.
@@ -21,8 +21,8 @@ export function wouldOverlap(
   const newBottom = newY + NEW_BLOCK_HEIGHT
 
   for (const block of blocks) {
-    const blockWidth = block.width || 12
-    const blockHeight = 6 // approximate text block height
+    const blockWidth = block.width || 5
+    const blockHeight = 1 // minimal height - only flag true overlaps
 
     const blockRight = block.x + blockWidth
     const blockBottom = block.y + blockHeight
@@ -59,8 +59,8 @@ export function wouldBlockOverlap(
     // Skip self
     if (other.id === blockId) continue
 
-    const otherWidth = other.width || 12
-    const otherHeight = 6 // approximate text block height
+    const otherWidth = other.width || 5
+    const otherHeight = 1 // minimal height - only flag true overlaps
 
     const otherRight = other.x + otherWidth
     const otherBottom = other.y + otherHeight
