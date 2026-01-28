@@ -58,6 +58,22 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
   const [dragPos, setDragPos] = useState<DragState | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [isOverlapping, setIsOverlapping] = useState(false)
+  // Track the position we're waiting for Firestore to confirm
+  const pendingPosRef = useRef<DragState | null>(null)
+
+  // Clear dragPos when Firestore confirms the new position (prevents jitter)
+  useEffect(() => {
+    if (pendingPosRef.current && !isDragging) {
+      const tolerance = 0.01 // Small tolerance for floating point comparison
+      const xMatches = Math.abs(block.x - pendingPosRef.current.x) < tolerance
+      const yMatches = Math.abs(block.y - pendingPosRef.current.y) < tolerance
+      if (xMatches && yMatches) {
+        // Firestore has confirmed the position, safe to clear local state
+        pendingPosRef.current = null
+        setDragPos(null)
+      }
+    }
+  }, [block.x, block.y, isDragging])
 
   // Local resize state for immediate visual feedback
   const [resizeWidth, setResizeWidth] = useState<ResizeState | null>(null)
@@ -205,6 +221,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
 
         setIsDragging(false)
         setIsGroupDragging(false)
+        setIsOverlapping(false)
 
         // Get current drag position and calculate delta
         setDragPos((currentPos) => {
@@ -214,7 +231,6 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
 
             if (overlaps) {
               // Don't save - position will revert when dragPos is cleared
-              setIsOverlapping(false)
               return null
             }
 
@@ -236,8 +252,11 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
               // Single block move
               moveBlock(block.id, currentPos.x, currentPos.y)
             }
+
+            // Keep dragPos until Firestore confirms (prevents jitter)
+            pendingPosRef.current = { x: currentPos.x, y: currentPos.y }
+            return currentPos
           }
-          setIsOverlapping(false)
           return null
         })
       }
@@ -348,6 +367,9 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         setDragPos((currentPos) => {
           if (currentPos) {
             moveBlock(block.id, currentPos.x, currentPos.y)
+            // Keep dragPos until Firestore confirms (prevents jitter)
+            pendingPosRef.current = { x: currentPos.x, y: currentPos.y }
+            return currentPos
           }
           return null
         })
