@@ -97,57 +97,57 @@ export function CampaignBanner() {
             ? 'from-emerald-900 via-green-800 to-emerald-900'
             : 'from-indigo-900 via-purple-900 to-indigo-900'
         }`}>
-        <div className="max-w-4xl mx-auto px-4 py-3">
-          {/* Row 1: Progress Bar + Goal */}
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex-1 h-3 sm:h-4 bg-white/20 rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-500 ${
-                  isSuccess
-                    ? 'bg-gradient-to-r from-green-400 to-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.5)]'
-                    : summary.percentComplete >= 100
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-400'
-                      : 'bg-gradient-to-r from-indigo-500 to-purple-500'
-                }`}
-                style={{ width: `${Math.min(summary.percentComplete, 100)}%` }}
-              />
-            </div>
-            <div className="text-sm sm:text-base text-white font-bold whitespace-nowrap">
-              ${summary.total.toLocaleString()}
-              <span className="text-white/50 font-normal"> / ${summary.goal.toLocaleString()}</span>
-            </div>
-          </div>
-
-          {/* Row 2: Timer + Donate */}
-          <div className="flex items-center justify-between gap-4">
+        <div className="max-w-4xl mx-auto px-4 py-2.5">
+          {/* Single Row: Timer | Progress Bar + Goal | Donate */}
+          <div className="flex items-center gap-3 sm:gap-4">
             {/* Left: Timer */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
               {isExpired ? (
                 isSuccess ? (
-                  <span className="flex items-center gap-2 text-green-300 font-bold text-base sm:text-lg">
-                    <span className="text-xl sm:text-2xl">🏆</span>
-                    GOAL REACHED!
+                  <span className="flex items-center gap-1.5 text-green-300 font-bold text-sm sm:text-base">
+                    <span className="text-base sm:text-lg">🏆</span>
+                    GOAL!
                   </span>
                 ) : (
-                  <span className="text-purple-300 font-bold text-base sm:text-lg">Campaign Complete</span>
+                  <span className="text-purple-300 font-bold text-sm sm:text-base">Complete</span>
                 )
               ) : (
                 <>
-                  <svg className="w-5 h-5 sm:w-6 sm:h-6 text-indigo-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
-                  <span className="font-mono text-white font-bold text-base sm:text-lg whitespace-nowrap">{formatTime()}</span>
+                  <span className="font-mono text-white font-bold text-sm sm:text-base whitespace-nowrap">{formatTime()}</span>
                 </>
               )}
+            </div>
+
+            {/* Center: Progress Bar + Goal */}
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <div className="flex-1 h-2.5 sm:h-3 bg-white/20 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ${
+                    isSuccess
+                      ? 'bg-gradient-to-r from-green-400 to-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.5)]'
+                      : summary.percentComplete >= 100
+                        ? 'bg-gradient-to-r from-green-500 to-emerald-400'
+                        : 'bg-gradient-to-r from-indigo-500 to-purple-500'
+                  }`}
+                  style={{ width: `${Math.min(summary.percentComplete, 100)}%` }}
+                />
+              </div>
+              <div className="text-xs sm:text-sm text-white font-bold whitespace-nowrap">
+                ${summary.total.toLocaleString()}
+                <span className="text-white/50 font-normal">/${summary.goal.toLocaleString()}</span>
+              </div>
             </div>
 
             {/* Right: Donate button */}
             {!isExpired && (
               <button
                 onClick={() => setShowDonateModal(true)}
-                className="flex items-center gap-2 px-5 sm:px-6 py-2 sm:py-2.5 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white text-sm sm:text-base font-bold rounded-full transition-all hover:scale-105 shadow-lg shadow-purple-500/30"
+                className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-400 hover:to-purple-400 text-white text-xs sm:text-sm font-bold rounded-full transition-all hover:scale-105 shadow-lg shadow-purple-500/30 shrink-0"
               >
-                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
                 </svg>
                 Donate
