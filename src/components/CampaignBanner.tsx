@@ -98,8 +98,28 @@ export function CampaignBanner() {
             : 'from-indigo-900 via-purple-900 to-indigo-900'
         }`}>
         <div className="max-w-4xl mx-auto px-4 py-3">
-          {/* Row 1: Timer + Donate */}
-          <div className="flex items-center justify-between gap-4 mb-2">
+          {/* Row 1: Progress Bar + Goal */}
+          <div className="flex items-center gap-3 mb-2">
+            <div className="flex-1 h-3 sm:h-4 bg-white/20 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-500 ${
+                  isSuccess
+                    ? 'bg-gradient-to-r from-green-400 to-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.5)]'
+                    : summary.percentComplete >= 100
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-400'
+                      : 'bg-gradient-to-r from-indigo-500 to-purple-500'
+                }`}
+                style={{ width: `${Math.min(summary.percentComplete, 100)}%` }}
+              />
+            </div>
+            <div className="text-sm sm:text-base text-white font-bold whitespace-nowrap">
+              ${summary.total.toLocaleString()}
+              <span className="text-white/50 font-normal"> / ${summary.goal.toLocaleString()}</span>
+            </div>
+          </div>
+
+          {/* Row 2: Timer + Donate */}
+          <div className="flex items-center justify-between gap-4">
             {/* Left: Timer */}
             <div className="flex items-center gap-2">
               {isExpired ? (
@@ -133,26 +153,6 @@ export function CampaignBanner() {
                 Donate
               </button>
             )}
-          </div>
-
-          {/* Row 2: Progress Bar + Goal */}
-          <div className="flex items-center gap-3">
-            <div className="flex-1 h-3 sm:h-4 bg-white/20 rounded-full overflow-hidden">
-              <div
-                className={`h-full transition-all duration-500 ${
-                  isSuccess
-                    ? 'bg-gradient-to-r from-green-400 to-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.5)]'
-                    : summary.percentComplete >= 100
-                      ? 'bg-gradient-to-r from-green-500 to-emerald-400'
-                      : 'bg-gradient-to-r from-indigo-500 to-purple-500'
-                }`}
-                style={{ width: `${Math.min(summary.percentComplete, 100)}%` }}
-              />
-            </div>
-            <div className="text-sm sm:text-base text-white font-bold whitespace-nowrap">
-              ${summary.total.toLocaleString()}
-              <span className="text-white/50 font-normal"> / ${summary.goal.toLocaleString()}</span>
-            </div>
           </div>
 
           {/* Public backers list */}
