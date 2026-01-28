@@ -3,6 +3,7 @@
 import { useRef, useEffect } from 'react'
 import { TextBlock, DEFAULT_BRIGHTNESS } from '@/types/canvas'
 import { sanitizeHtml } from '@/lib/sanitize'
+import { wrapSelectionWithTag } from '@/lib/selectionFormat'
 
 const PLACEHOLDER_TEXT = 'Click to edit'
 
@@ -112,6 +113,16 @@ export function TextBlockRenderer({
         onKeyDown={(e) => {
           if (e.key === 'Escape') {
             e.currentTarget.blur()
+            return
+          }
+
+          // Ctrl/Cmd + B/I/U for formatting
+          if (e.ctrlKey || e.metaKey) {
+            const key = e.key.toLowerCase()
+            if (key === 'b' || key === 'i' || key === 'u') {
+              e.preventDefault()
+              wrapSelectionWithTag(key, editorRef.current)
+            }
           }
         }}
       />
