@@ -8,13 +8,14 @@ import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
 import { subscribeToCampaignSettings, CampaignSettings } from '@/lib/campaignStorage'
 import { AuthModal } from '@/components/AuthModal'
 import { EditorTab } from './EditorTab'
-import { CommunityTab } from './CommunityTab'
+import { ChatTab } from './ChatTab'
+import { MembersTab } from './MembersTab'
 import { DonateTab } from './DonateTab'
 import { ProfilePanel } from './ProfilePanel'
 import { ContentPanel } from './ContentPanel'
 import { CampaignPanel } from './CampaignPanel'
 
-type TabType = 'editor' | 'community' | 'donate' | 'profile' | 'content' | 'campaign'
+type TabType = 'editor' | 'chat' | 'members' | 'donate' | 'profile' | 'content' | 'campaign'
 
 export function UnifiedPanel() {
   const { user, isAdmin } = useAuth()
@@ -84,7 +85,7 @@ export function UnifiedPanel() {
     )
   }
 
-  const isContentTab = activeTab === 'editor' || activeTab === 'community' || activeTab === 'donate'
+  const isContentTab = activeTab === 'editor' || activeTab === 'chat' || activeTab === 'members' || activeTab === 'donate'
 
   return (
     <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-auto sm:min-w-[500px] sm:max-w-[700px]">
@@ -124,15 +125,25 @@ export function UnifiedPanel() {
               Editor
             </button>
             <button
-              onClick={() => { setActiveTab('community'); setIsMinimized(false) }}
+              onClick={() => { setActiveTab('chat'); setIsMinimized(false) }}
               className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 ${
-                activeTab === 'community'
+                activeTab === 'chat'
                   ? 'bg-indigo-600 text-white'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Community
+              Chat
               <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`} />
+            </button>
+            <button
+              onClick={() => { setActiveTab('members'); setIsMinimized(false) }}
+              className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'members'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              Members
             </button>
             {/* Only show Donate tab when no active campaign */}
             {!hasCampaign && (
@@ -150,19 +161,15 @@ export function UnifiedPanel() {
                 <span className="hidden sm:inline">Donate</span>
               </button>
             )}
-            {/* Profile button */}
             <button
               onClick={() => { setActiveTab('profile'); setIsMinimized(false) }}
-              className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-1.5 transition-colors ${
+              className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'profile'
-                  ? 'bg-white/20 text-white'
-                  : 'text-gray-400 hover:text-white hover:bg-white/10'
+                  ? 'bg-indigo-600 text-white'
+                  : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              <span className="hidden sm:inline">Profile</span>
+              Profile
             </button>
           </div>
 
@@ -219,7 +226,8 @@ export function UnifiedPanel() {
         {!isMinimized && (
           <div>
             {activeTab === 'editor' && <EditorTab />}
-            {activeTab === 'community' && <CommunityTab isConnected={isConnected} />}
+            {activeTab === 'chat' && <ChatTab isConnected={isConnected} />}
+            {activeTab === 'members' && <MembersTab />}
             {activeTab === 'donate' && <DonateTab />}
             {activeTab === 'profile' && <ProfilePanel />}
             {activeTab === 'content' && <ContentPanel />}
