@@ -23,7 +23,7 @@ const MOBILE_BREAKPOINT = 500   // Below this: pure mobile (zoom to safe zone)
 const TABLET_BREAKPOINT = 900   // Below this: transitional scaling
 
 // Reserved space at top for campaign banner (prevents text overlap)
-const BANNER_HEIGHT = 56 // px - matches CampaignBanner approximate height
+const BANNER_HEIGHT = 90 // px - matches CampaignBanner 2-row layout
 
 interface ContextMenuState {
   x: number // screen position
