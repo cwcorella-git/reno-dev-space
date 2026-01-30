@@ -44,7 +44,11 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   }
 
   const updateText = async (id: string, value: string, category: string, description?: string): Promise<void> => {
-    if (!user) return
+    if (!user) {
+      console.error('[ContentContext] updateText called with no user')
+      return
+    }
+    console.log('[ContentContext] Updating:', { id, value, category, uid: user.uid })
     await updateContentStorage(id, value, category, user.uid, description)
   }
 

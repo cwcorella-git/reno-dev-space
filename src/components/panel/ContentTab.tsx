@@ -172,8 +172,14 @@ export function ContentTab() {
   }
 
   const handleSave = async (id: string, category: string, description?: string) => {
-    await updateText(id, editValue, category, description)
-    setEditingId(null)
+    try {
+      console.log('[ContentTab] Saving:', { id, editValue, category, description })
+      await updateText(id, editValue, category, description)
+      console.log('[ContentTab] Save successful')
+      setEditingId(null)
+    } catch (err) {
+      console.error('[ContentTab] Save failed:', err)
+    }
   }
 
   const handleCancel = () => {
