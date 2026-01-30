@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { TrophyIcon } from '@heroicons/react/24/solid'
+import { TrophyIcon, UserGroupIcon } from '@heroicons/react/24/solid'
 import { EditableText } from './EditableText'
 import {
   subscribeToCampaignSettings,
@@ -10,12 +10,16 @@ import {
   CampaignSettings,
 } from '@/lib/campaignStorage'
 import { subscribeToPledges, calculatePledgeSummary, Pledge } from '@/lib/pledgeStorage'
+import { subscribeToUsers, UserProfile } from '@/lib/userStorage'
 import { DonateModal } from './DonateModal'
+
+const MEMBER_THRESHOLD = 5
 
 export function CampaignBanner() {
   const [showDonateModal, setShowDonateModal] = useState(false)
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
   const [pledges, setPledges] = useState<Pledge[]>([])
+  const [memberCount, setMemberCount] = useState(0)
   const [timeRemaining, setTimeRemaining] = useState(getTimeRemaining({
     timerStartedAt: null,
     timerDurationMs: 0,
@@ -51,6 +55,18 @@ export function CampaignBanner() {
     return () => unsubscribe()
   }, [mounted])
 
+  // Subscribe to member count
+  useEffect(() => {
+    if (!mounted) return
+
+    const unsubscribe = subscribeToUsers(
+      (users: UserProfile[]) => setMemberCount(users.length),
+      () => setMemberCount(0)
+    )
+
+    return () => unsubscribe()
+  }, [mounted])
+
   // Update countdown timer every second
   useEffect(() => {
     if (!settings?.timerStartedAt) return
@@ -71,10 +87,41 @@ export function CampaignBanner() {
     return () => clearInterval(interval)
   }, [settings])
 
-  if (!mounted || !settings?.timerStartedAt) return null
+  if (!mounted) return null
 
-  const summary = calculatePledgeSummary(pledges, settings.fundingGoal)
-  const isExpired = timeRemaining.isExpired || settings.isLocked
+  const isReady = memberCount >= MEMBER_THRESHOLD
+  const campaignActive = !!settings?.timerStartedAt
+
+  // Inert state: no active campaign
+  if (!campaignActive) {
+    return (
+      <div className={`fixed top-0 left-0 right-0 z-40 border-b border-white/10 bg-gradient-to-r ${
+        isReady ? 'from-emerald-900 via-teal-800 to-emerald-900' : 'from-slate-800 via-gray-800 to-slate-800'
+      }`}>
+        <div className="max-w-4xl mx-auto px-4 py-2.5">
+          <div className="flex items-center justify-center gap-3">
+            <UserGroupIcon className={`w-5 h-5 ${isReady ? 'text-emerald-300' : 'text-gray-400'}`} />
+            <span className={`text-sm font-medium ${isReady ? 'text-emerald-200' : 'text-gray-300'}`}>
+              {isReady ? (
+                <EditableText id="campaign.banner.ready" defaultValue="We're ready to launch!" category="campaign" />
+              ) : (
+                <EditableText id="campaign.banner.teaser" defaultValue="A campaign is brewing..." category="campaign" />
+              )}
+            </span>
+            <span className={`text-sm font-bold ${isReady ? 'text-emerald-300' : 'text-white'}`}>
+              {memberCount}/{MEMBER_THRESHOLD}
+            </span>
+            <span className={`text-xs ${isReady ? 'text-emerald-400' : 'text-gray-400'}`}>
+              <EditableText id="campaign.banner.memberCount" defaultValue="members" category="campaign" />
+            </span>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  const summary = calculatePledgeSummary(pledges, settings!.fundingGoal)
+  const isExpired = timeRemaining.isExpired || settings!.isLocked
 
   // Format time display - always show seconds
   const formatTime = () => {

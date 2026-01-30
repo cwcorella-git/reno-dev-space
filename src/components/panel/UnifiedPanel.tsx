@@ -10,12 +10,11 @@ import { AuthModal } from '@/components/AuthModal'
 import { EditorTab } from './EditorTab'
 import { ChatTab } from './ChatTab'
 import { MembersTab } from './MembersTab'
-import { DonateTab } from './DonateTab'
 import { ProfilePanel } from './ProfilePanel'
 import { ContentPanel } from './ContentPanel'
 import { CampaignPanel } from './CampaignPanel'
 
-type TabType = 'editor' | 'chat' | 'members' | 'donate' | 'profile' | 'content' | 'campaign'
+type TabType = 'editor' | 'chat' | 'members' | 'profile' | 'content' | 'campaign'
 
 export function UnifiedPanel() {
   const { user, isAdmin } = useAuth()
@@ -85,7 +84,7 @@ export function UnifiedPanel() {
     )
   }
 
-  const isContentTab = activeTab === 'editor' || activeTab === 'chat' || activeTab === 'members' || activeTab === 'donate'
+  const isContentTab = activeTab === 'editor' || activeTab === 'chat' || activeTab === 'members'
 
   return (
     <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-auto sm:min-w-[500px] sm:max-w-[700px]">
@@ -145,22 +144,6 @@ export function UnifiedPanel() {
             >
               Members
             </button>
-            {/* Only show Donate tab when no active campaign */}
-            {!hasCampaign && (
-              <button
-                onClick={() => { setActiveTab('donate'); setIsMinimized(false) }}
-                className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-1 ${
-                  activeTab === 'donate'
-                    ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-                <span className="hidden sm:inline">Donate</span>
-              </button>
-            )}
             <button
               onClick={() => { setActiveTab('profile'); setIsMinimized(false) }}
               className={`px-2 sm:px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
@@ -228,7 +211,6 @@ export function UnifiedPanel() {
             {activeTab === 'editor' && <EditorTab />}
             {activeTab === 'chat' && <ChatTab isConnected={isConnected} />}
             {activeTab === 'members' && <MembersTab />}
-            {activeTab === 'donate' && <DonateTab />}
             {activeTab === 'profile' && <ProfilePanel />}
             {activeTab === 'content' && <ContentPanel />}
             {activeTab === 'campaign' && <CampaignPanel />}

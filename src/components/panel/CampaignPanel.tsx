@@ -13,12 +13,16 @@ import {
 } from '@/lib/campaignStorage'
 import { resetAllBrightness } from '@/lib/canvasStorage'
 import { subscribeToPledges, calculatePledgeSummary, Pledge } from '@/lib/pledgeStorage'
+import { subscribeToUsers, UserProfile } from '@/lib/userStorage'
+
+const MEMBER_THRESHOLD = 5
 
 export function CampaignPanel() {
   const { user, isAdmin } = useAuth()
 
   const [pledges, setPledges] = useState<Pledge[]>([])
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
+  const [memberCount, setMemberCount] = useState(0)
   const [actionLoading, setActionLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [confirmAction, setConfirmAction] = useState<string | null>(null)
@@ -30,9 +34,14 @@ export function CampaignPanel() {
       setSettings(s)
       setGoalInput(s.fundingGoal.toString())
     })
+    const unsubUsers = subscribeToUsers(
+      (users: UserProfile[]) => setMemberCount(users.length),
+      () => setMemberCount(0)
+    )
     return () => {
       unsubPledges()
       unsubSettings()
+      unsubUsers()
     }
   }, [])
 
@@ -126,7 +135,13 @@ export function CampaignPanel() {
               {timerActive ? (
                 <button onClick={handleResetTimer} disabled={actionLoading} className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium disabled:opacity-50">Reset Timer</button>
               ) : (
-                <button onClick={handleStartTimer} disabled={actionLoading} className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50">Start Timer</button>
+                <>
+                  <button onClick={handleStartTimer} disabled={actionLoading} className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50">Start Timer</button>
+                  <span className={`text-xs ${memberCount < MEMBER_THRESHOLD ? 'text-yellow-400' : 'text-green-400'}`}>
+                    {memberCount}/{MEMBER_THRESHOLD} members
+                    {memberCount < MEMBER_THRESHOLD && ' (below threshold)'}
+                  </span>
+                </>
               )}
               <button onClick={handleToggleLock} disabled={actionLoading} className={`px-2 py-1 rounded text-xs font-medium disabled:opacity-50 ${settings?.isLocked ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
                 {settings?.isLocked ? 'Unlock' : 'Lock'}
