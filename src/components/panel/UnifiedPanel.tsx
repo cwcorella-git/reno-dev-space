@@ -7,6 +7,7 @@ import { useFirestoreChat } from '@/hooks/useFirestoreChat'
 import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
 import { subscribeToCampaignSettings, CampaignSettings } from '@/lib/campaignStorage'
 import { AuthModal } from '@/components/AuthModal'
+import { EditableText } from '@/components/EditableText'
 import { EditorTab } from './EditorTab'
 import { ChatTab } from './ChatTab'
 import { MembersTab } from './MembersTab'
@@ -77,7 +78,7 @@ export function UnifiedPanel() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
-          Sign In
+          <EditableText id="panel.button.signIn" defaultValue="Sign In" category="panel" />
         </button>
         {showAuthModal && <AuthModal onClose={() => setShowAuthModal(false)} />}
       </>
@@ -105,7 +106,7 @@ export function UnifiedPanel() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             )}
           </svg>
-          {isAddTextMode ? 'Cancel' : 'Add Text'}
+          {isAddTextMode ? <EditableText id="panel.button.cancel" defaultValue="Cancel" category="panel" /> : <EditableText id="panel.button.addText" defaultValue="Add Text" category="panel" />}
         </button>
       )}
       <div className="bg-gray-900/95 backdrop-blur-sm border border-white/10 rounded-2xl shadow-xl">
@@ -121,7 +122,7 @@ export function UnifiedPanel() {
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Editor
+              <EditableText id="panel.tab.editor" defaultValue="Editor" category="panel" />
             </button>
             <button
               onClick={() => { setActiveTab('chat'); setIsMinimized(false) }}
@@ -131,7 +132,7 @@ export function UnifiedPanel() {
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Chat
+              <EditableText id="panel.tab.chat" defaultValue="Chat" category="panel" />
               <span className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-yellow-400 animate-pulse'}`} />
             </button>
             <button
@@ -142,7 +143,7 @@ export function UnifiedPanel() {
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Members
+              <EditableText id="panel.tab.members" defaultValue="Members" category="panel" />
             </button>
             <button
               onClick={() => { setActiveTab('profile'); setIsMinimized(false) }}
@@ -152,7 +153,7 @@ export function UnifiedPanel() {
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              Profile
+              <EditableText id="panel.tab.profile" defaultValue="Profile" category="panel" />
             </button>
           </div>
 

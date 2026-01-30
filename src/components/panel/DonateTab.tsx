@@ -31,7 +31,7 @@ export function DonateTab() {
 
   const handleDonate = async () => {
     if (effectiveAmount < 1) {
-      setError('Please enter an amount of at least $1')
+      setError(getText('donate.error.minAmount', 'Please enter an amount of at least $1'))
       return
     }
 
@@ -155,14 +155,14 @@ export function DonateTab() {
         {loading ? (
           <>
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            Processing...
+            <EditableText id="donate.button.processing" defaultValue="Processing..." category="donate" />
           </>
         ) : (
           <>
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
-            Donate ${effectiveAmount || '...'}
+            <EditableText id="donate.button.donate" defaultValue="Donate" category="donate" /> ${effectiveAmount || '...'}
           </>
         )}
       </button>

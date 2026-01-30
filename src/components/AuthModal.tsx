@@ -28,13 +28,13 @@ export function AuthModal({ onClose }: AuthModalProps) {
     try {
       if (mode === 'signup') {
         if (!displayName.trim()) {
-          setError('Please enter a display name')
+          setError(getText('auth.error.displayName', 'Please enter a display name'))
           setLoading(false)
           return
         }
         const pledge = parseInt(pledgeAmount, 10)
         if (isNaN(pledge) || pledge < 20) {
-          setError('Please enter a pledge amount ($20 minimum)')
+          setError(getText('auth.error.pledgeAmount', 'Please enter a pledge amount ($20 minimum)'))
           setLoading(false)
           return
         }

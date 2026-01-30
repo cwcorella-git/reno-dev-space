@@ -118,7 +118,7 @@ export function ProfilePanel() {
             {confirmAction === 'account' && <EditableText id="profile.confirm.deleteAccount" defaultValue="Permanently delete your account?" category="profile" />}
           </p>
           <div className="flex gap-2">
-            <button onClick={() => setConfirmAction(null)} disabled={actionLoading} className="flex-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-sm">Cancel</button>
+            <button onClick={() => setConfirmAction(null)} disabled={actionLoading} className="flex-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-sm"><EditableText id="profile.button.cancel" defaultValue="Cancel" category="profile" /></button>
             <button
               onClick={() => {
                 if (confirmAction === 'votes') handleClearVotes()
@@ -128,7 +128,7 @@ export function ProfilePanel() {
               disabled={actionLoading}
               className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
             >
-              {actionLoading ? '...' : 'Confirm'}
+              {actionLoading ? '...' : <EditableText id="profile.button.confirm" defaultValue="Confirm" category="profile" />}
             </button>
           </div>
         </div>
@@ -142,7 +142,7 @@ export function ProfilePanel() {
               <p className="font-medium text-white">{displayName}</p>
               <p className="text-xs text-gray-400">{user.email}</p>
             </div>
-            {isAdmin && <span className="text-xs bg-amber-600/50 text-amber-200 px-2 py-0.5 rounded">Admin</span>}
+            {isAdmin && <span className="text-xs bg-amber-600/50 text-amber-200 px-2 py-0.5 rounded"><EditableText id="profile.badge.admin" defaultValue="Admin" category="profile" /></span>}
           </div>
 
           {/* Pledge Section */}
@@ -160,7 +160,7 @@ export function ProfilePanel() {
                     <input type="number" min="0" value={pledgeAmount} onChange={(e) => setPledgeAmount(e.target.value)} placeholder="0" className="w-full pl-7 pr-3 py-1.5 bg-white/10 border border-white/20 rounded text-white text-sm" />
                   </div>
                   <button onClick={handleUpdatePledge} disabled={actionLoading} className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium disabled:opacity-50">
-                    {userPledge ? 'Update' : 'Pledge'}
+                    {userPledge ? <EditableText id="profile.button.update" defaultValue="Update" category="profile" /> : <EditableText id="profile.button.pledge" defaultValue="Pledge" category="profile" />}
                   </button>
                 </div>
               )}

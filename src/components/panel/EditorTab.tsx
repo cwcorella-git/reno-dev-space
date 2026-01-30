@@ -10,6 +10,7 @@ import {
   wrapSelectionWithTag,
   wrapSelectionWithStyle,
 } from '@/lib/selectionFormat'
+import { EditableText } from '@/components/EditableText'
 
 // Fonts loaded via Next.js Google Fonts (see layout.tsx)
 // Using CSS variable names that resolve to the actual font-family
@@ -112,7 +113,7 @@ export function EditorTab() {
   if (!selectedBlockId || !selectedBlock) {
     return (
       <div className="px-4 py-6 text-center text-gray-500 text-sm">
-        Select a text block to edit
+        <EditableText id="editor.hint.select" defaultValue="Select a text block to edit" category="editor" />
       </div>
     )
   }
@@ -122,7 +123,7 @@ export function EditorTab() {
   if (!canEdit) {
     return (
       <div className="px-4 py-6 text-center text-gray-500 text-sm">
-        You can only edit your own blocks
+        <EditableText id="editor.hint.ownBlocks" defaultValue="You can only edit your own blocks" category="editor" />
       </div>
     )
   }
@@ -134,7 +135,7 @@ export function EditorTab() {
           onClick={handleDelete}
           className="px-3 py-1.5 bg-red-600/50 hover:bg-red-600 rounded text-white text-sm"
         >
-          Delete Block
+          <EditableText id="editor.button.delete" defaultValue="Delete Block" category="editor" />
         </button>
       </div>
     )

@@ -579,8 +579,8 @@ export function Canvas() {
                   : 'bg-indigo-600 text-white'
               }`}>
                 {addTextPreview && !addTextPreview.isValid
-                  ? 'Can\'t place here – overlapping'
-                  : 'Click to place text'}
+                  ? <EditableText id="canvas.addText.overlapping" defaultValue="Can't place here – overlapping" category="canvas" />
+                  : <EditableText id="canvas.addText.clickToPlace" defaultValue="Click to place text" category="canvas" />}
               </div>
 
               {/* Cursor-following preview box */}
@@ -620,7 +620,7 @@ export function Canvas() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Add Text
+            <EditableText id="canvas.contextMenu.addText" defaultValue="Add Text" category="canvas" />
           </button>
         </div>
       )}
