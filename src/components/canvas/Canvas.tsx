@@ -341,15 +341,16 @@ export function Canvas() {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [blocks, selectBlocks, selectBlock, setIsAddTextMode, selectedBlockIds, removeBlock, user?.uid, isAdmin, undo, redo, copyBlocks, pasteBlocks])
 
-  // Dismiss context menu when clicking anywhere (outside the menu)
+  // Dismiss context menu when clicking outside of it
+  const contextMenuRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!contextMenu) return
 
-    const handleClick = () => {
+    const handleClick = (e: MouseEvent) => {
+      if (contextMenuRef.current?.contains(e.target as Node)) return
       setContextMenu(null)
     }
 
-    // Use capture phase to catch clicks before they're handled by other elements
     // Small delay to avoid immediately closing on the same click that opened it
     const timeoutId = setTimeout(() => {
       document.addEventListener('click', handleClick, true)
@@ -610,6 +611,7 @@ export function Canvas() {
       {/* Context Menu */}
       {contextMenu && (
         <div
+          ref={contextMenuRef}
           className="fixed z-50 bg-gray-900 border border-white/20 rounded-lg shadow-xl py-1 min-w-[140px]"
           style={{ left: contextMenu.x, top: contextMenu.y }}
         >
