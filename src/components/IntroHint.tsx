@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ChatBubbleLeftRightIcon, SparklesIcon, PuzzlePieceIcon } from '@heroicons/react/24/outline'
 import { AuthModal } from './AuthModal'
 import { EditableText } from './EditableText'
 
@@ -56,7 +57,7 @@ export function IntroHint() {
           {/* Features */}
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="text-center p-2 bg-white/5 rounded-lg">
-              <div className="text-2xl mb-1">💬</div>
+              <ChatBubbleLeftRightIcon className="w-7 h-7 mx-auto mb-1 text-indigo-400" />
               <EditableText
                 id="intro.hint.feature1"
                 defaultValue="Community Chat"
@@ -66,7 +67,7 @@ export function IntroHint() {
               />
             </div>
             <div className="text-center p-2 bg-white/5 rounded-lg">
-              <div className="text-2xl mb-1">✨</div>
+              <SparklesIcon className="w-7 h-7 mx-auto mb-1 text-indigo-400" />
               <EditableText
                 id="intro.hint.feature2"
                 defaultValue="Vote on Content"
@@ -76,7 +77,7 @@ export function IntroHint() {
               />
             </div>
             <div className="text-center p-2 bg-white/5 rounded-lg">
-              <div className="text-2xl mb-1">🎮</div>
+              <PuzzlePieceIcon className="w-7 h-7 mx-auto mb-1 text-indigo-400" />
               <EditableText
                 id="intro.hint.feature3"
                 defaultValue="Project Driven"

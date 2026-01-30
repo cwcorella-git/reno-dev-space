@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { TrophyIcon } from '@heroicons/react/24/solid'
 import {
   subscribeToCampaignSettings,
   getTimeRemaining,
@@ -105,7 +106,7 @@ export function CampaignBanner() {
               {isExpired ? (
                 isSuccess ? (
                   <span className="flex items-center gap-1.5 text-green-300 font-bold text-sm sm:text-base">
-                    <span className="text-base sm:text-lg">🏆</span>
+                    <TrophyIcon className="w-5 h-5 sm:w-6 sm:h-6" />
                     GOAL!
                   </span>
                 ) : (
