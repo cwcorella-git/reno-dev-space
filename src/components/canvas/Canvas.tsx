@@ -10,6 +10,7 @@ import { CampaignBanner } from '@/components/CampaignBanner'
 import { incrementPageViews } from '@/lib/campaignStorage'
 import { wouldOverlap } from '@/lib/overlapDetection'
 import { filterEditableBlocks } from '@/lib/permissions'
+import { EditableText } from '@/components/EditableText'
 
 // Mobile safe zone width (for admin visual guide)
 const MOBILE_SAFE_ZONE = 375
@@ -563,8 +564,8 @@ export function Canvas() {
           {isAdmin && blocks.length === 0 && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center text-gray-500">
-                <p className="text-lg mb-2">Your canvas is empty</p>
-                <p className="text-sm">Tap the + button or right-click to add text</p>
+                <p className="text-lg mb-2"><EditableText id="canvas.empty.title" defaultValue="Your canvas is empty" category="canvas" /></p>
+                <p className="text-sm"><EditableText id="canvas.empty.subtitle" defaultValue="Tap the + button or right-click to add text" category="canvas" /></p>
               </div>
             </div>
           )}

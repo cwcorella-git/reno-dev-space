@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import { ChatMessage } from '@/hooks/useFirestoreChat'
+import { EditableText } from '@/components/EditableText'
 
 interface MessageListProps {
   messages: ChatMessage[]
@@ -37,7 +38,9 @@ export function MessageList({
       <div className="flex items-center justify-center py-2">
         <div className={`flex items-center gap-2 text-xs ${isConnected ? 'text-green-400' : 'text-gray-500'}`}>
           <div className={`w-2 h-2 rounded-full ${isConnected ? 'bg-green-400' : 'bg-gray-500 animate-pulse'}`} />
-          {isConnected ? 'Connected' : 'Connecting...'}
+          {isConnected
+            ? <EditableText id="chat.status.connected" defaultValue="Connected" category="chat" />
+            : <EditableText id="chat.status.connecting" defaultValue="Connecting..." category="chat" />}
         </div>
       </div>
 
@@ -45,8 +48,8 @@ export function MessageList({
       {messages.length === 0 ? (
         <div className="flex-1 flex items-center justify-center text-gray-500 text-sm text-center px-4">
           <div>
-            <p className="font-medium mb-1">No messages yet</p>
-            <p className="text-xs">Start the conversation!</p>
+            <p className="font-medium mb-1"><EditableText id="chat.empty.title" defaultValue="No messages yet" category="chat" /></p>
+            <p className="text-xs"><EditableText id="chat.empty.subtitle" defaultValue="Start the conversation!" category="chat" /></p>
           </div>
         </div>
       ) : (

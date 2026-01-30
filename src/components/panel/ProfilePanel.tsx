@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { EditableText } from '@/components/EditableText'
 import { subscribeToCampaignSettings, CampaignSettings } from '@/lib/campaignStorage'
 import { clearUserVotes, deleteUserBlocks, deleteUserAccount } from '@/lib/userStorage'
 import { subscribeToPledges, setPledge, deletePledge, calculatePledgeSummary, Pledge } from '@/lib/pledgeStorage'
@@ -112,9 +113,9 @@ export function ProfilePanel() {
       {confirmAction && (
         <div className="p-4 bg-red-900/30">
           <p className="text-sm text-white mb-3">
-            {confirmAction === 'votes' && 'Clear all your votes?'}
-            {confirmAction === 'content' && 'Delete all content you created?'}
-            {confirmAction === 'account' && 'Permanently delete your account?'}
+            {confirmAction === 'votes' && <EditableText id="profile.confirm.clearVotes" defaultValue="Clear all your votes?" category="profile" />}
+            {confirmAction === 'content' && <EditableText id="profile.confirm.deleteContent" defaultValue="Delete all content you created?" category="profile" />}
+            {confirmAction === 'account' && <EditableText id="profile.confirm.deleteAccount" defaultValue="Permanently delete your account?" category="profile" />}
           </p>
           <div className="flex gap-2">
             <button onClick={() => setConfirmAction(null)} disabled={actionLoading} className="flex-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-sm">Cancel</button>
@@ -147,10 +148,10 @@ export function ProfilePanel() {
           {/* Pledge Section */}
           {settings?.timerStartedAt && (
             <div className="pt-3 border-t border-white/10">
-              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">My Pledge</p>
+              <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2"><EditableText id="profile.heading.pledge" defaultValue="My Pledge" category="profile" /></p>
               {isLocked ? (
                 <div className="text-sm text-gray-400">
-                  {userPledge ? <p>Your pledge: <span className="text-white font-medium">${userPledge.amount}</span></p> : <p>Campaign ended</p>}
+                  {userPledge ? <p><EditableText id="profile.pledge.yourPledge" defaultValue="Your pledge:" category="profile" /> <span className="text-white font-medium">${userPledge.amount}</span></p> : <p><EditableText id="profile.pledge.ended" defaultValue="Campaign ended" category="profile" /></p>}
                 </div>
               ) : (
                 <div className="flex gap-2">
@@ -171,11 +172,11 @@ export function ProfilePanel() {
 
           {/* Account Actions */}
           <div className="pt-3 border-t border-white/10">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Account</p>
+            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2"><EditableText id="profile.heading.account" defaultValue="Account" category="profile" /></p>
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => setConfirmAction('votes')} className="px-3 py-1.5 text-sm text-gray-300 bg-white/5 hover:bg-white/10 rounded">Clear Votes</button>
-              <button onClick={() => setConfirmAction('content')} className="px-3 py-1.5 text-sm text-gray-300 bg-white/5 hover:bg-white/10 rounded">Delete Content</button>
-              <button onClick={() => setConfirmAction('account')} className="px-3 py-1.5 text-sm text-red-400 bg-white/5 hover:bg-white/10 rounded">Delete Account</button>
+              <button onClick={() => setConfirmAction('votes')} className="px-3 py-1.5 text-sm text-gray-300 bg-white/5 hover:bg-white/10 rounded"><EditableText id="profile.button.clearVotes" defaultValue="Clear Votes" category="profile" /></button>
+              <button onClick={() => setConfirmAction('content')} className="px-3 py-1.5 text-sm text-gray-300 bg-white/5 hover:bg-white/10 rounded"><EditableText id="profile.button.deleteContent" defaultValue="Delete Content" category="profile" /></button>
+              <button onClick={() => setConfirmAction('account')} className="px-3 py-1.5 text-sm text-red-400 bg-white/5 hover:bg-white/10 rounded"><EditableText id="profile.button.deleteAccount" defaultValue="Delete Account" category="profile" /></button>
             </div>
           </div>
 
@@ -184,7 +185,7 @@ export function ProfilePanel() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
-            Sign Out
+            <EditableText id="profile.button.signOut" defaultValue="Sign Out" category="profile" />
           </button>
         </div>
       )}

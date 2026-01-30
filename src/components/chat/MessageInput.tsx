@@ -1,6 +1,8 @@
 'use client'
 
 import { useState, KeyboardEvent } from 'react'
+import { useContent } from '@/contexts/ContentContext'
+import { EditableText } from '@/components/EditableText'
 
 interface MessageInputProps {
   onSendMessage: (text: string, username: string) => void
@@ -9,6 +11,7 @@ interface MessageInputProps {
 }
 
 export function MessageInput({ onSendMessage, isConnected, username }: MessageInputProps) {
+  const { getText } = useContent()
   const [text, setText] = useState('')
 
   const handleSend = () => {
@@ -32,7 +35,7 @@ export function MessageInput({ onSendMessage, isConnected, username }: MessageIn
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={isConnected ? 'Type a message...' : 'Connecting...'}
+          placeholder={isConnected ? getText('chat.placeholder.message', 'Type a message...') : getText('chat.placeholder.connecting', 'Connecting...')}
           disabled={!isConnected || !username}
           className="flex-1 bg-white/10 border border-white/20 rounded-lg px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-brand-primary disabled:opacity-50"
         />
@@ -41,11 +44,11 @@ export function MessageInput({ onSendMessage, isConnected, username }: MessageIn
           disabled={!isConnected || !text.trim() || !username}
           className="bg-brand-primary hover:bg-brand-secondary text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Send
+          <EditableText id="chat.button.send" defaultValue="Send" category="chat" />
         </button>
       </div>
       {!username && isConnected && (
-        <p className="text-xs text-gray-500 mt-2">Sign in to send messages</p>
+        <p className="text-xs text-gray-500 mt-2"><EditableText id="chat.hint.signIn" defaultValue="Sign in to send messages" category="chat" /></p>
       )}
     </div>
   )

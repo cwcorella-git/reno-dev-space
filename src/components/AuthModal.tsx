@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useContent } from '@/contexts/ContentContext'
 import { EditableText } from './EditableText'
 
 interface AuthModalProps {
@@ -10,6 +11,7 @@ interface AuthModalProps {
 
 export function AuthModal({ onClose }: AuthModalProps) {
   const { signup, login } = useAuth()
+  const { getText } = useContent()
   const [mode, setMode] = useState<'login' | 'signup'>('signup')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -117,32 +119,36 @@ export function AuthModal({ onClose }: AuthModalProps) {
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
                 className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:border-brand-primary"
-                placeholder="How should we call you?"
+                placeholder={getText('auth.placeholder.displayName', 'How should we call you?')}
                 required
               />
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label className="block text-sm font-medium mb-1">
+              <EditableText id="auth.label.email" defaultValue="Email" category="auth" />
+            </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:border-brand-primary"
-              placeholder="you@example.com"
+              placeholder={getText('auth.placeholder.email', 'you@example.com')}
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
+            <label className="block text-sm font-medium mb-1">
+              <EditableText id="auth.label.password" defaultValue="Password" category="auth" />
+            </label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-2 focus:outline-none focus:border-brand-primary"
-              placeholder="At least 6 characters"
+              placeholder={getText('auth.placeholder.password', 'At least 6 characters')}
               minLength={6}
               required
             />
@@ -164,7 +170,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
                   value={pledgeAmount}
                   onChange={(e) => setPledgeAmount(e.target.value)}
                   className="w-full bg-white/10 border border-white/20 rounded-lg pl-7 pr-4 py-2 focus:outline-none focus:border-brand-primary"
-                  placeholder="How much would you pledge?"
+                  placeholder={getText('auth.placeholder.pledge', 'How much would you pledge?')}
                   min={20}
                   required
                 />
@@ -190,7 +196,13 @@ export function AuthModal({ onClose }: AuthModalProps) {
             disabled={loading}
             className="w-full bg-brand-primary hover:bg-brand-secondary text-white py-3 rounded-lg font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Please wait...' : mode === 'signup' ? 'Create Account' : 'Sign In'}
+            {loading ? (
+              <EditableText id="auth.button.loading" defaultValue="Please wait..." category="auth" />
+            ) : mode === 'signup' ? (
+              <EditableText id="auth.button.signup" defaultValue="Create Account" category="auth" />
+            ) : (
+              <EditableText id="auth.button.login" defaultValue="Sign In" category="auth" />
+            )}
           </button>
         </form>
 
@@ -198,22 +210,22 @@ export function AuthModal({ onClose }: AuthModalProps) {
         <div className="mt-6 text-center text-sm text-gray-400">
           {mode === 'signup' ? (
             <>
-              Already have an account?{' '}
+              <EditableText id="auth.toggle.hasAccount" defaultValue="Already have an account?" category="auth" />{' '}
               <button
                 onClick={() => setMode('login')}
                 className="text-brand-accent hover:underline"
               >
-                Sign in
+                <EditableText id="auth.toggle.signIn" defaultValue="Sign in" category="auth" />
               </button>
             </>
           ) : (
             <>
-              New here?{' '}
+              <EditableText id="auth.toggle.newHere" defaultValue="New here?" category="auth" />{' '}
               <button
                 onClick={() => setMode('signup')}
                 className="text-brand-accent hover:underline"
               >
-                Create an account
+                <EditableText id="auth.toggle.createAccount" defaultValue="Create an account" category="auth" />
               </button>
             </>
           )}

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useContent } from '@/contexts/ContentContext'
 import { EditableText } from '../EditableText'
 
 const PRESET_AMOUNTS = [25, 50, 100, 250]
@@ -9,6 +10,7 @@ const FUNCTIONS_URL = process.env.NEXT_PUBLIC_FUNCTIONS_URL || 'https://us-centr
 
 export function DonateTab() {
   const { user, profile } = useAuth()
+  const { getText } = useContent()
   const [selectedAmount, setSelectedAmount] = useState<number | null>(50)
   const [customAmount, setCustomAmount] = useState('')
   const [updatePledge, setUpdatePledge] = useState(true)
@@ -108,14 +110,14 @@ export function DonateTab() {
 
       {/* Custom amount */}
       <div className="flex items-center justify-center gap-2">
-        <span className="text-gray-400">or</span>
+        <span className="text-gray-400"><EditableText id="donate.label.or" defaultValue="or" category="donate" /></span>
         <div className="relative">
           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">$</span>
           <input
             type="number"
             value={customAmount}
             onChange={(e) => handleCustomChange(e.target.value)}
-            placeholder="Custom"
+            placeholder={getText('donate.placeholder.custom', 'Custom')}
             min={1}
             className={`w-28 pl-7 pr-3 py-2 bg-white/10 border rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
               selectedAmount === null && customAmount

@@ -100,11 +100,11 @@ export function MembersTab() {
       <table className="w-full text-sm">
         <thead className="bg-white/5 sticky top-0">
           <tr className="text-left text-gray-400">
-            <th className="px-3 py-2 font-medium">Name</th>
-            <th className="px-3 py-2 font-medium text-center">Blocks</th>
-            <th className="px-3 py-2 font-medium text-center">Votes</th>
-            <th className="px-3 py-2 font-medium text-right">Pledge</th>
-            <th className="px-3 py-2 font-medium text-right">Joined</th>
+            <th className="px-3 py-2 font-medium"><EditableText id="members.header.name" defaultValue="Name" category="members" /></th>
+            <th className="px-3 py-2 font-medium text-center"><EditableText id="members.header.blocks" defaultValue="Blocks" category="members" /></th>
+            <th className="px-3 py-2 font-medium text-center"><EditableText id="members.header.votes" defaultValue="Votes" category="members" /></th>
+            <th className="px-3 py-2 font-medium text-right"><EditableText id="members.header.pledge" defaultValue="Pledge" category="members" /></th>
+            <th className="px-3 py-2 font-medium text-right"><EditableText id="members.header.joined" defaultValue="Joined" category="members" /></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-white/5">
@@ -123,12 +123,12 @@ export function MembersTab() {
                     </span>
                     {isCurrentUser && (
                       <span className="text-[10px] bg-indigo-600 px-1.5 py-0.5 rounded text-white">
-                        you
+                        <EditableText id="members.badge.you" defaultValue="you" category="members" />
                       </span>
                     )}
                     {hasPledge && !isCurrentUser && (
                       <span className="text-[10px] bg-emerald-600/50 px-1.5 py-0.5 rounded text-emerald-200">
-                        backer
+                        <EditableText id="members.badge.backer" defaultValue="backer" category="members" />
                       </span>
                     )}
                   </div>
