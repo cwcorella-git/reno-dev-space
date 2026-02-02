@@ -172,8 +172,8 @@ export function ContentTab() {
   }
 
   const handleSave = async (id: string, category: string, description?: string) => {
+    console.log('[ContentTab] handleSave called:', { id, editValue, category, description })
     try {
-      console.log('[ContentTab] Saving:', { id, editValue, category, description })
       await updateText(id, editValue, category, description)
       console.log('[ContentTab] Save successful')
       setEditingId(null)
@@ -243,7 +243,11 @@ export function ContentTab() {
                         Cancel
                       </button>
                       <button
-                        onClick={() => handleSave(entry.id, entry.category, entry.description)}
+                        onMouseDown={() => console.log('[ContentTab] Save button mousedown')}
+                        onClick={() => {
+                          console.log('[ContentTab] Save button clicked')
+                          handleSave(entry.id, entry.category, entry.description)
+                        }}
                         className="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500"
                       >
                         Save
