@@ -76,3 +76,31 @@ export function wouldBlockOverlap(
   }
   return false
 }
+
+/**
+ * Find an open position on the canvas for a restored block.
+ * Tries the original position first, then scans a grid for open space.
+ */
+export function findOpenPosition(
+  preferredX: number,
+  preferredY: number,
+  blockWidth: number,
+  blocks: CanvasBlock[]
+): { x: number; y: number } {
+  if (!wouldOverlap(preferredX, preferredY, blocks)) {
+    return { x: preferredX, y: preferredY }
+  }
+
+  const stepX = Math.max(blockWidth + 1, 6)
+  const stepY = 3
+  for (let y = 5; y < 200; y += stepY) {
+    for (let x = 5; x < 95; x += stepX) {
+      if (!wouldOverlap(x, y, blocks)) {
+        return { x, y }
+      }
+    }
+  }
+
+  const maxY = blocks.reduce((max, b) => Math.max(max, b.y), 0)
+  return { x: 10, y: maxY + 5 }
+}

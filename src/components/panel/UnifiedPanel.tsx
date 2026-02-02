@@ -14,8 +14,9 @@ import { MembersTab } from './MembersTab'
 import { ProfilePanel } from './ProfilePanel'
 import { ContentPanel } from './ContentPanel'
 import { CampaignPanel } from './CampaignPanel'
+import { HistoryPanel } from './HistoryPanel'
 
-type TabType = 'editor' | 'chat' | 'members' | 'profile' | 'content' | 'campaign'
+type TabType = 'editor' | 'chat' | 'members' | 'profile' | 'content' | 'campaign' | 'history'
 
 export function UnifiedPanel() {
   const { user, isAdmin } = useAuth()
@@ -193,6 +194,23 @@ export function UnifiedPanel() {
               </button>
             )}
 
+            {/* History icon - only for admin */}
+            {isAdmin && (
+              <button
+                onClick={() => { setActiveTab('history'); setIsMinimized(false) }}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
+                  activeTab === 'history'
+                    ? 'bg-amber-600/50 text-amber-200'
+                    : 'text-amber-400 hover:text-amber-200 hover:bg-amber-600/20'
+                }`}
+                title="History"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </button>
+            )}
+
             {/* Collapse/Expand button */}
             <button
               onClick={() => setIsMinimized(!isMinimized)}
@@ -215,6 +233,7 @@ export function UnifiedPanel() {
             {activeTab === 'profile' && <ProfilePanel />}
             {activeTab === 'content' && <ContentPanel />}
             {activeTab === 'campaign' && <CampaignPanel />}
+            {activeTab === 'history' && <HistoryPanel />}
           </div>
         )}
       </div>

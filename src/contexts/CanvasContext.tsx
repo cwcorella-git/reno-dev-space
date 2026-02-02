@@ -42,6 +42,7 @@ import {
   restoreBlocks,
   updateBlockFull,
 } from '@/lib/canvasStorage'
+import { logDeletion } from '@/lib/deletionStorage'
 import { useAuth } from './AuthContext'
 
 interface CanvasContextType {
@@ -423,6 +424,8 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
       try {
         // Record history BEFORE deleting
         recordHistory('delete', [id], { deletedBlocks: [block] })
+        const reason = isOwnBlock ? 'self' : 'admin'
+        await logDeletion(block, reason, user!.uid)
         await deleteBlock(id)
         if (selectedBlockId === id) {
           setSelectedBlockId(null)
@@ -463,9 +466,15 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     async (id: string, direction: 'up' | 'down'): Promise<boolean> => {
       if (!user) return false
       try {
+        const block = blocks.find(b => b.id === id)
         const wasDeleted = await voteBrightness(id, user.uid, direction)
-        if (wasDeleted && selectedBlockId === id) {
-          setSelectedBlockId(null)
+        if (wasDeleted) {
+          if (block) {
+            await logDeletion(block, 'vote', user.uid)
+          }
+          if (selectedBlockId === id) {
+            setSelectedBlockId(null)
+          }
         }
         return wasDeleted
       } catch (error) {
@@ -473,7 +482,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         return false
       }
     },
-    [user, selectedBlockId]
+    [user, blocks, selectedBlockId]
   )
 
   // Report a block

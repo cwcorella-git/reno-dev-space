@@ -15,7 +15,8 @@ import {
 } from 'firebase/firestore'
 import { deleteUser } from 'firebase/auth'
 import { getDb, getAuth } from './firebase'
-import { VOTE_BRIGHTNESS_CHANGE } from '@/types/canvas'
+import { VOTE_BRIGHTNESS_CHANGE, CanvasBlock } from '@/types/canvas'
+import { logDeletion } from './deletionStorage'
 
 const BLOCKS_COLLECTION = 'canvasBlocks'
 const USERS_COLLECTION = 'users'
@@ -131,6 +132,14 @@ export async function deleteUserBlocks(uid: string): Promise<number> {
     where('createdBy', '==', uid)
   )
   const blocksSnapshot = await getDocs(blocksQuery)
+
+  // Log each deletion to history before deleting
+  const logPromises: Promise<void>[] = []
+  blocksSnapshot.forEach((docSnapshot) => {
+    const block = { id: docSnapshot.id, ...docSnapshot.data() } as CanvasBlock
+    logPromises.push(logDeletion(block, 'cascade', uid))
+  })
+  await Promise.all(logPromises)
 
   const promises: Promise<void>[] = []
   blocksSnapshot.forEach((docSnapshot) => {
