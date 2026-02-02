@@ -34,6 +34,12 @@ const bebasNeue = Bebas_Neue({ weight: '400', subsets: ['latin'], variable: '--f
 export const metadata: Metadata = {
   title: 'Reno Dev Space - Local Game Developers',
   description: 'Local game developers in Reno. Build together, keep what you make.',
+  icons: {
+    icon: [
+      { url: '/reno-dev-space/favicon.svg', type: 'image/svg+xml' },
+      { url: '/reno-dev-space/favicon.ico', sizes: '32x32' },
+    ],
+  },
 }
 
 export default function RootLayout({
