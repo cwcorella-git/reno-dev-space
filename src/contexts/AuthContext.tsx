@@ -12,6 +12,7 @@ import {
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { getAuth, getDb } from '@/lib/firebase'
 import { isAdmin as checkIsAdmin } from '@/lib/admin'
+import { subscribeToAdmins } from '@/lib/adminStorage'
 import { setPledge } from '@/lib/pledgeStorage'
 
 interface UserProfile {
@@ -27,6 +28,7 @@ interface AuthContextType {
   profile: UserProfile | null
   loading: boolean
   isAdmin: boolean
+  adminEmails: Set<string>
   signup: (email: string, password: string, displayName: string, pledgeAmount: number) => Promise<void>
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -39,6 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
+  const [adminEmails, setAdminEmails] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     // Only run on client side
@@ -50,6 +53,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const auth = getAuth()
       const db = getDb()
+
+      const unsubAdmins = subscribeToAdmins(setAdminEmails)
 
       const unsubscribe = onAuthStateChanged(auth, async (user) => {
         setUser(user)
@@ -67,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setLoading(false)
       })
 
-      return unsubscribe
+      return () => { unsubscribe(); unsubAdmins() }
     } catch (error) {
       console.error('Firebase initialization error:', error)
       setLoading(false)
@@ -124,10 +129,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  const isAdmin = checkIsAdmin(user?.email)
+  const isAdmin = checkIsAdmin(user?.email, adminEmails)
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin, signup, login, logout, updateUserProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, adminEmails, signup, login, logout, updateUserProfile }}>
       {children}
     </AuthContext.Provider>
   )

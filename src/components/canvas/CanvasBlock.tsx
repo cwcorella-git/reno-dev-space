@@ -48,6 +48,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     updateContent,
     removeBlock,
     vote,
+    report,
   } = useCanvas()
 
   const isSelected = selectedBlockId === block.id
@@ -505,7 +506,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     <div
       ref={blockRef}
       style={blockStyle}
-      className={`
+      className={`group
         ${isAdmin ? 'cursor-move' : ''}
         ${isOverlapping
           ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-transparent'
@@ -532,6 +533,70 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     >
       {renderContent()}
 
+      {/* Vote arrows - right side, shown on hover for logged-in users */}
+      {user && !isEditing && !isDragging && (
+        <div
+          className={`absolute -right-8 top-1/2 -translate-y-1/2 flex flex-col items-center gap-0.5 transition-opacity z-10 ${
+            isSelected || isInSelection ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-green-400 disabled:opacity-30 disabled:hover:text-gray-400"
+            disabled={block.voters?.includes(user.uid)}
+            onClick={(e) => { e.stopPropagation(); vote(block.id, 'up') }}
+            title="Brighten"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+            </svg>
+          </button>
+          <span className="text-[9px] text-gray-500 font-mono leading-none">{block.brightness ?? 50}</span>
+          <button
+            className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-400 disabled:opacity-30 disabled:hover:text-gray-400"
+            disabled={block.voters?.includes(user.uid)}
+            onClick={(e) => { e.stopPropagation(); vote(block.id, 'down') }}
+            title="Dim"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Report button - left side, shown on hover for logged-in users (not own blocks) */}
+      {user && !isEditing && !isDragging && block.createdBy !== user.uid && (
+        <div
+          className={`absolute -left-8 top-1/2 -translate-y-1/2 transition-opacity z-10 ${
+            isSelected || isInSelection ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+          }`}
+          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className={`w-6 h-6 flex items-center justify-center transition-colors ${
+              block.reportedBy?.includes(user.uid)
+                ? 'text-amber-400 cursor-default'
+                : 'text-gray-500 hover:text-amber-400'
+            }`}
+            disabled={block.reportedBy?.includes(user.uid)}
+            onClick={(e) => { e.stopPropagation(); report(block.id) }}
+            title={block.reportedBy?.includes(user.uid) ? 'Reported' : 'Report'}
+          >
+            <svg className="w-4 h-4" fill={block.reportedBy?.includes(user.uid) ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* Reported indicator - yellow border visible to admins */}
+      {isAdmin && (block.reportedBy?.length ?? 0) > 0 && (
+        <div className="absolute inset-0 border-2 border-amber-400/60 rounded pointer-events-none" />
+      )}
+
       {/* Overlap warning message */}
       {isOverlapping && isDragging && (
         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg z-20">
@@ -539,8 +604,11 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         </div>
       )}
 
-      {/* Delete button (shown when selected and user can edit) */}
-      {isSelected && !isEditing && (isAdmin || (user && block.createdBy === user.uid)) && (
+      {/* Delete button (own blocks always, admin only if reported) */}
+      {isSelected && !isEditing && (
+        (user && block.createdBy === user.uid) ||
+        (isAdmin && (block.reportedBy?.length ?? 0) > 0)
+      ) && (
         <button
           className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center text-white shadow-md transition-colors z-10"
           onClick={(e) => {

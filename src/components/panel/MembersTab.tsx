@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { subscribeToUsers, getUserStats, UserProfile, UserStats } from '@/lib/userStorage'
+import { addAdmin, removeAdmin } from '@/lib/adminStorage'
+import { SUPER_ADMIN_EMAIL } from '@/lib/admin'
 import { EditableText } from '../EditableText'
 
 interface UserWithStats extends UserProfile {
@@ -10,10 +12,11 @@ interface UserWithStats extends UserProfile {
 }
 
 export function MembersTab() {
-  const { user } = useAuth()
+  const { user, isAdmin, adminEmails } = useAuth()
   const [users, setUsers] = useState<UserWithStats[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [confirmingUid, setConfirmingUid] = useState<string | null>(null)
 
   useEffect(() => {
     const unsubUsers = subscribeToUsers(
@@ -105,6 +108,7 @@ export function MembersTab() {
             <th className="px-3 py-2 font-medium text-center"><EditableText id="members.header.votes" defaultValue="Votes" category="members" /></th>
             <th className="px-3 py-2 font-medium text-right"><EditableText id="members.header.pledge" defaultValue="Pledge" category="members" /></th>
             <th className="px-3 py-2 font-medium text-right"><EditableText id="members.header.joined" defaultValue="Joined" category="members" /></th>
+            {isAdmin && <th className="px-3 py-2 font-medium text-center w-10"></th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-white/5">
@@ -131,6 +135,9 @@ export function MembersTab() {
                         <EditableText id="members.badge.backer" defaultValue="backer" category="members" />
                       </span>
                     )}
+                    {adminEmails.has(u.email.toLowerCase()) || u.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() ? (
+                      <span className="text-[10px] bg-amber-600/50 px-1.5 py-0.5 rounded text-amber-200">admin</span>
+                    ) : null}
                   </div>
                 </td>
                 <td className="px-3 py-2 text-center text-gray-300">
@@ -145,6 +152,47 @@ export function MembersTab() {
                 <td className="px-3 py-2 text-right text-gray-400">
                   {u.createdAt ? formatDate(u.createdAt) : '-'}
                 </td>
+                {isAdmin && (
+                  <td className="px-3 py-2 text-center">
+                    {u.email.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase() && (
+                      confirmingUid === u.uid ? (
+                        <div className="flex items-center gap-1 justify-center">
+                          <button
+                            onClick={() => {
+                              const isUserAdmin = adminEmails.has(u.email.toLowerCase())
+                              if (isUserAdmin) removeAdmin(u.email)
+                              else addAdmin(u.email)
+                              setConfirmingUid(null)
+                            }}
+                            className="text-[10px] px-1.5 py-0.5 bg-amber-600 text-white rounded hover:bg-amber-500"
+                          >
+                            {adminEmails.has(u.email.toLowerCase()) ? '−' : '✓'}
+                          </button>
+                          <button
+                            onClick={() => setConfirmingUid(null)}
+                            className="text-[10px] px-1.5 py-0.5 text-gray-400 hover:text-white"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setConfirmingUid(u.uid)}
+                          className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
+                            adminEmails.has(u.email.toLowerCase())
+                              ? 'text-amber-400 hover:text-amber-200 hover:bg-amber-600/20'
+                              : 'text-gray-600 hover:text-gray-400 hover:bg-white/5'
+                          }`}
+                          title={adminEmails.has(u.email.toLowerCase()) ? 'Remove admin' : 'Make admin'}
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                          </svg>
+                        </button>
+                      )
+                    )}
+                  </td>
+                )}
               </tr>
             )
           })}

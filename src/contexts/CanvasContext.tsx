@@ -37,6 +37,7 @@ import {
   bringToFront,
   sendToBack,
   voteBrightness,
+  reportBlock as reportBlockStorage,
   restoreBlock,
   restoreBlocks,
   updateBlockFull,
@@ -73,6 +74,9 @@ interface CanvasContextType {
 
   // Voting (any logged-in user)
   vote: (id: string, direction: 'up' | 'down') => Promise<boolean>
+
+  // Reporting
+  report: (id: string) => Promise<void>
 
   // Undo/Redo (session-only)
   undo: () => Promise<void>
@@ -411,8 +415,11 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
   const removeBlock = useCallback(
     async (id: string): Promise<void> => {
       const block = blocks.find((b) => b.id === id)
-      const canEdit = isAdmin || (user && block?.createdBy === user.uid)
-      if (!canEdit || !block) return
+      if (!block) return
+      const isOwnBlock = user && block.createdBy === user.uid
+      const isReported = (block.reportedBy?.length ?? 0) > 0
+      const canDelete = isOwnBlock || (isAdmin && isReported)
+      if (!canDelete) return
       try {
         // Record history BEFORE deleting
         recordHistory('delete', [id], { deletedBlocks: [block] })
@@ -469,6 +476,19 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     [user, selectedBlockId]
   )
 
+  // Report a block
+  const report = useCallback(
+    async (id: string): Promise<void> => {
+      if (!user) return
+      try {
+        await reportBlockStorage(id, user.uid)
+      } catch (error) {
+        console.error('[CanvasContext] Failed to report block:', error)
+      }
+    },
+    [user]
+  )
+
   return (
     <CanvasContext.Provider
       value={{
@@ -495,6 +515,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         bringBlockToFront,
         sendBlockToBack,
         vote,
+        report,
         undo,
         redo,
         canUndo,

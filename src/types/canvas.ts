@@ -82,6 +82,7 @@ export interface TextBlock extends BaseBlock {
   // At 0 brightness, block is deleted
   brightness: number
   voters: string[]        // User IDs who have voted (prevent double voting)
+  reportedBy?: string[]   // User IDs who have reported this block
 }
 
 export type CanvasBlock = TextBlock
