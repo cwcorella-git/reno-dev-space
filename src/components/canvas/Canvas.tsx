@@ -4,6 +4,7 @@ import { useCallback, useState, useEffect, useRef, useMemo } from 'react'
 import { useCanvas, DESIGN_WIDTH, DESIGN_HEIGHT } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { CanvasBlock, OVERFLOW_LEFT, OVERFLOW_RIGHT } from './CanvasBlock'
+import { getRandomColor } from '@/types/canvas'
 import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
@@ -49,6 +50,7 @@ export function Canvas() {
 
   // Add Text mode cursor preview
   const [addTextPreview, setAddTextPreview] = useState<{ x: number; y: number; isValid: boolean } | null>(null)
+  const [previewColor, setPreviewColor] = useState('#4ade80')
 
   // Track cursor position for paste operations
   const cursorPosRef = useRef<{ x: number; y: number }>({ x: 50, y: 50 })
@@ -393,9 +395,14 @@ export function Canvas() {
     }
   }, [])
 
+  // Pick a random color when entering add-text mode
+  useEffect(() => {
+    if (isAddTextMode) setPreviewColor(getRandomColor())
+  }, [isAddTextMode])
+
   // Track mouse position for Add Text mode preview
   useEffect(() => {
-    if (!isAddTextMode || !isAdmin) {
+    if (!isAddTextMode || !canAddText) {
       setAddTextPreview(null)
       return
     }
@@ -430,7 +437,7 @@ export function Canvas() {
         canvas.removeEventListener('mouseleave', handleMouseLeave)
       }
     }
-  }, [isAddTextMode, isAdmin, blocks, canvasRef, canvasHeightPercent])
+  }, [isAddTextMode, canAddText, blocks, canvasRef, canvasHeightPercent])
 
 
   if (authLoading || canvasLoading) {
@@ -587,17 +594,15 @@ export function Canvas() {
               {/* Cursor-following preview box */}
               {addTextPreview && (
                 <div
-                  className={`absolute border-2 border-dashed rounded transition-colors ${
-                    addTextPreview.isValid
-                      ? 'border-green-500 bg-green-500/10'
-                      : 'border-red-500 bg-red-500/10'
-                  }`}
+                  className="absolute border-2 border-dashed rounded transition-colors"
                   style={{
                     left: `${addTextPreview.x}%`,
                     top: `${(addTextPreview.y / canvasHeightPercent) * 100}%`,
                     width: '12%',
                     height: `${(6 / canvasHeightPercent) * 100}%`,
                     minHeight: '30px',
+                    borderColor: addTextPreview.isValid ? previewColor : '#ef4444',
+                    backgroundColor: addTextPreview.isValid ? `${previewColor}1a` : '#ef44441a',
                   }}
                 />
               )}
