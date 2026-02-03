@@ -123,7 +123,7 @@ export function Canvas() {
             return
           }
 
-          addText(x, y)
+          addText(x, y, previewColor)
           setIsAddTextMode(false)
           return
         }

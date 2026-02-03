@@ -75,20 +75,22 @@ interface VoteOutlinesProps {
 
 export function VoteOutlines({ block }: VoteOutlinesProps) {
   const voteCount = block.voters?.length ?? 0
-  const numOutlines = Math.min(3, Math.max(1, Math.ceil(voteCount / 2)))
+  const numOutlines = voteCount > 0 ? Math.min(3, Math.max(1, Math.ceil(voteCount / 2))) : 0
   const containerRef = useRef<HTMLDivElement>(null)
   const [dims, setDims] = useState({ w: 0, h: 0 })
 
-  // Measure actual pixel size with ResizeObserver
+  // Always keep ResizeObserver running so dims are ready when votes arrive
   useEffect(() => {
     const el = containerRef.current
     if (!el) return
 
-    // Initial measurement
-    const rect = el.getBoundingClientRect()
-    if (rect.width > 0 && rect.height > 0) {
-      setDims({ w: Math.round(rect.width), h: Math.round(rect.height) })
-    }
+    // Defer initial measurement to ensure layout is complete
+    const raf = requestAnimationFrame(() => {
+      const rect = el.getBoundingClientRect()
+      if (rect.width > 0 && rect.height > 0) {
+        setDims({ w: Math.round(rect.width), h: Math.round(rect.height) })
+      }
+    })
 
     const ro = new ResizeObserver((entries) => {
       const entry = entries[0]
@@ -100,10 +102,11 @@ export function VoteOutlines({ block }: VoteOutlinesProps) {
       }
     })
     ro.observe(el)
-    return () => ro.disconnect()
+    return () => { cancelAnimationFrame(raf); ro.disconnect() }
   }, [])
 
   const configs = useMemo(() => {
+    if (numOutlines === 0) return []
     return Array.from({ length: numOutlines }, (_, i) => {
       const hash = hashStr(block.id + i)
       return {
@@ -119,15 +122,13 @@ export function VoteOutlines({ block }: VoteOutlinesProps) {
     })
   }, [block.id, numOutlines])
 
-  if (voteCount === 0) return null
-
   return (
     <div
       ref={containerRef}
       className="absolute pointer-events-none"
       style={{ top: 0, left: 0, right: 0, bottom: 0 }}
     >
-      {dims.w > 0 && dims.h > 0 && configs.map((cfg, i) => {
+      {numOutlines > 0 && dims.w > 0 && dims.h > 0 && configs.map((cfg, i) => {
         const spread = -cfg.inset
         const svgW = dims.w + spread * 2
         const svgH = dims.h + spread * 2
