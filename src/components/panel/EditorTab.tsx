@@ -295,12 +295,12 @@ export function EditorTab() {
               e.preventDefault()
               setShowColorPicker(!showColorPicker)
             }}
-            className="w-7 h-7 rounded flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20"
+            className="w-7 h-7 rounded flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20 relative"
             title="Text color"
           >
             <div
-              className="w-4 h-4 rounded-sm border border-white/30"
-              style={{ background: `conic-gradient(${TEXT_COLORS.join(', ')})` }}
+              className="w-4 h-4 rounded-full border border-white/30"
+              style={{ backgroundColor: textBlock.style.color || '#ffffff' }}
             />
           </button>
           {showColorPicker && (
