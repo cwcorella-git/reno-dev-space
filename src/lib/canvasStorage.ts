@@ -289,6 +289,15 @@ export async function reportBlock(id: string, userId: string): Promise<void> {
   })
 }
 
+// Unreport a block (removes user from reportedBy array)
+export async function unreportBlock(id: string, userId: string): Promise<void> {
+  const db = getDb()
+  await updateDoc(doc(db, COLLECTION_NAME, id), {
+    reportedBy: arrayRemove(userId),
+    updatedAt: Date.now(),
+  })
+}
+
 // Reset brightness for all blocks to default (admin only)
 export async function resetAllBrightness(): Promise<number> {
   const db = getDb()

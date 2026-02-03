@@ -11,6 +11,7 @@ const REASON_LABELS: Record<string, string> = {
   admin: 'Admin removed',
   vote: 'Voted out',
   cascade: 'Account deleted',
+  report: 'Reported',
 }
 
 const REASON_COLORS: Record<string, string> = {
@@ -18,6 +19,7 @@ const REASON_COLORS: Record<string, string> = {
   admin: 'text-amber-400',
   vote: 'text-red-400',
   cascade: 'text-purple-400',
+  report: 'text-orange-400',
 }
 
 export function HistoryTab() {
@@ -78,7 +80,7 @@ export function HistoryTab() {
         >
           All ({entries.length})
         </button>
-        {['self', 'admin', 'vote', 'cascade'].map((r) => {
+        {['self', 'admin', 'vote', 'cascade', 'report'].map((r) => {
           const count = entries.filter((e) => e.reason === r).length
           if (count === 0) return null
           return (
@@ -114,13 +116,15 @@ export function HistoryTab() {
                     <span className="text-gray-600">{formatTime(entry.deletedAt)}</span>
                   </div>
                 </div>
-                <button
-                  onClick={() => handleRestore(entry)}
-                  disabled={restoringId === entry.id}
-                  className="text-[10px] px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 disabled:opacity-50 shrink-0"
-                >
-                  {restoringId === entry.id ? '...' : 'Restore'}
-                </button>
+                {entry.reason !== 'report' && (
+                  <button
+                    onClick={() => handleRestore(entry)}
+                    disabled={restoringId === entry.id}
+                    className="text-[10px] px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 disabled:opacity-50 shrink-0"
+                  >
+                    {restoringId === entry.id ? '...' : 'Restore'}
+                  </button>
+                )}
               </div>
             </div>
           ))}

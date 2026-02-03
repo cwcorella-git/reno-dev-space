@@ -38,11 +38,12 @@ import {
   sendToBack,
   voteBrightness,
   reportBlock as reportBlockStorage,
+  unreportBlock as unreportBlockStorage,
   restoreBlock,
   restoreBlocks,
   updateBlockFull,
 } from '@/lib/canvasStorage'
-import { logDeletion } from '@/lib/deletionStorage'
+import { logDeletion, removeReportEntry } from '@/lib/deletionStorage'
 import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
 import { useAuth } from './AuthContext'
 
@@ -500,17 +501,26 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     [user, blocks, selectedBlockId]
   )
 
-  // Report a block
+  // Toggle report on a block
   const report = useCallback(
     async (id: string): Promise<void> => {
       if (!user) return
       try {
-        await reportBlockStorage(id, user.uid)
+        const block = blocks.find((b) => b.id === id)
+        if (!block) return
+        const alreadyReported = block.reportedBy?.includes(user.uid) ?? false
+        if (alreadyReported) {
+          await unreportBlockStorage(id, user.uid)
+          await removeReportEntry(id, user.uid)
+        } else {
+          await reportBlockStorage(id, user.uid)
+          await logDeletion(block, 'report', user.uid)
+        }
       } catch (error) {
-        console.error('[CanvasContext] Failed to report block:', error)
+        console.error('[CanvasContext] Failed to toggle report:', error)
       }
     },
-    [user]
+    [user, blocks]
   )
 
   return (
