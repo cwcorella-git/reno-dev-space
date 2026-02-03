@@ -29,6 +29,9 @@ export async function logDeletion(
   reason: DeletionReason,
   deletedBy: string
 ): Promise<void> {
+  // Skip empty blocks (e.g. newly created blocks with no content)
+  if (!block.content?.trim()) return
+
   const db = getDb()
   await addDoc(collection(db, COLLECTION_NAME), {
     originalId: block.id,

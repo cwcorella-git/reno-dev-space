@@ -111,22 +111,19 @@ export async function voteBrightness(
 
   const votedUp = block.votersUp?.includes(odId) ?? false
   const votedDown = block.votersDown?.includes(odId) ?? false
+  const inLegacyVoters = block.voters?.includes(odId) ?? false
 
-  // If user already voted this direction, unvote (reverse it)
+  // Already voted this direction — no-op (keeps brightness where it is)
   if ((direction === 'up' && votedUp) || (direction === 'down' && votedDown)) {
-    const reverseChange = direction === 'up' ? -VOTE_BRIGHTNESS_CHANGE : VOTE_BRIGHTNESS_CHANGE
-    const newBrightness = Math.max(0, Math.min(100, (block.brightness ?? DEFAULT_BRIGHTNESS) + reverseChange))
-
-    await updateDoc(docRef, {
-      brightness: newBrightness,
-      voters: arrayRemove(odId),
-      ...(direction === 'up' ? { votersUp: arrayRemove(odId) } : { votersDown: arrayRemove(odId) }),
-      updatedAt: Date.now(),
-    })
     return false
   }
 
-  // If user voted the other direction, remove that vote first (1-for-1 swap)
+  // Legacy voter (in voters but not in votersUp/votersDown) — no-op
+  if (inLegacyVoters && !votedUp && !votedDown) {
+    return false
+  }
+
+  // Voted the other direction — remove that vote (1-for-1 reversal)
   if ((direction === 'up' && votedDown) || (direction === 'down' && votedUp)) {
     const reverseChange = votedUp ? -VOTE_BRIGHTNESS_CHANGE : VOTE_BRIGHTNESS_CHANGE
     const newBrightness = Math.max(0, Math.min(100, (block.brightness ?? DEFAULT_BRIGHTNESS) + reverseChange))
