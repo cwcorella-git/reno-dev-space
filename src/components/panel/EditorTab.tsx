@@ -304,8 +304,8 @@ export function EditorTab() {
             />
           </button>
           {showColorPicker && (
-            <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-900 border border-white/20 rounded-lg p-2 shadow-xl z-50">
-              <div className="grid grid-cols-4 gap-1.5">
+            <div className="absolute bottom-full mb-1 right-0 bg-gray-900 border border-white/20 rounded-lg p-1.5 shadow-xl z-50">
+              <div className="flex gap-1">
                 {TEXT_COLORS.map((color) => (
                   <button
                     key={color}
@@ -314,7 +314,7 @@ export function EditorTab() {
                       applyInlineColor(color)
                       setShowColorPicker(false)
                     }}
-                    className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                    className={`w-6 h-6 rounded-full border-2 shrink-0 transition-transform ${
                       textBlock.style.color === color ? 'border-white scale-110' : 'border-transparent hover:scale-110'
                     }`}
                     style={{ backgroundColor: color }}
