@@ -99,7 +99,7 @@ export async function getUserStats(uid: string): Promise<UserStats> {
   return { blocksCreated, votesGiven, pledgeAmount }
 }
 
-// Clear all votes by user (remove from voters arrays)
+// Clear all votes by user (remove from voters, votersUp, and votersDown arrays)
 // Note: This doesn't adjust brightness since we don't know which direction they voted
 export async function clearUserVotes(uid: string): Promise<number> {
   const db = getDb()
@@ -110,11 +110,17 @@ export async function clearUserVotes(uid: string): Promise<number> {
 
   blocksSnapshot.forEach((docSnapshot) => {
     const data = docSnapshot.data()
-    if (data.voters?.includes(uid)) {
+    const inVoters = data.voters?.includes(uid)
+    const inVotersUp = data.votersUp?.includes(uid)
+    const inVotersDown = data.votersDown?.includes(uid)
+
+    if (inVoters || inVotersUp || inVotersDown) {
       clearedCount++
       promises.push(
         updateDoc(doc(db, BLOCKS_COLLECTION, docSnapshot.id), {
           voters: arrayRemove(uid),
+          votersUp: arrayRemove(uid),
+          votersDown: arrayRemove(uid),
         })
       )
     }
