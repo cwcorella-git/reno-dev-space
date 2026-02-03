@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useRef } from 'react'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { isTextBlock, TextBlock, TEXT_COLORS } from '@/types/canvas'
@@ -38,6 +38,8 @@ export function EditorTab() {
     updateStyle,
     removeBlock,
   } = useCanvas()
+  const [showColorPicker, setShowColorPicker] = useState(false)
+  const colorPickerRef = useRef<HTMLDivElement>(null)
 
   // Get selected block info first (needed for callbacks)
   const selectedBlock = selectedBlockId ? blocks.find((b) => b.id === selectedBlockId) : null
@@ -103,6 +105,18 @@ export function EditorTab() {
     },
     [applyStyle]
   )
+
+  // Close color picker on click outside
+  useEffect(() => {
+    if (!showColorPicker) return
+    const handler = (e: MouseEvent) => {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
+        setShowColorPicker(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showColorPicker])
 
   // Handle delete
   const handleDelete = useCallback(() => {
@@ -274,23 +288,41 @@ export function EditorTab() {
           ))}
         </div>
 
-        <div className="w-px h-6 bg-white/20 hidden sm:block" />
-
-        {/* Color swatches - use onMouseDown to preserve text selection */}
-        <div className="flex gap-1">
-          {TEXT_COLORS.map((color) => (
-            <button
-              key={color}
-              onMouseDown={(e) => {
-                e.preventDefault()
-                applyInlineColor(color)
-              }}
-              className={`w-5 h-5 rounded-full border-2 transition-transform ${
-                textBlock.style.color === color ? 'border-white scale-110' : 'border-transparent hover:scale-105'
-              }`}
-              style={{ backgroundColor: color }}
+        {/* Color swatch picker */}
+        <div className="relative" ref={colorPickerRef}>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault()
+              setShowColorPicker(!showColorPicker)
+            }}
+            className="w-7 h-7 rounded flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20"
+            title="Text color"
+          >
+            <div
+              className="w-4 h-4 rounded-sm border border-white/30"
+              style={{ background: `conic-gradient(${TEXT_COLORS.join(', ')})` }}
             />
-          ))}
+          </button>
+          {showColorPicker && (
+            <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 bg-gray-900 border border-white/20 rounded-lg p-2 shadow-xl z-50">
+              <div className="grid grid-cols-4 gap-1.5">
+                {TEXT_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      applyInlineColor(color)
+                      setShowColorPicker(false)
+                    }}
+                    className={`w-6 h-6 rounded-full border-2 transition-transform ${
+                      textBlock.style.color === color ? 'border-white scale-110' : 'border-transparent hover:scale-110'
+                    }`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

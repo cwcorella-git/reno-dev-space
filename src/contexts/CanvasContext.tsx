@@ -511,7 +511,9 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         const alreadyReported = block.reportedBy?.includes(user.uid) ?? false
         if (alreadyReported) {
           await unreportBlockStorage(id, user.uid)
-          await removeReportEntry(id, user.uid)
+          removeReportEntry(id, user.uid).catch((err) =>
+            console.warn('[CanvasContext] Failed to remove report entry:', err)
+          )
         } else {
           await reportBlockStorage(id, user.uid)
           await logDeletion(block, 'report', user.uid)
