@@ -53,3 +53,18 @@ input[type="number"]::-webkit-outer-spin-button {
 input[type="number"] {
   -moz-appearance: textfield;
 }
+
+/* Dancing vote outlines — animated dashed borders around voted blocks */
+@keyframes dash-flow-1 {
+  to { stroke-dashoffset: -40; }
+}
+@keyframes dash-flow-2 {
+  to { stroke-dashoffset: 60; }
+}
+@keyframes dash-flow-3 {
+  to { stroke-dashoffset: -80; }
+}
+
+.dash-dance-1 { animation: dash-flow-1 2s linear infinite; }
+.dash-dance-2 { animation: dash-flow-2 3s linear infinite; }
+.dash-dance-3 { animation: dash-flow-3 4.5s linear infinite; }

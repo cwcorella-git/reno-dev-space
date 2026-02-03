@@ -7,6 +7,7 @@ import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { filterEditableBlocks } from '@/lib/permissions'
 import { wouldBlockOverlap } from '@/lib/overlapDetection'
+import { VoteOutlines } from './VoteOutlines'
 
 interface CanvasBlockProps {
   block: CanvasBlockType
@@ -533,6 +534,9 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     >
       {renderContent()}
 
+      {/* Dancing vote outlines */}
+      <VoteOutlines block={block} />
+
       {/* Vote arrows - right side, shown on hover for logged-in users */}
       {user && !isEditing && !isDragging && (
         <div
@@ -542,27 +546,40 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
           onMouseDown={(e) => e.stopPropagation()}
           onClick={(e) => e.stopPropagation()}
         >
-          <button
-            className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-green-400 disabled:opacity-30 disabled:hover:text-gray-400"
-            disabled={block.voters?.includes(user.uid)}
-            onClick={(e) => { e.stopPropagation(); vote(block.id, 'up') }}
-            title="Brighten"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
-            </svg>
-          </button>
-          <span className="text-[9px] text-gray-500 font-mono leading-none">{block.brightness ?? 50}</span>
-          <button
-            className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-400 disabled:opacity-30 disabled:hover:text-gray-400"
-            disabled={block.voters?.includes(user.uid)}
-            onClick={(e) => { e.stopPropagation(); vote(block.id, 'down') }}
-            title="Dim"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-            </svg>
-          </button>
+          {(() => {
+            const votedUp = block.votersUp?.includes(user.uid) ?? false
+            const votedDown = block.votersDown?.includes(user.uid) ?? false
+            const hasVoted = votedUp || votedDown
+            return (
+              <>
+                <button
+                  className={`w-6 h-6 flex items-center justify-center transition-colors ${
+                    votedUp ? 'text-green-400' : hasVoted ? 'opacity-30 text-gray-400' : 'text-gray-400 hover:text-green-400'
+                  }`}
+                  disabled={votedDown}
+                  onClick={(e) => { e.stopPropagation(); vote(block.id, 'up') }}
+                  title={votedUp ? 'Remove vote' : 'Brighten'}
+                >
+                  <svg className="w-3.5 h-3.5" fill={votedUp ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
+                  </svg>
+                </button>
+                <span className="text-[9px] text-gray-500 font-mono leading-none">{block.brightness ?? 50}</span>
+                <button
+                  className={`w-6 h-6 flex items-center justify-center transition-colors ${
+                    votedDown ? 'text-red-400' : hasVoted ? 'opacity-30 text-gray-400' : 'text-gray-400 hover:text-red-400'
+                  }`}
+                  disabled={votedUp}
+                  onClick={(e) => { e.stopPropagation(); vote(block.id, 'down') }}
+                  title={votedDown ? 'Remove vote' : 'Dim'}
+                >
+                  <svg className="w-3.5 h-3.5" fill={votedDown ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+              </>
+            )
+          })()}
         </div>
       )}
 

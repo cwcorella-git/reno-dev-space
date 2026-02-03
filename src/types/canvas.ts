@@ -82,6 +82,8 @@ export interface TextBlock extends BaseBlock {
   // At 0 brightness, block is deleted
   brightness: number
   voters: string[]        // User IDs who have voted (prevent double voting)
+  votersUp?: string[]     // User IDs who voted up (for unvote)
+  votersDown?: string[]   // User IDs who voted down (for unvote)
   reportedBy?: string[]   // User IDs who have reported this block
 }
 

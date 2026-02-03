@@ -23,7 +23,7 @@ import {
   getRandomColor,
   getRandomFont,
 } from '@/types/canvas'
-import { arrayUnion } from 'firebase/firestore'
+import { arrayUnion, arrayRemove } from 'firebase/firestore'
 
 const COLLECTION_NAME = 'canvasBlocks'
 
@@ -93,6 +93,7 @@ export async function addTextBlock(
 
 // Vote on a block (brightness-based)
 // Space = brighten (+), Alt = dim (-)
+// Clicking same direction again = unvote (reverses the change)
 // Returns true if block was deleted (brightness hit 0)
 export async function voteBrightness(
   id: string,
@@ -108,12 +109,29 @@ export async function voteBrightness(
 
   const block = docSnap.data() as TextBlock
 
-  // Check if user already voted
-  if (block.voters?.includes(odId)) {
-    return false // Already voted
+  const votedUp = block.votersUp?.includes(odId) ?? false
+  const votedDown = block.votersDown?.includes(odId) ?? false
+
+  // If user already voted this direction, unvote (reverse it)
+  if ((direction === 'up' && votedUp) || (direction === 'down' && votedDown)) {
+    const reverseChange = direction === 'up' ? -VOTE_BRIGHTNESS_CHANGE : VOTE_BRIGHTNESS_CHANGE
+    const newBrightness = Math.max(0, Math.min(100, (block.brightness ?? DEFAULT_BRIGHTNESS) + reverseChange))
+
+    await updateDoc(docRef, {
+      brightness: newBrightness,
+      voters: arrayRemove(odId),
+      ...(direction === 'up' ? { votersUp: arrayRemove(odId) } : { votersDown: arrayRemove(odId) }),
+      updatedAt: Date.now(),
+    })
+    return false
   }
 
-  // Calculate new brightness
+  // If user voted the other direction, don't allow switching
+  if (votedUp || votedDown) {
+    return false
+  }
+
+  // New vote
   const change = direction === 'up' ? VOTE_BRIGHTNESS_CHANGE : -VOTE_BRIGHTNESS_CHANGE
   const newBrightness = Math.max(0, Math.min(100, (block.brightness ?? DEFAULT_BRIGHTNESS) + change))
 
@@ -127,6 +145,7 @@ export async function voteBrightness(
   await updateDoc(docRef, {
     brightness: newBrightness,
     voters: arrayUnion(odId),
+    ...(direction === 'up' ? { votersUp: arrayUnion(odId) } : { votersDown: arrayUnion(odId) }),
     updatedAt: Date.now(),
   })
 
