@@ -42,7 +42,7 @@ interface MarqueeState {
 
 export function Canvas() {
   const { user, isAdmin, loading: authLoading } = useAuth()
-  const { blocks, canvasRef, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText, isAddTextMode, setIsAddTextMode, removeBlock, undo, redo, copyBlocks, pasteBlocks } = useCanvas()
+  const { blocks, canvasRef, canAddText, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText, isAddTextMode, setIsAddTextMode, removeBlock, undo, redo, copyBlocks, pasteBlocks } = useCanvas()
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [marquee, setMarquee] = useState<MarqueeState | null>(null)
   const isMarqueeActive = useRef(false)
@@ -110,7 +110,7 @@ export function Canvas() {
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent) => {
       // If in add text mode, place text at click position
-      if (isAddTextMode && isAdmin) {
+      if (isAddTextMode && canAddText) {
         const canvas = canvasRef.current
         if (canvas) {
           const rect = canvas.getBoundingClientRect()
@@ -134,7 +134,7 @@ export function Canvas() {
         setContextMenu(null)
       }
     },
-    [selectBlock, isAddTextMode, setIsAddTextMode, isAdmin, canvasRef, addText, canvasHeightPercent, blocks]
+    [selectBlock, isAddTextMode, setIsAddTextMode, canAddText, canvasRef, addText, canvasHeightPercent, blocks]
   )
 
   // Start marquee selection on mouse down (available to everyone)
@@ -229,7 +229,7 @@ export function Canvas() {
   // Right-click to show context menu (admin only)
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {
-      if (!isAdmin) return
+      if (!canAddText) return
 
       e.preventDefault()
 
@@ -248,7 +248,7 @@ export function Canvas() {
         canvasY,
       })
     },
-    [isAdmin, canvasRef, canvasHeightPercent]
+    [canAddText, canvasRef, canvasHeightPercent]
   )
 
   const handleAddText = useCallback(() => {

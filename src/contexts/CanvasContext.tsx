@@ -43,10 +43,12 @@ import {
   updateBlockFull,
 } from '@/lib/canvasStorage'
 import { logDeletion } from '@/lib/deletionStorage'
+import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
 import { useAuth } from './AuthContext'
 
 interface CanvasContextType {
   blocks: CanvasBlock[]
+  canAddText: boolean
   selectedBlockId: string | null
   selectedBlockIds: string[]
   isEditing: boolean
@@ -102,6 +104,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
   const [isAddTextMode, setIsAddTextMode] = useState(false)
   const [isGroupDragging, setIsGroupDragging] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [hasPledged, setHasPledged] = useState(false)
   const canvasRef = useRef<HTMLDivElement | null>(null)
 
   // History for undo/redo (session-only, stored in ref to avoid re-renders on every action)
@@ -133,6 +136,18 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
 
     return () => unsubscribe()
   }, [])
+
+  // Subscribe to pledges to determine canAddText
+  useEffect(() => {
+    if (!user) { setHasPledged(false); return }
+    const unsub = subscribeToPledges((pledges: Pledge[]) => {
+      const p = pledges.find(p => p.odId === user.uid)
+      setHasPledged(!!p && p.amount > 0)
+    })
+    return () => unsub()
+  }, [user])
+
+  const canAddText = isAdmin || hasPledged
 
   // Clear selection when clicking outside
   const selectBlock = useCallback((id: string | null) => {
@@ -335,7 +350,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
   // Admin operations
   const addText = useCallback(
     async (x: number, y: number): Promise<string | null> => {
-      if (!isAdmin || !user) return null
+      if (!canAddText || !user) return null
       try {
         const id = await addTextBlock(x, y, user.uid, '', getMaxZIndex())
         setSelectedBlockId(id)
@@ -345,7 +360,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         return null
       }
     },
-    [isAdmin, user, getMaxZIndex]
+    [canAddText, user, getMaxZIndex]
   )
 
   const moveBlock = useCallback(
@@ -502,6 +517,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     <CanvasContext.Provider
       value={{
         blocks,
+        canAddText,
         selectedBlockId,
         selectedBlockIds,
         isEditing,

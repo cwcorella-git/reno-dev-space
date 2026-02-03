@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useFirestoreChat } from '@/hooks/useFirestoreChat'
-import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
 import { subscribeToCampaignSettings, CampaignSettings } from '@/lib/campaignStorage'
 import { AuthModal } from '@/components/AuthModal'
 import { EditableText } from '@/components/EditableText'
@@ -20,14 +19,13 @@ type TabType = 'editor' | 'chat' | 'members' | 'profile' | 'content' | 'campaign
 
 export function UnifiedPanel() {
   const { user, isAdmin } = useAuth()
-  const { selectedBlockId, isAddTextMode, setIsAddTextMode } = useCanvas()
+  const { selectedBlockId, isAddTextMode, setIsAddTextMode, canAddText } = useCanvas()
   const { isConnected } = useFirestoreChat('community')
 
   const [activeTab, setActiveTab] = useState<TabType>('editor')
   const [isMinimized, setIsMinimized] = useState(false)
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [mounted, setMounted] = useState(false)
-  const [hasPledged, setHasPledged] = useState(false)
   const [campaignSettings, setCampaignSettings] = useState<CampaignSettings | null>(null)
 
   useEffect(() => {
@@ -39,21 +37,6 @@ export function UnifiedPanel() {
     const unsubscribe = subscribeToCampaignSettings(setCampaignSettings)
     return () => unsubscribe()
   }, [])
-
-  // Check if user has pledged (to enable Add Text button)
-  useEffect(() => {
-    if (!user) {
-      setHasPledged(false)
-      return
-    }
-
-    const unsubscribe = subscribeToPledges((pledges: Pledge[]) => {
-      const userPledge = pledges.find(p => p.odId === user.uid)
-      setHasPledged(!!userPledge && userPledge.amount > 0)
-    })
-
-    return () => unsubscribe()
-  }, [user])
 
   // Auto-switch to editor tab when block is selected
   useEffect(() => {
@@ -91,7 +74,7 @@ export function UnifiedPanel() {
   return (
     <div className="fixed bottom-2 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-1rem)] sm:w-auto sm:min-w-[500px] sm:max-w-[700px]">
       {/* Add Text button - positioned at top-right, above the panel */}
-      {(isAdmin || hasPledged) && (
+      {canAddText && (
         <button
           onClick={() => setIsAddTextMode(!isAddTextMode)}
           className={`absolute -top-12 right-0 z-10 px-3 py-1.5 rounded-lg shadow-lg transition-all hover:scale-105 flex items-center gap-1.5 text-sm font-medium ${

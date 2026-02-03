@@ -126,8 +126,17 @@ export async function voteBrightness(
     return false
   }
 
-  // If user voted the other direction, don't allow switching
-  if (votedUp || votedDown) {
+  // If user voted the other direction, remove that vote first (1-for-1 swap)
+  if ((direction === 'up' && votedDown) || (direction === 'down' && votedUp)) {
+    const reverseChange = votedUp ? -VOTE_BRIGHTNESS_CHANGE : VOTE_BRIGHTNESS_CHANGE
+    const newBrightness = Math.max(0, Math.min(100, (block.brightness ?? DEFAULT_BRIGHTNESS) + reverseChange))
+
+    await updateDoc(docRef, {
+      brightness: newBrightness,
+      voters: arrayRemove(odId),
+      ...(votedUp ? { votersUp: arrayRemove(odId) } : { votersDown: arrayRemove(odId) }),
+      updatedAt: Date.now(),
+    })
     return false
   }
 

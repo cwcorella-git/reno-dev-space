@@ -554,11 +554,10 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
               <>
                 <button
                   className={`w-6 h-6 flex items-center justify-center transition-colors ${
-                    votedUp ? 'text-green-400' : hasVoted ? 'opacity-30 text-gray-400' : 'text-gray-400 hover:text-green-400'
+                    votedUp ? 'text-green-400' : 'text-gray-400 hover:text-green-400'
                   }`}
-                  disabled={votedDown}
                   onClick={(e) => { e.stopPropagation(); vote(block.id, 'up') }}
-                  title={votedUp ? 'Remove vote' : 'Brighten'}
+                  title={votedUp ? 'Remove vote' : votedDown ? 'Switch to brighten' : 'Brighten'}
                 >
                   <svg className="w-3.5 h-3.5" fill={votedUp ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 15l7-7 7 7" />
@@ -567,11 +566,10 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
                 <span className="text-[9px] text-gray-500 font-mono leading-none">{block.brightness ?? 50}</span>
                 <button
                   className={`w-6 h-6 flex items-center justify-center transition-colors ${
-                    votedDown ? 'text-red-400' : hasVoted ? 'opacity-30 text-gray-400' : 'text-gray-400 hover:text-red-400'
+                    votedDown ? 'text-red-400' : 'text-gray-400 hover:text-red-400'
                   }`}
-                  disabled={votedUp}
                   onClick={(e) => { e.stopPropagation(); vote(block.id, 'down') }}
-                  title={votedDown ? 'Remove vote' : 'Dim'}
+                  title={votedDown ? 'Remove vote' : votedUp ? 'Switch to dim' : 'Dim'}
                 >
                   <svg className="w-3.5 h-3.5" fill={votedDown ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
