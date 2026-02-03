@@ -39,6 +39,7 @@ import {
   voteBrightness,
   reportBlock as reportBlockStorage,
   unreportBlock as unreportBlockStorage,
+  dismissReports as dismissReportsStorage,
   restoreBlock,
   restoreBlocks,
   updateBlockFull,
@@ -82,6 +83,7 @@ interface CanvasContextType {
 
   // Reporting
   report: (id: string) => Promise<void>
+  dismissReport: (id: string) => Promise<void>
 
   // Undo/Redo (session-only)
   undo: () => Promise<void>
@@ -530,6 +532,22 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     [user, blocks]
   )
 
+  // Admin: dismiss all reports on a block (moves reporters to dismissedReporters)
+  const dismissReport = useCallback(
+    async (id: string): Promise<void> => {
+      if (!isAdmin) return
+      try {
+        const block = blocks.find((b) => b.id === id)
+        if (!block) return
+        const reporters = block.reportedBy ?? []
+        await dismissReportsStorage(id, reporters)
+      } catch (error) {
+        console.error('[CanvasContext] Failed to dismiss reports:', error)
+      }
+    },
+    [isAdmin, blocks]
+  )
+
   return (
     <CanvasContext.Provider
       value={{
@@ -558,6 +576,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         sendBlockToBack,
         vote,
         report,
+        dismissReport,
         undo,
         redo,
         canUndo,

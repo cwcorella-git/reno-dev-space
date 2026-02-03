@@ -298,6 +298,17 @@ export async function unreportBlock(id: string, userId: string): Promise<void> {
   })
 }
 
+// Dismiss all reports on a block (admin action — moves reporters to dismissedReporters)
+export async function dismissReports(id: string, reportedByUsers: string[]): Promise<void> {
+  if (reportedByUsers.length === 0) return
+  const db = getDb()
+  await updateDoc(doc(db, COLLECTION_NAME, id), {
+    reportedBy: [],
+    dismissedReporters: arrayUnion(...reportedByUsers),
+    updatedAt: Date.now(),
+  })
+}
+
 // Reset brightness for all blocks to default (admin only)
 export async function resetAllBrightness(): Promise<number> {
   const db = getDb()

@@ -84,7 +84,8 @@ export interface TextBlock extends BaseBlock {
   voters: string[]        // User IDs who have voted (prevent double voting)
   votersUp?: string[]     // User IDs who voted up (for unvote)
   votersDown?: string[]   // User IDs who voted down (for unvote)
-  reportedBy?: string[]   // User IDs who have reported this block
+  reportedBy?: string[]          // User IDs who have reported this block
+  dismissedReporters?: string[]  // User IDs whose reports were dismissed (can't re-report)
 }
 
 export type CanvasBlock = TextBlock

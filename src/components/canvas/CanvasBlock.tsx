@@ -50,6 +50,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     removeBlock,
     vote,
     report,
+    dismissReport,
   } = useCanvas()
 
   const isSelected = selectedBlockId === block.id
@@ -584,8 +585,8 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         </div>
       )}
 
-      {/* Report button - left side, shown on hover for logged-in users (not own blocks) */}
-      {user && !isEditing && !isDragging && block.createdBy !== user.uid && (
+      {/* Report button - left side, shown on hover for logged-in users (not own blocks, not dismissed) */}
+      {user && !isEditing && !isDragging && block.createdBy !== user.uid && !(block.dismissedReporters?.includes(user.uid)) && (
         <div
           className={`absolute -left-8 top-1/2 -translate-y-1/2 transition-opacity z-10 ${
             isSelected || isInSelection ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
@@ -609,9 +610,23 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         </div>
       )}
 
-      {/* Reported indicator - yellow border visible to admins */}
+      {/* Reported indicator - yellow border + dismiss button visible to admins */}
       {isAdmin && (block.reportedBy?.length ?? 0) > 0 && (
-        <div className="absolute inset-0 border-2 border-amber-400/60 rounded pointer-events-none" />
+        <>
+          <div className="absolute inset-0 border-2 border-amber-400/60 rounded pointer-events-none" />
+          <button
+            className={`absolute -left-8 bottom-1 w-6 h-6 flex items-center justify-center text-emerald-400 hover:text-emerald-300 transition-opacity z-10 ${
+              isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+            }`}
+            onClick={(e) => { e.stopPropagation(); dismissReport(block.id) }}
+            onMouseDown={(e) => e.stopPropagation()}
+            title={`Dismiss ${block.reportedBy?.length} report(s)`}
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </button>
+        </>
       )}
 
       {/* Overlap warning message */}
