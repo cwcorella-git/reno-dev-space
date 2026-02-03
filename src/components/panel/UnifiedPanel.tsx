@@ -177,17 +177,20 @@ export function UnifiedPanel() {
               </button>
             )}
 
-            {/* History button - only for admin */}
+            {/* History icon - only for admin */}
             {isAdmin && (
               <button
                 onClick={() => { setActiveTab('history'); setIsMinimized(false) }}
-                className={`px-2 h-8 rounded-lg flex items-center justify-center text-xs font-medium transition-colors ${
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
                   activeTab === 'history'
                     ? 'bg-amber-600/50 text-amber-200'
                     : 'text-amber-400 hover:text-amber-200 hover:bg-amber-600/20'
                 }`}
+                title="History"
               >
-                History
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
               </button>
             )}
 

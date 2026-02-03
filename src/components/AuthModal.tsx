@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useContent } from '@/contexts/ContentContext'
+import { isEmailBanned } from '@/lib/bannedEmailsStorage'
 import { EditableText } from './EditableText'
 
 interface AuthModalProps {
@@ -27,6 +28,13 @@ export function AuthModal({ onClose }: AuthModalProps) {
 
     try {
       if (mode === 'signup') {
+        // Check if email is banned
+        const banned = await isEmailBanned(email)
+        if (banned) {
+          setError(getText('auth.error.banned', 'This email address has been banned'))
+          setLoading(false)
+          return
+        }
         if (!displayName.trim()) {
           setError(getText('auth.error.displayName', 'Please enter a display name'))
           setLoading(false)
@@ -40,6 +48,13 @@ export function AuthModal({ onClose }: AuthModalProps) {
         }
         await signup(email, password, displayName, pledge)
       } else {
+        // Also check on login - banned users shouldn't be able to log back in
+        const banned = await isEmailBanned(email)
+        if (banned) {
+          setError(getText('auth.error.banned', 'This email address has been banned'))
+          setLoading(false)
+          return
+        }
         await login(email, password)
       }
       onClose()

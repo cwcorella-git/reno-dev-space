@@ -161,12 +161,12 @@ export function HistoryTab() {
                   {entry.reason !== 'report' && (
                     <button
                       onClick={() => setExpandedEditId(expandedEditId === entry.id ? null : entry.id)}
-                      className={`text-[10px] px-1.5 py-1 rounded shrink-0 ${
+                      className={`text-[10px] px-2 py-1 rounded shrink-0 ${
                         expandedEditId === entry.id ? 'bg-white/20 text-white' : 'bg-white/5 text-gray-400 hover:text-white'
                       }`}
-                      title="Edit history"
+                      title="View edit history"
                     >
-                      📝
+                      Edits
                     </button>
                   )}
                   {entry.reason !== 'report' && (

@@ -178,7 +178,7 @@ export async function deleteUserPledge(uid: string): Promise<void> {
   }
 }
 
-// Full account deletion
+// Full account deletion (self-delete)
 export async function deleteUserAccount(uid: string): Promise<{
   votesCleared: number
   blocksDeleted: number
@@ -206,6 +206,35 @@ export async function deleteUserAccount(uid: string): Promise<{
   if (auth.currentUser && auth.currentUser.uid === uid) {
     await deleteUser(auth.currentUser)
   }
+
+  return { votesCleared, blocksDeleted, messagesDeleted }
+}
+
+// Admin delete user (cascade but no auth deletion - user will be locked out)
+export async function adminDeleteUser(uid: string): Promise<{
+  votesCleared: number
+  blocksDeleted: number
+  messagesDeleted: number
+}> {
+  const db = getDb()
+
+  // 1. Clear votes
+  const votesCleared = await clearUserVotes(uid)
+
+  // 2. Delete blocks
+  const blocksDeleted = await deleteUserBlocks(uid)
+
+  // 3. Delete messages
+  const messagesDeleted = await deleteUserMessages(uid)
+
+  // 4. Delete pledge
+  await deleteUserPledge(uid)
+
+  // 5. Delete user profile from Firestore
+  await deleteDoc(doc(db, USERS_COLLECTION, uid))
+
+  // Note: Firebase Auth user remains but profile is gone
+  // They can't do anything without a profile, and if banned they can't re-sign up
 
   return { votesCleared, blocksDeleted, messagesDeleted }
 }

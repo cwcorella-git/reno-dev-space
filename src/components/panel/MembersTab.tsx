@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { subscribeToUsers, getUserStats, UserProfile, UserStats } from '@/lib/userStorage'
+import { subscribeToUsers, getUserStats, UserProfile, UserStats, adminDeleteUser } from '@/lib/userStorage'
 import { addAdmin, removeAdmin } from '@/lib/adminStorage'
+import { subscribeToBannedEmails, banEmail, unbanEmail } from '@/lib/bannedEmailsStorage'
 import { SUPER_ADMIN_EMAIL } from '@/lib/admin'
 import { EditableText } from '../EditableText'
 
@@ -11,12 +12,16 @@ interface UserWithStats extends UserProfile {
   stats?: UserStats
 }
 
+type ConfirmAction = { uid: string; type: 'promote' | 'delete' | 'ban' }
+
 export function MembersTab() {
   const { user, isAdmin, adminEmails } = useAuth()
   const [users, setUsers] = useState<UserWithStats[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [confirmingUid, setConfirmingUid] = useState<string | null>(null)
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction | null>(null)
+  const [bannedEmails, setBannedEmails] = useState<Set<string>>(new Set())
+  const [actionLoading, setActionLoading] = useState(false)
 
   useEffect(() => {
     const unsubUsers = subscribeToUsers(
@@ -46,7 +51,12 @@ export function MembersTab() {
       }
     )
 
-    return () => unsubUsers()
+    const unsubBanned = subscribeToBannedEmails((emails) => setBannedEmails(emails))
+
+    return () => {
+      unsubUsers()
+      unsubBanned()
+    }
   }, [])
 
   const formatDate = (timestamp: number) => {
@@ -138,6 +148,9 @@ export function MembersTab() {
                     {adminEmails.has(u.email.toLowerCase()) || u.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() ? (
                       <span className="text-[10px] bg-amber-600/50 px-1.5 py-0.5 rounded text-amber-200">admin</span>
                     ) : null}
+                    {bannedEmails.has(u.email.toLowerCase()) && (
+                      <span className="text-[10px] bg-red-600/50 px-1.5 py-0.5 rounded text-red-200">banned</span>
+                    )}
                   </div>
                 </td>
                 <td className="px-3 py-2 text-center text-gray-300">
@@ -153,42 +166,89 @@ export function MembersTab() {
                   {u.createdAt ? formatDate(u.createdAt) : '-'}
                 </td>
                 {isAdmin && (
-                  <td className="px-3 py-2 text-center">
-                    {u.email.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase() && (
-                      confirmingUid === u.uid ? (
-                        <div className="flex items-center gap-1 justify-center">
+                  <td className="px-3 py-2">
+                    {u.email.toLowerCase() !== SUPER_ADMIN_EMAIL.toLowerCase() && u.uid !== user?.uid && (
+                      confirmAction?.uid === u.uid ? (
+                        <div className="flex items-center gap-1 justify-end">
+                          <span className="text-[9px] text-gray-400 mr-1">
+                            {confirmAction.type === 'promote' && (adminEmails.has(u.email.toLowerCase()) ? 'Demote?' : 'Promote?')}
+                            {confirmAction.type === 'delete' && 'Delete?'}
+                            {confirmAction.type === 'ban' && (bannedEmails.has(u.email.toLowerCase()) ? 'Unban?' : 'Ban?')}
+                          </span>
                           <button
-                            onClick={() => {
-                              const isUserAdmin = adminEmails.has(u.email.toLowerCase())
-                              if (isUserAdmin) removeAdmin(u.email)
-                              else addAdmin(u.email)
-                              setConfirmingUid(null)
+                            disabled={actionLoading}
+                            onClick={async () => {
+                              setActionLoading(true)
+                              try {
+                                if (confirmAction.type === 'promote') {
+                                  const isUserAdmin = adminEmails.has(u.email.toLowerCase())
+                                  if (isUserAdmin) await removeAdmin(u.email)
+                                  else await addAdmin(u.email)
+                                } else if (confirmAction.type === 'delete') {
+                                  await adminDeleteUser(u.uid)
+                                } else if (confirmAction.type === 'ban') {
+                                  const isBanned = bannedEmails.has(u.email.toLowerCase())
+                                  if (isBanned) await unbanEmail(u.email)
+                                  else await banEmail(u.email, user?.uid || 'admin')
+                                }
+                              } catch (err) {
+                                console.error('Action failed:', err)
+                              }
+                              setActionLoading(false)
+                              setConfirmAction(null)
                             }}
-                            className="text-[10px] px-1.5 py-0.5 bg-amber-600 text-white rounded hover:bg-amber-500"
+                            className="text-[10px] px-1.5 py-0.5 bg-amber-600 text-white rounded hover:bg-amber-500 disabled:opacity-50"
                           >
-                            {adminEmails.has(u.email.toLowerCase()) ? '−' : '✓'}
+                            ✓
                           </button>
                           <button
-                            onClick={() => setConfirmingUid(null)}
+                            onClick={() => setConfirmAction(null)}
                             className="text-[10px] px-1.5 py-0.5 text-gray-400 hover:text-white"
                           >
                             ✕
                           </button>
                         </div>
                       ) : (
-                        <button
-                          onClick={() => setConfirmingUid(u.uid)}
-                          className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
-                            adminEmails.has(u.email.toLowerCase())
-                              ? 'text-amber-400 hover:text-amber-200 hover:bg-amber-600/20'
-                              : 'text-gray-600 hover:text-gray-400 hover:bg-white/5'
-                          }`}
-                          title={adminEmails.has(u.email.toLowerCase()) ? 'Remove admin' : 'Make admin'}
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                          </svg>
-                        </button>
+                        <div className="flex items-center gap-0.5 justify-end">
+                          {/* Promote/Demote */}
+                          <button
+                            onClick={() => setConfirmAction({ uid: u.uid, type: 'promote' })}
+                            className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
+                              adminEmails.has(u.email.toLowerCase())
+                                ? 'text-amber-400 hover:text-amber-200 hover:bg-amber-600/20'
+                                : 'text-gray-600 hover:text-gray-400 hover:bg-white/5'
+                            }`}
+                            title={adminEmails.has(u.email.toLowerCase()) ? 'Remove admin' : 'Make admin'}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                            </svg>
+                          </button>
+                          {/* Delete */}
+                          <button
+                            onClick={() => setConfirmAction({ uid: u.uid, type: 'delete' })}
+                            className="w-6 h-6 rounded flex items-center justify-center text-gray-600 hover:text-red-400 hover:bg-red-600/10 transition-colors"
+                            title="Delete user"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                          {/* Ban/Unban */}
+                          <button
+                            onClick={() => setConfirmAction({ uid: u.uid, type: 'ban' })}
+                            className={`w-6 h-6 rounded flex items-center justify-center transition-colors ${
+                              bannedEmails.has(u.email.toLowerCase())
+                                ? 'text-red-400 hover:text-red-200 hover:bg-red-600/20'
+                                : 'text-gray-600 hover:text-red-400 hover:bg-red-600/10'
+                            }`}
+                            title={bannedEmails.has(u.email.toLowerCase()) ? 'Unban email' : 'Ban email'}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                          </button>
+                        </div>
                       )
                     )}
                   </td>

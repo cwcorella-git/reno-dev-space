@@ -136,7 +136,7 @@ export function Canvas() {
         setContextMenu(null)
       }
     },
-    [selectBlock, isAddTextMode, setIsAddTextMode, canAddText, canvasRef, addText, canvasHeightPercent, blocks]
+    [selectBlock, isAddTextMode, setIsAddTextMode, canAddText, canvasRef, addText, canvasHeightPercent, blocks, previewColor]
   )
 
   // Start marquee selection on mouse down (available to everyone)
@@ -255,10 +255,10 @@ export function Canvas() {
 
   const handleAddText = useCallback(() => {
     if (contextMenu) {
-      addText(contextMenu.canvasX, contextMenu.canvasY)
+      addText(contextMenu.canvasX, contextMenu.canvasY, previewColor)
       setContextMenu(null)
     }
-  }, [contextMenu, addText])
+  }, [contextMenu, addText, previewColor])
 
   // Keyboard shortcuts: Delete, Escape, Ctrl+A/Z/Y/C/V
   useEffect(() => {
