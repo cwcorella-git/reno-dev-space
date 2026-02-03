@@ -44,7 +44,7 @@ import {
   restoreBlocks,
   updateBlockFull,
 } from '@/lib/canvasStorage'
-import { logDeletion, removeReportEntry } from '@/lib/deletionStorage'
+import { logDeletion, removeReportEntry, removeAllReportEntries } from '@/lib/deletionStorage'
 import { logContentEdit } from '@/lib/editHistoryStorage'
 import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
 import { useAuth } from './AuthContext'
@@ -541,6 +541,10 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         if (!block) return
         const reporters = block.reportedBy ?? []
         await dismissReportsStorage(id, reporters)
+        // Remove all report entries from history feed
+        removeAllReportEntries(id).catch((err) =>
+          console.warn('[CanvasContext] Failed to remove report entries:', err)
+        )
       } catch (error) {
         console.error('[CanvasContext] Failed to dismiss reports:', error)
       }

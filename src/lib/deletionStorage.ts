@@ -52,14 +52,29 @@ export async function removeReportEntry(
   reportedBy: string
 ): Promise<void> {
   const db = getDb()
+  // Simpler query: just get all entries for this block, filter in JS
   const q = query(
     collection(db, COLLECTION_NAME),
-    where('originalId', '==', blockId),
-    where('reason', '==', 'report'),
-    where('deletedBy', '==', reportedBy)
+    where('originalId', '==', blockId)
   )
   const snapshot = await getDocs(q)
-  await Promise.all(snapshot.docs.map((d) => deleteDoc(doc(db, COLLECTION_NAME, d.id))))
+  const toDelete = snapshot.docs.filter((d) => {
+    const data = d.data()
+    return data.reason === 'report' && data.deletedBy === reportedBy
+  })
+  await Promise.all(toDelete.map((d) => deleteDoc(doc(db, COLLECTION_NAME, d.id))))
+}
+
+// Remove ALL report entries for a block (used when admin dismisses)
+export async function removeAllReportEntries(blockId: string): Promise<void> {
+  const db = getDb()
+  const q = query(
+    collection(db, COLLECTION_NAME),
+    where('originalId', '==', blockId)
+  )
+  const snapshot = await getDocs(q)
+  const toDelete = snapshot.docs.filter((d) => d.data().reason === 'report')
+  await Promise.all(toDelete.map((d) => deleteDoc(doc(db, COLLECTION_NAME, d.id))))
 }
 
 export function subscribeToDeletions(
