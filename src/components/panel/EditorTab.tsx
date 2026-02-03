@@ -9,6 +9,7 @@ import {
   getSelectedBlockElement,
   wrapSelectionWithTag,
   wrapSelectionWithStyle,
+  wrapSelectionWithLink,
 } from '@/lib/selectionFormat'
 import { EditableText } from '@/components/EditableText'
 
@@ -105,6 +106,19 @@ export function EditorTab() {
     },
     [applyStyle]
   )
+
+  // Apply link to selection
+  const applyLink = useCallback(() => {
+    const container = getSelectedBlockElement()
+    if (!container) {
+      alert('Select some text first')
+      return
+    }
+    const url = prompt('Enter URL:')
+    if (url) {
+      wrapSelectionWithLink(url, container)
+    }
+  }, [])
 
   // Close color picker on click outside
   useEffect(() => {
@@ -208,7 +222,7 @@ export function EditorTab() {
                 applyStyle({ fontSize: 8 })
               }
             }}
-            className="w-12 h-7 px-1.5 bg-white/10 border border-white/20 rounded text-sm text-center"
+            className="w-10 h-7 px-1 bg-white/10 border border-white/20 rounded text-sm text-center"
           />
         </div>
 
@@ -324,6 +338,20 @@ export function EditorTab() {
             </div>
           )}
         </div>
+
+        {/* Link button */}
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault()
+            applyLink()
+          }}
+          className="w-7 h-7 rounded flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20"
+          title="Add link to selected text"
+        >
+          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+          </svg>
+        </button>
       </div>
     </div>
   )

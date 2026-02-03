@@ -154,6 +154,57 @@ function wrapSelectionWithTagFallback(
 }
 
 /**
+ * Wrap the current selection with an anchor tag (link).
+ * Returns true if selection was wrapped, false if no valid selection.
+ */
+export function wrapSelectionWithLink(
+  href: string,
+  container: HTMLElement | null
+): boolean {
+  if (!container || !href) return false
+
+  const selection = window.getSelection()
+  if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+    return false
+  }
+
+  const range = selection.getRangeAt(0)
+
+  // Ensure selection is within the container
+  if (!container.contains(range.commonAncestorContainer)) {
+    return false
+  }
+
+  try {
+    const anchor = document.createElement('a')
+    anchor.href = href.startsWith('http') ? href : `https://${href}`
+    anchor.target = '_blank'
+    anchor.rel = 'noopener noreferrer'
+    anchor.className = 'text-indigo-400 hover:text-indigo-300 underline'
+
+    range.surroundContents(anchor)
+    selection.removeAllRanges()
+    return true
+  } catch {
+    // Fall back for cross-boundary selections
+    try {
+      const fragment = range.extractContents()
+      const anchor = document.createElement('a')
+      anchor.href = href.startsWith('http') ? href : `https://${href}`
+      anchor.target = '_blank'
+      anchor.rel = 'noopener noreferrer'
+      anchor.className = 'text-indigo-400 hover:text-indigo-300 underline'
+      anchor.appendChild(fragment)
+      range.insertNode(anchor)
+      selection.removeAllRanges()
+      return true
+    } catch {
+      return false
+    }
+  }
+}
+
+/**
  * Get the element ID of the block containing the current selection.
  * Returns null if no valid selection or not within a contentEditable.
  */
