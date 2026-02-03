@@ -46,6 +46,12 @@ export async function logDeletion(
   })
 }
 
+// Delete a history entry permanently
+export async function deleteHistoryEntry(entryId: string): Promise<void> {
+  const db = getDb()
+  await deleteDoc(doc(db, COLLECTION_NAME, entryId))
+}
+
 // Remove report entries for a specific block+user from history
 export async function removeReportEntry(
   blockId: string,

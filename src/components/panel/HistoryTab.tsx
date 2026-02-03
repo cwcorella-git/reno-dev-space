@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { subscribeToDeletions, DeletionEntry } from '@/lib/deletionStorage'
+import { subscribeToDeletions, deleteHistoryEntry, DeletionEntry } from '@/lib/deletionStorage'
 import { subscribeToBlockEdits, EditHistoryEntry } from '@/lib/editHistoryStorage'
 import { restoreBlock } from '@/lib/canvasStorage'
 import { findOpenPosition } from '@/lib/overlapDetection'
@@ -29,6 +29,7 @@ export function HistoryTab() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('')
   const [restoringId, setRestoringId] = useState<string | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [expandedEditId, setExpandedEditId] = useState<string | null>(null)
   const [editHistory, setEditHistory] = useState<EditHistoryEntry[]>([])
   const [editHistoryLoading, setEditHistoryLoading] = useState(false)
@@ -95,6 +96,16 @@ export function HistoryTab() {
       console.error('[HistoryTab] Restore failed:', err)
     }
     setRestoringId(null)
+  }
+
+  const handleDelete = async (entryId: string) => {
+    setDeletingId(entryId)
+    try {
+      await deleteHistoryEntry(entryId)
+    } catch (err) {
+      console.error('[HistoryTab] Delete failed:', err)
+    }
+    setDeletingId(null)
   }
 
   const formatTime = (ts: number) => {
@@ -178,6 +189,14 @@ export function HistoryTab() {
                       {restoringId === entry.id ? '...' : 'Restore'}
                     </button>
                   )}
+                  <button
+                    onClick={() => handleDelete(entry.id)}
+                    disabled={deletingId === entry.id}
+                    className="text-[10px] px-2 py-1 bg-white/5 text-gray-400 hover:text-red-400 hover:bg-red-600/10 rounded disabled:opacity-50 shrink-0"
+                    title="Delete from history"
+                  >
+                    {deletingId === entry.id ? '...' : '✕'}
+                  </button>
                 </div>
               </div>
               {expandedEditId === entry.id && renderEditHistory()}
