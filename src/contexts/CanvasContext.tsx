@@ -44,6 +44,7 @@ import {
   updateBlockFull,
 } from '@/lib/canvasStorage'
 import { logDeletion, removeReportEntry } from '@/lib/deletionStorage'
+import { logContentEdit } from '@/lib/editHistoryStorage'
 import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
 import { useAuth } from './AuthContext'
 
@@ -407,12 +408,16 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     async (id: string, content: string): Promise<void> => {
       if (!isAdmin) return
       try {
+        const block = blocks.find((b) => b.id === id)
+        if (block && block.content !== content && user) {
+          logContentEdit(id, block.content, user.uid).catch(() => {})
+        }
         await updateTextContent(id, content)
       } catch (error) {
         console.error('[CanvasContext] Failed to update content:', error)
       }
     },
-    [isAdmin]
+    [isAdmin, blocks, user]
   )
 
   const updateStyle = useCallback(

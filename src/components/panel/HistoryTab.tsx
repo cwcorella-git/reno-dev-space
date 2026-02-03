@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { subscribeToDeletions, DeletionEntry } from '@/lib/deletionStorage'
+import { subscribeToBlockEdits, EditHistoryEntry } from '@/lib/editHistoryStorage'
 import { restoreBlock } from '@/lib/canvasStorage'
 import { findOpenPosition } from '@/lib/overlapDetection'
 import { useCanvas } from '@/contexts/CanvasContext'
@@ -28,11 +29,51 @@ export function HistoryTab() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<string>('')
   const [restoringId, setRestoringId] = useState<string | null>(null)
+  const [expandedEditId, setExpandedEditId] = useState<string | null>(null)
+  const [editHistory, setEditHistory] = useState<EditHistoryEntry[]>([])
+  const [editHistoryLoading, setEditHistoryLoading] = useState(false)
+
+  // Subscribe to block edits when an entry is expanded
+  useEffect(() => {
+    if (!expandedEditId) {
+      setEditHistory([])
+      return
+    }
+    const entry = entries.find((e) => e.id === expandedEditId)
+    if (!entry) return
+    setEditHistoryLoading(true)
+    const unsub = subscribeToBlockEdits(
+      entry.originalId,
+      (edits) => { setEditHistory(edits); setEditHistoryLoading(false) },
+      () => setEditHistoryLoading(false)
+    )
+    return unsub
+  }, [expandedEditId, entries])
+
+  const renderEditHistory = useCallback(() => {
+    if (editHistoryLoading) {
+      return <div className="text-[10px] text-gray-500 pt-2">Loading edits...</div>
+    }
+    if (editHistory.length === 0) {
+      return <div className="text-[10px] text-gray-500 pt-2">No edit history recorded.</div>
+    }
+    return (
+      <div className="mt-2 border-t border-white/10 pt-2 max-h-32 overflow-y-auto space-y-1">
+        <div className="text-[9px] text-gray-500 uppercase tracking-wider mb-1">Previous versions</div>
+        {editHistory.map((edit) => (
+          <div key={edit.id} className="flex items-start gap-2 text-[10px] py-1 border-b border-white/5 last:border-0">
+            <span className="text-gray-500 shrink-0 w-24">{formatTime(edit.editedAt)}</span>
+            <span className="text-gray-300 truncate flex-1">{edit.content}</span>
+          </div>
+        ))}
+      </div>
+    )
+  }, [editHistory, editHistoryLoading])
 
   useEffect(() => {
     const unsub = subscribeToDeletions(
       (newEntries) => {
-        setEntries(newEntries)
+        setEntries(newEntries.filter((e) => e.block.content?.trim()))
         setLoading(false)
       },
       () => setLoading(false)
@@ -116,16 +157,30 @@ export function HistoryTab() {
                     <span className="text-gray-600">{formatTime(entry.deletedAt)}</span>
                   </div>
                 </div>
-                {entry.reason !== 'report' && (
-                  <button
-                    onClick={() => handleRestore(entry)}
-                    disabled={restoringId === entry.id}
-                    className="text-[10px] px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 disabled:opacity-50 shrink-0"
-                  >
-                    {restoringId === entry.id ? '...' : 'Restore'}
-                  </button>
-                )}
+                <div className="flex gap-1 shrink-0">
+                  {entry.reason !== 'report' && (
+                    <button
+                      onClick={() => setExpandedEditId(expandedEditId === entry.id ? null : entry.id)}
+                      className={`text-[10px] px-1.5 py-1 rounded shrink-0 ${
+                        expandedEditId === entry.id ? 'bg-white/20 text-white' : 'bg-white/5 text-gray-400 hover:text-white'
+                      }`}
+                      title="Edit history"
+                    >
+                      📝
+                    </button>
+                  )}
+                  {entry.reason !== 'report' && (
+                    <button
+                      onClick={() => handleRestore(entry)}
+                      disabled={restoringId === entry.id}
+                      className="text-[10px] px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500 disabled:opacity-50 shrink-0"
+                    >
+                      {restoringId === entry.id ? '...' : 'Restore'}
+                    </button>
+                  )}
+                </div>
               </div>
+              {expandedEditId === entry.id && renderEditHistory()}
             </div>
           ))}
         </div>
