@@ -208,7 +208,7 @@ export function EditorTab() {
       )}
 
       {/* Single responsive row with flex-wrap */}
-      <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-y-2">
         {/* Font + Size group */}
         <div className="flex items-center gap-1.5">
           <select
