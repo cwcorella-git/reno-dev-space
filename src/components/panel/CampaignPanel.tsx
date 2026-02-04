@@ -12,15 +12,11 @@ import {
   CampaignSettings,
 } from '@/lib/campaignStorage'
 import { resetAllBrightness } from '@/lib/canvasStorage'
-import { subscribeToUsers, UserProfile } from '@/lib/userStorage'
-
-const MEMBER_THRESHOLD = 5
 
 export function CampaignPanel() {
   const { user, isAdmin } = useAuth()
 
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
-  const [memberCount, setMemberCount] = useState(0)
   const [actionLoading, setActionLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [confirmAction, setConfirmAction] = useState<string | null>(null)
@@ -31,14 +27,7 @@ export function CampaignPanel() {
       setSettings(s)
       setGoalInput(s.fundingGoal.toString())
     })
-    const unsubUsers = subscribeToUsers(
-      (users: UserProfile[]) => setMemberCount(users.length),
-      () => setMemberCount(0)
-    )
-    return () => {
-      unsubSettings()
-      unsubUsers()
-    }
+    return () => unsubSettings()
   }, [])
 
   if (!user || !isAdmin) {
@@ -123,7 +112,7 @@ export function CampaignPanel() {
 
       {!confirmAction && (
         <div className="p-4 space-y-3">
-          {/* Timer row */}
+          {/* Timer + Lock */}
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400">Timer</span>
             <div className="flex items-center gap-2">
@@ -132,30 +121,20 @@ export function CampaignPanel() {
               ) : (
                 <button onClick={handleStartTimer} disabled={actionLoading} className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50">Start</button>
               )}
-              <span className={`text-[10px] ${memberCount < MEMBER_THRESHOLD ? 'text-yellow-400' : 'text-green-400'}`}>
-                {memberCount}/{MEMBER_THRESHOLD} members
-              </span>
+              <button onClick={handleToggleLock} disabled={actionLoading} className={`px-3 py-1 rounded text-xs font-medium disabled:opacity-50 ${settings?.isLocked ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-300'}`}>
+                {settings?.isLocked ? 'Unlock' : 'Lock'}
+              </button>
+              <button onClick={() => setConfirmAction('brightness')} disabled={actionLoading} className="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 rounded text-xs disabled:opacity-50">Reset Votes</button>
             </div>
           </div>
 
-          {/* Goal row */}
+          {/* Goal */}
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400">Goal</span>
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-gray-500">$</span>
               <input type="number" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs text-right" />
               <button onClick={handleUpdateGoal} disabled={actionLoading} className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs disabled:opacity-50">Set</button>
-            </div>
-          </div>
-
-          {/* Actions row */}
-          <div className="flex items-center justify-between pt-2 border-t border-white/10">
-            <span className="text-xs text-gray-400">Actions</span>
-            <div className="flex items-center gap-2">
-              <button onClick={handleToggleLock} disabled={actionLoading} className={`px-3 py-1 rounded text-xs font-medium disabled:opacity-50 ${settings?.isLocked ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-300'}`}>
-                {settings?.isLocked ? 'Unlock' : 'Lock'}
-              </button>
-              <button onClick={() => setConfirmAction('brightness')} disabled={actionLoading} className="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 rounded text-xs disabled:opacity-50">Reset Votes</button>
             </div>
           </div>
         </div>
