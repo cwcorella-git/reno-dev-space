@@ -11,7 +11,7 @@ interface AuthModalProps {
 }
 
 export function AuthModal({ onClose }: AuthModalProps) {
-  const { signup, login } = useAuth()
+  const { signup, login, logout } = useAuth()
   const { getText } = useContent()
   const [mode, setMode] = useState<'login' | 'signup'>('signup')
   const [email, setEmail] = useState('')
@@ -28,12 +28,17 @@ export function AuthModal({ onClose }: AuthModalProps) {
 
     try {
       if (mode === 'signup') {
-        // Check if email is banned
-        const banned = await isEmailBanned(email)
-        if (banned) {
-          setError(getText('auth.error.banned', 'This email address has been banned'))
-          setLoading(false)
-          return
+        // Best-effort ban check before creating account
+        // Wrapped in try-catch because Firestore rules may require auth
+        try {
+          const banned = await isEmailBanned(email)
+          if (banned) {
+            setError(getText('auth.error.banned', 'This email address has been banned'))
+            setLoading(false)
+            return
+          }
+        } catch {
+          // Can't check ban list (permissions) — proceed with signup
         }
         if (!displayName.trim()) {
           setError(getText('auth.error.displayName', 'Please enter a display name'))
@@ -48,14 +53,19 @@ export function AuthModal({ onClose }: AuthModalProps) {
         }
         await signup(email, password, displayName, pledge)
       } else {
-        // Also check on login - banned users shouldn't be able to log back in
-        const banned = await isEmailBanned(email)
-        if (banned) {
-          setError(getText('auth.error.banned', 'This email address has been banned'))
-          setLoading(false)
-          return
-        }
+        // Login first, then check ban (requires auth to read Firestore)
         await login(email, password)
+        try {
+          const banned = await isEmailBanned(email)
+          if (banned) {
+            await logout()
+            setError(getText('auth.error.banned', 'This email address has been banned'))
+            setLoading(false)
+            return
+          }
+        } catch {
+          // Can't check ban list — user is authenticated, proceed
+        }
       }
       onClose()
     } catch (err: unknown) {
