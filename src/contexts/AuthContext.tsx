@@ -9,7 +9,7 @@ import {
   onAuthStateChanged,
   updateProfile,
 } from 'firebase/auth'
-import { doc, setDoc, getDoc } from 'firebase/firestore'
+import { doc, setDoc, getDoc, onSnapshot as onDocSnapshot } from 'firebase/firestore'
 import { getAuth, getDb } from '@/lib/firebase'
 import { isAdmin as checkIsAdmin } from '@/lib/admin'
 import { subscribeToAdmins } from '@/lib/adminStorage'
@@ -56,23 +56,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       const unsubAdmins = subscribeToAdmins(setAdminEmails)
 
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // Track profile listener so we can tear it down on sign-out
+      let unsubProfile: (() => void) | null = null
+
+      const unsubscribe = onAuthStateChanged(auth, (user) => {
         setUser(user)
 
-        if (user) {
-          // Fetch user profile from Firestore
-          const profileDoc = await getDoc(doc(db, 'users', user.uid))
-          if (profileDoc.exists()) {
-            setProfile(profileDoc.data() as UserProfile)
-          }
-        } else {
-          setProfile(null)
+        // Clean up previous profile listener
+        if (unsubProfile) {
+          unsubProfile()
+          unsubProfile = null
         }
 
-        setLoading(false)
+        if (user) {
+          // Real-time listener on user profile doc.
+          // If admin deletes the profile, this fires with exists()=false
+          // and we auto-sign the user out.
+          unsubProfile = onDocSnapshot(doc(db, 'users', user.uid), async (snap) => {
+            if (snap.exists()) {
+              setProfile(snap.data() as UserProfile)
+            } else {
+              // Profile was deleted (admin cascade) — force sign out
+              setProfile(null)
+              await signOut(auth)
+            }
+            setLoading(false)
+          })
+        } else {
+          setProfile(null)
+          setLoading(false)
+        }
       })
 
-      return () => { unsubscribe(); unsubAdmins() }
+      return () => {
+        unsubscribe()
+        unsubAdmins()
+        if (unsubProfile) unsubProfile()
+      }
     } catch (error) {
       console.error('Firebase initialization error:', error)
       setLoading(false)
