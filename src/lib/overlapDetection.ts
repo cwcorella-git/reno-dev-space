@@ -77,6 +77,81 @@ export function wouldBlockOverlap(
   return false
 }
 
+// ── DOM-based overlap detection (pixel-accurate) ──────────────────────
+
+type Rect = { left: number; top: number; right: number; bottom: number }
+
+/**
+ * Check if a block's actual rendered bounding box overlaps any other block.
+ * Uses getBoundingClientRect() for pixel-accurate measurements.
+ *
+ * @param blockId - The block to check (excluded from "others")
+ * @param overrideRect - Optional rect override for the target block
+ *                       (used when predicting size changes like font size increase)
+ * @returns true if the block would overlap another block
+ */
+export function checkDOMOverlap(
+  blockId: string,
+  overrideRect?: Rect
+): boolean {
+  const allBlockElements = Array.from(document.querySelectorAll<HTMLElement>('[data-block-id]'))
+
+  let targetRect: Rect | null = null
+  const otherRects: Rect[] = []
+
+  for (const el of allBlockElements) {
+    const id = el.getAttribute('data-block-id')
+    if (id === blockId) {
+      targetRect = overrideRect ?? el.getBoundingClientRect()
+    } else {
+      otherRects.push(el.getBoundingClientRect())
+    }
+  }
+
+  if (!targetRect) return false
+
+  for (const other of otherRects) {
+    // Two rects DON'T overlap if one is completely left, right, above, or below
+    const noOverlap =
+      targetRect.right <= other.left ||
+      targetRect.left >= other.right ||
+      targetRect.bottom <= other.top ||
+      targetRect.top >= other.bottom
+
+    if (!noOverlap) return true
+  }
+
+  return false
+}
+
+/**
+ * Estimate what a block's bounding rect would be after changing font size.
+ * Height scales proportionally to the font-size ratio.
+ * Width stays fixed (CSS percentage constraint) unless auto-width (width=0).
+ */
+export function estimateRectAfterFontSizeChange(
+  blockElement: HTMLElement,
+  oldFontSize: number,
+  newFontSize: number,
+  blockWidth: number
+): Rect {
+  const currentRect = blockElement.getBoundingClientRect()
+  const ratio = newFontSize / oldFontSize
+
+  const newHeight = currentRect.height * ratio
+  // Auto-width blocks (width === 0) grow horizontally too
+  const newWidthPx = blockWidth === 0
+    ? currentRect.width * ratio
+    : currentRect.width
+
+  return {
+    left: currentRect.left,
+    top: currentRect.top,
+    right: currentRect.left + newWidthPx,
+    bottom: currentRect.top + newHeight,
+  }
+}
+
 /**
  * Find an open position on the canvas for a restored block.
  * Tries the original position first, then scans a grid for open space.

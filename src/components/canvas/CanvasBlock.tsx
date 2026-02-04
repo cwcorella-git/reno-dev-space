@@ -6,7 +6,7 @@ import { TextBlockRenderer } from './TextBlockRenderer'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { filterEditableBlocks } from '@/lib/permissions'
-import { wouldBlockOverlap } from '@/lib/overlapDetection'
+import { wouldBlockOverlap, checkDOMOverlap } from '@/lib/overlapDetection'
 import { VoteOutlines } from './VoteOutlines'
 
 interface CanvasBlockProps {
@@ -81,6 +81,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
   // Local resize state for immediate visual feedback
   const [resizeWidth, setResizeWidth] = useState<ResizeState | null>(null)
   const [isResizing, setIsResizing] = useState(false)
+  const [isResizeOverlapping, setIsResizeOverlapping] = useState(false)
 
   // Touch-and-hold state
   const [isHolding, setIsHolding] = useState(false)
@@ -88,6 +89,16 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
   const touchStartPos = useRef<{ x: number; y: number } | null>(null)
   const touchStartBlockPos = useRef<{ x: number; y: number }>({ x: 0, y: 0 })
   const isTouchDragging = useRef(false)
+
+  // Check overlap during resize (runs after DOM re-renders with new width)
+  useEffect(() => {
+    if (!isResizing || !blockRef.current) {
+      setIsResizeOverlapping(false)
+      return
+    }
+    const overlaps = checkDOMOverlap(block.id)
+    setIsResizeOverlapping(overlaps)
+  }, [resizeWidth, isResizing, block.id])
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -307,11 +318,18 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
 
         setIsResizing(false)
 
-        // Save final width to Firestore
+        // Save final width to Firestore (blocked if overlapping)
         setResizeWidth((currentWidth) => {
           if (currentWidth && currentWidth.width !== block.width) {
+            const overlaps = checkDOMOverlap(block.id)
+            if (overlaps) {
+              // Revert — don't save to Firestore
+              setIsResizeOverlapping(false)
+              return null
+            }
             resizeBlock(block.id, currentWidth.width, block.height)
           }
+          setIsResizeOverlapping(false)
           return null
         })
       }
@@ -507,20 +525,21 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
   return (
     <div
       ref={blockRef}
+      data-block-id={block.id}
       style={blockStyle}
       className={`group
         ${isAdmin ? 'cursor-move' : ''}
-        ${isOverlapping
+        ${(isOverlapping || isResizeOverlapping)
           ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-transparent'
           : isSelected
             ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-transparent'
             : ''}
-        ${isInSelection && !isSelected && !isOverlapping
+        ${isInSelection && !isSelected && !isOverlapping && !isResizeOverlapping
           ? isGroupDragging
             ? 'ring-2 ring-indigo-500 ring-offset-2 ring-offset-transparent'
             : 'ring-2 ring-indigo-400/50 ring-offset-1 ring-offset-transparent'
           : ''}
-        ${isOverlapping ? 'shadow-lg shadow-red-500/40' : (isInteracting || (isGroupDragging && isInSelection)) ? 'shadow-lg shadow-indigo-500/30' : ''}
+        ${(isOverlapping || isResizeOverlapping) ? 'shadow-lg shadow-red-500/40' : (isInteracting || (isGroupDragging && isInSelection)) ? 'shadow-lg shadow-indigo-500/30' : ''}
         ${isHolding ? 'animate-pulse scale-105' : ''}
         touch-none
       `}
@@ -630,7 +649,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       )}
 
       {/* Overlap warning message */}
-      {isOverlapping && isDragging && (
+      {((isOverlapping && isDragging) || (isResizeOverlapping && isResizing)) && (
         <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-red-600 text-white text-xs px-2 py-1 rounded whitespace-nowrap shadow-lg z-20">
           Can&apos;t place here – overlapping
         </div>

@@ -12,6 +12,7 @@ import {
   wrapSelectionWithLink,
 } from '@/lib/selectionFormat'
 import { EditableText } from '@/components/EditableText'
+import { checkDOMOverlap, estimateRectAfterFontSizeChange } from '@/lib/overlapDetection'
 
 // Fonts loaded via Next.js Google Fonts (see layout.tsx)
 // Using CSS variable names that resolve to the actual font-family
@@ -76,6 +77,29 @@ export function EditorTab() {
       editableTextBlockIds.forEach(id => updateStyle(id, style))
     },
     [editableTextBlockIds, updateStyle]
+  )
+
+  // Check if increasing font size would cause any selected block to overlap
+  const wouldFontSizeOverlap = useCallback(
+    (newFontSize: number): boolean => {
+      return editableTextBlockIds.some(id => {
+        const b = blocks.find(x => x.id === id)
+        if (!b || !isTextBlock(b)) return false
+        const tb = b as TextBlock
+        const oldFontSize = tb.style.fontSize ?? 1
+        // Only check when increasing — shrinking can't create new overlaps
+        if (newFontSize <= oldFontSize) return false
+
+        const blockEl = document.querySelector<HTMLElement>(`[data-block-id="${id}"]`)
+        if (!blockEl) return false
+
+        const estimatedRect = estimateRectAfterFontSizeChange(
+          blockEl, oldFontSize, newFontSize, b.width
+        )
+        return checkDOMOverlap(id, estimatedRect)
+      })
+    },
+    [editableTextBlockIds, blocks]
   )
 
   // Apply inline formatting with tag (b, i, u) to selection, or fall back to block style
@@ -206,20 +230,32 @@ export function EditorTab() {
             max="8"
             value={fontSizeInput}
             onChange={(e) => {
-              setFontSizeInput(e.target.value)
               const val = parseFloat(e.target.value)
               if (!isNaN(val) && val >= 0.5 && val <= 8) {
+                if (wouldFontSizeOverlap(val)) {
+                  // Revert — would overlap another block
+                  return
+                }
+                setFontSizeInput(e.target.value)
                 applyStyle({ fontSize: val })
+              } else {
+                setFontSizeInput(e.target.value)
               }
             }}
             onBlur={() => {
               const val = parseFloat(fontSizeInput)
               if (isNaN(val) || val < 0.5) {
-                setFontSizeInput('0.5')
-                applyStyle({ fontSize: 0.5 })
+                if (!wouldFontSizeOverlap(0.5)) {
+                  setFontSizeInput('0.5')
+                  applyStyle({ fontSize: 0.5 })
+                }
               } else if (val > 8) {
-                setFontSizeInput('8')
-                applyStyle({ fontSize: 8 })
+                if (!wouldFontSizeOverlap(8)) {
+                  setFontSizeInput('8')
+                  applyStyle({ fontSize: 8 })
+                } else {
+                  setFontSizeInput((textBlock?.style.fontSize ?? 1).toString())
+                }
               }
             }}
             className="w-10 h-7 px-1 bg-white/10 border border-white/20 rounded text-sm text-center"
