@@ -12,7 +12,6 @@ import {
   CampaignSettings,
 } from '@/lib/campaignStorage'
 import { resetAllBrightness } from '@/lib/canvasStorage'
-import { subscribeToPledges, calculatePledgeSummary, Pledge } from '@/lib/pledgeStorage'
 import { subscribeToUsers, UserProfile } from '@/lib/userStorage'
 
 const MEMBER_THRESHOLD = 5
@@ -20,7 +19,6 @@ const MEMBER_THRESHOLD = 5
 export function CampaignPanel() {
   const { user, isAdmin } = useAuth()
 
-  const [pledges, setPledges] = useState<Pledge[]>([])
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
   const [memberCount, setMemberCount] = useState(0)
   const [actionLoading, setActionLoading] = useState(false)
@@ -29,7 +27,6 @@ export function CampaignPanel() {
   const [goalInput, setGoalInput] = useState('5000')
 
   useEffect(() => {
-    const unsubPledges = subscribeToPledges((p) => setPledges(p))
     const unsubSettings = subscribeToCampaignSettings((s) => {
       setSettings(s)
       setGoalInput(s.fundingGoal.toString())
@@ -39,7 +36,6 @@ export function CampaignPanel() {
       () => setMemberCount(0)
     )
     return () => {
-      unsubPledges()
       unsubSettings()
       unsubUsers()
     }
@@ -53,7 +49,6 @@ export function CampaignPanel() {
     )
   }
 
-  const summary = settings ? calculatePledgeSummary(pledges, settings.fundingGoal) : null
   const timerActive = !!settings?.timerStartedAt
 
   const showStatus = (type: 'success' | 'error', text: string) => {
@@ -127,41 +122,40 @@ export function CampaignPanel() {
       )}
 
       {!confirmAction && (
-        <div className="p-4 space-y-4">
-          {/* Campaign Controls */}
-          <div>
-            <p className="text-xs font-medium text-amber-400 uppercase tracking-wide mb-2">Controls</p>
-            <div className="flex flex-wrap gap-2 mb-3">
-              {timerActive ? (
-                <button onClick={handleResetTimer} disabled={actionLoading} className="px-2 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium disabled:opacity-50">Reset Timer</button>
-              ) : (
-                <>
-                  <button onClick={handleStartTimer} disabled={actionLoading} className="px-2 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50">Start Timer</button>
-                  <span className={`text-xs ${memberCount < MEMBER_THRESHOLD ? 'text-yellow-400' : 'text-green-400'}`}>
-                    {memberCount}/{MEMBER_THRESHOLD} members
-                    {memberCount < MEMBER_THRESHOLD && ' (below threshold)'}
-                  </span>
-                </>
-              )}
-              <button onClick={handleToggleLock} disabled={actionLoading} className={`px-2 py-1 rounded text-xs font-medium disabled:opacity-50 ${settings?.isLocked ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-white/10 hover:bg-white/20 text-white'}`}>
-                {settings?.isLocked ? 'Unlock' : 'Lock'}
-              </button>
-              <button onClick={() => setConfirmAction('brightness')} disabled={actionLoading} className="px-2 py-1 bg-white/10 hover:bg-white/20 text-white rounded text-xs disabled:opacity-50">Reset Brightness</button>
-            </div>
+        <div className="p-4 space-y-3">
+          {/* Timer row */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-400">Timer</span>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">Goal: $</span>
-              <input type="number" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs" />
-              <button onClick={handleUpdateGoal} disabled={actionLoading} className="px-2 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs disabled:opacity-50">Set</button>
+              {timerActive ? (
+                <button onClick={handleResetTimer} disabled={actionLoading} className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium disabled:opacity-50">Reset</button>
+              ) : (
+                <button onClick={handleStartTimer} disabled={actionLoading} className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50">Start</button>
+              )}
+              <span className={`text-[10px] ${memberCount < MEMBER_THRESHOLD ? 'text-yellow-400' : 'text-green-400'}`}>
+                {memberCount}/{MEMBER_THRESHOLD} members
+              </span>
             </div>
           </div>
 
-          {/* Stats */}
-          <div className="pt-3 border-t border-white/10">
-            <p className="text-xs font-medium text-amber-400 uppercase tracking-wide mb-2">Stats</p>
-            <div className="text-xs text-gray-400 grid grid-cols-3 gap-2">
-              <div><span className="block text-white font-medium">{settings?.pageViews || 0}</span>Views</div>
-              {summary && <div><span className="block text-white font-medium">${summary.total}</span>Pledged</div>}
-              <div><span className="block text-white font-mono">{process.env.NEXT_PUBLIC_COMMIT_SHA || 'dev'}</span>Build</div>
+          {/* Goal row */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-400">Goal</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs text-gray-500">$</span>
+              <input type="number" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs text-right" />
+              <button onClick={handleUpdateGoal} disabled={actionLoading} className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs disabled:opacity-50">Set</button>
+            </div>
+          </div>
+
+          {/* Actions row */}
+          <div className="flex items-center justify-between pt-2 border-t border-white/10">
+            <span className="text-xs text-gray-400">Actions</span>
+            <div className="flex items-center gap-2">
+              <button onClick={handleToggleLock} disabled={actionLoading} className={`px-3 py-1 rounded text-xs font-medium disabled:opacity-50 ${settings?.isLocked ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-300'}`}>
+                {settings?.isLocked ? 'Unlock' : 'Lock'}
+              </button>
+              <button onClick={() => setConfirmAction('brightness')} disabled={actionLoading} className="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 rounded text-xs disabled:opacity-50">Reset Votes</button>
             </div>
           </div>
         </div>
