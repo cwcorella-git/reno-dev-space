@@ -535,8 +535,8 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     >
       {renderContent()}
 
-      {/* Dancing vote outlines */}
-      <VoteOutlines block={block} />
+      {/* SVG outlines disabled — text effects now applied inside TextBlockRenderer */}
+      {/* <VoteOutlines block={block} /> */}
 
       {/* Vote arrows - right side, shown on hover for logged-in users */}
       {user && !isEditing && !isDragging && (

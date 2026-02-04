@@ -68,3 +68,58 @@ input[type="number"] {
 .dash-dance-1 { animation: dash-flow-1 2s linear infinite; }
 .dash-dance-2 { animation: dash-flow-2 3s linear infinite; }
 .dash-dance-3 { animation: dash-flow-3 4.5s linear infinite; }
+
+/* ── Vote text effects ── */
+
+/* Tier 1: Soft glow pulse */
+@keyframes vote-glow-pulse {
+  0%, 100% { filter: drop-shadow(0 0 2px var(--glow-color, currentColor)); }
+  50%      { filter: drop-shadow(0 0 8px var(--glow-color, currentColor)); }
+}
+
+.vote-effect-glow {
+  animation: vote-glow-pulse 2.5s ease-in-out infinite;
+}
+
+/* Tier 2: Shimmer — animated gradient across text */
+@keyframes vote-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.vote-effect-shimmer {
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: vote-shimmer 3s linear infinite;
+}
+
+/* Tier 3: Color-cycle hue rotation */
+@keyframes vote-hue-rotate {
+  0%   { filter: hue-rotate(0deg) drop-shadow(0 0 6px var(--glow-color, currentColor)); }
+  100% { filter: hue-rotate(360deg) drop-shadow(0 0 6px var(--glow-color, currentColor)); }
+}
+
+.vote-effect-hue-cycle {
+  animation: vote-hue-rotate 4s linear infinite;
+}
+
+/* Tier 4: Vibrant rainbow gradient through text + glow */
+@keyframes vote-rainbow {
+  0%   { background-position: 0% center; }
+  100% { background-position: 300% center; }
+}
+
+.vote-effect-rainbow {
+  background: linear-gradient(
+    90deg,
+    #f87171, #fbbf24, #34d399, #22d3ee, #818cf8, #e879f9, #f87171
+  );
+  background-size: 300% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: vote-rainbow 4s linear infinite;
+  filter: drop-shadow(0 0 10px rgba(129, 140, 248, 0.5));
+}
