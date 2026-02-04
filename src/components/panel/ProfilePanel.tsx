@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { EditableText } from '@/components/EditableText'
-import { subscribeToCampaignSettings, CampaignSettings } from '@/lib/campaignStorage'
-import { clearUserVotes, deleteUserBlocks, deleteUserAccount } from '@/lib/userStorage'
-import { subscribeToPledges, setPledge, deletePledge, calculatePledgeSummary, Pledge } from '@/lib/pledgeStorage'
+import { subscribeToCampaignSettings, CampaignSettings } from '@/lib/storage/campaignStorage'
+import { clearUserVotes, deleteUserBlocks, deleteUserAccount } from '@/lib/storage/userStorage'
+import { subscribeToPledges, setPledge, deletePledge, calculatePledgeSummary, Pledge } from '@/lib/storage/pledgeStorage'
 
 export function ProfilePanel() {
   const { user, profile, isAdmin, logout } = useAuth()

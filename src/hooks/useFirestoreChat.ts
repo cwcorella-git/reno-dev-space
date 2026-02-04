@@ -7,7 +7,7 @@ import {
   sendChatMessage,
   deleteChatMessage,
   ChatMessage,
-} from '@/lib/chatStorage'
+} from '@/lib/storage/chatStorage'
 
 // Re-export ChatMessage type for components
 export type { ChatMessage }

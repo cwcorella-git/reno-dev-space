@@ -8,9 +8,9 @@ import {
   getTimeRemaining,
   lockCampaign,
   CampaignSettings,
-} from '@/lib/campaignStorage'
-import { subscribeToPledges, calculatePledgeSummary, Pledge } from '@/lib/pledgeStorage'
-import { subscribeToUsers, UserProfile } from '@/lib/userStorage'
+} from '@/lib/storage/campaignStorage'
+import { subscribeToPledges, calculatePledgeSummary, Pledge } from '@/lib/storage/pledgeStorage'
+import { subscribeToUsers, UserProfile } from '@/lib/storage/userStorage'
 import { DonateModal } from './DonateModal'
 
 const MEMBER_THRESHOLD = 5

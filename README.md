@@ -2,19 +2,25 @@
 
 A collaborative space for indie game developers in Reno. Features a canvas-based editor where users can add text blocks, vote on content, and chat in real-time.
 
+**Live site**: [cwcorella-git.github.io/reno-dev-space](https://cwcorella-git.github.io/reno-dev-space/)
+
 ## Features
 
-- **Canvas Editor** - Add text blocks, drag to reposition, resize via 8-direction handles
-- **Voting System** - Brightness-based voting affects block visibility (blocks deleted at 0 brightness)
-- **Real-time Chat** - Persistent community chat synced via Firestore
-- **Campaign System** - Always-visible banner with three states: member count teaser, active countdown with donations, and completed/locked
-- **Donations** - One-time Stripe donations via campaign banner (during active campaigns)
-- **Content CMS** - Admin can edit all 80+ UI text strings via Content panel or inline with ctrl+click
-- **Undo/Redo** - Session-based history with Ctrl+Z / Ctrl+Y
-- **Copy/Paste** - Duplicate blocks with Ctrl+C / Ctrl+V
-- **Multi-select** - Ctrl+click or marquee drag to select multiple blocks for batch editing
-- **Inline Formatting** - Ctrl+B/I/U for bold, italic, underline while editing text
-- **12 Google Fonts** - Random font and color assigned to new blocks
+- **Canvas Editor** — Add text blocks, drag to reposition, resize via 8-direction handles
+- **Voting System** — Brightness-based voting with directional up/down tracking. Blocks deleted at 0 brightness.
+- **Vote Text Effects** — CSS effects escalate with upvotes: glow → pulse → hue-cycle → rainbow gradient
+- **Real-time Chat** — Persistent community chat synced via Firestore
+- **Campaign System** — Always-visible banner with three states: member count teaser, active countdown with donations, and completed/locked
+- **Donations** — One-time Stripe donations via campaign banner (during active campaigns)
+- **Content CMS** — Admin can edit all 80+ UI text strings via Content panel or inline with Ctrl+click
+- **Reporting** — Users can report blocks; admins see reports, can dismiss or delete
+- **History** — Deletion audit log with restore capability + edit history for content changes
+- **Admin Moderation** — Multi-admin system with user deletion, email banning, and report dismissal
+- **Undo/Redo** — Session-based history with Ctrl+Z / Ctrl+Y
+- **Copy/Paste** — Duplicate blocks with Ctrl+C / Ctrl+V
+- **Multi-select** — Ctrl+click or marquee drag to select multiple blocks for batch editing
+- **Inline Formatting** — Ctrl+B/I/U for bold, italic, underline; inline links via toolbar
+- **12 Google Fonts** — Random font and color assigned to new blocks
 
 ## Tech Stack
 
@@ -57,17 +63,18 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 The bottom panel has 4 tabs + admin icon buttons:
 
 ```
-[ Editor ] [ Chat ● ] [ Members ] [ Profile ]    [Content] [Campaign] [Collapse]
+[ Editor ] [ Chat ] [ Members ] [ Profile ]    [History] [Content] [Campaign] [Collapse]
 ```
 
 | Tab/Icon | Description |
 |----------|-------------|
-| **Editor** | Block styling (font, size, color, alignment, bold/italic/underline/strikethrough) |
+| **Editor** | Block styling (font, size, color, alignment, bold/italic/underline/strikethrough, link) |
 | **Chat** | Real-time community messages (green dot = connected) |
-| **Members** | User directory with blocks, votes, pledge, join date |
+| **Members** | User directory + admin tools (delete, ban/unban, promote/demote) |
 | **Profile** | User info, pledge amount, account actions |
-| **Content** (pencil) | CMS for all UI text — 80+ editable strings (admin-only) |
-| **Campaign** (chart) | Timer, lock, goal, member count, stats (admin-only) |
+| **History** (clock) | Deletion + edit history with restore/delete (admin-only) |
+| **Content** (pencil) | CMS for all UI text (admin-only) |
+| **Campaign** (chart) | Timer, goal, lock, reset votes (admin-only) |
 
 ## Keyboard Shortcuts
 
@@ -85,9 +92,10 @@ The bottom panel has 4 tabs + admin icon buttons:
 
 1. **Sign up** with email/password, display name, and a pledge amount ($20 minimum)
 2. **Add text blocks** to the canvas (requires pledge or admin status)
-3. **Vote** on blocks to increase/decrease their brightness
-4. **Chat** with other community members in real-time
-5. **Donate** via Stripe during active campaigns (button appears in the top banner)
+3. **Vote** on blocks — upvotes add glow/shimmer effects, downvotes dim the text
+4. **Report** inappropriate blocks — admins review and dismiss or delete
+5. **Chat** with other community members in real-time
+6. **Donate** via Stripe during active campaigns (button appears in the top banner)
 
 ## Contributing
 

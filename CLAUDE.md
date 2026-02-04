@@ -26,22 +26,33 @@ Everything is Firestore-based with real-time updates via `onSnapshot`:
 - Pledges stored in `pledges` collection
 - Campaign settings stored in `settings` collection (doc: `campaign`)
 - Donations stored in `donations` collection (created by Stripe webhook)
+- Admin emails stored in `admins` collection (dynamic multi-admin)
+- Banned emails stored in `bannedEmails` collection (email as doc ID)
+- Deletion history stored in `deletedBlocks` collection (audit log)
+- Edit history stored in `blockEdits` collection (content snapshots)
 - No external servers needed (except Stripe webhooks via Cloud Functions)
 
-## Admin
+## Admin System
 
-Admin is identified by email: `christopher@corella.com` (hardcoded in `src/lib/admin.ts`)
+### Super Admin
+Hardcoded email: `christopher@corella.com` (in `src/lib/admin.ts`). Can never be demoted.
 
-Admin can:
+### Multi-Admin
+Dynamic admin emails stored in `admins` Firestore collection. Super admin can promote/demote other users via the Members tab (shield icon). `AuthContext` subscribes to the admins collection in real-time.
+
+### Admin Capabilities
 - Use "Add Text" button (or right-click context menu) to add text blocks
 - Double-click text to edit
 - Drag blocks to reposition (optimistic UI with Firestore confirmation)
 - Resize blocks via corner/edge handles (8 directions)
-- Style text (font family, size, color, alignment, bold, italic, underline, strikethrough)
+- Style text (font family, size, color, alignment, bold, italic, underline, strikethrough, inline links)
 - Ctrl+click any EditableText to edit site content inline
 - Access Content panel (pencil icon) for CMS and Campaign panel (chart icon) for controls
 - Start/stop campaign timer, set funding goal, lock/unlock editing
 - Undo/redo changes (Ctrl+Z / Ctrl+Y), copy/paste blocks (Ctrl+C / Ctrl+V)
+- Delete any user (cascade), ban/unban emails, promote/demote admins (Members tab)
+- Dismiss reports on blocks (clears reports, prevents re-reporting by dismissed reporters)
+- View and manage deletion/edit history (History panel)
 
 **Note**: Pledged users (backers) can also add text blocks via the "Add Text" button.
 
@@ -50,68 +61,76 @@ Admin can:
 ```
 src/
 ├── app/
-│   ├── layout.tsx            # Root layout with providers (Auth, Canvas, Content)
-│   ├── page.tsx              # Main page (renders Canvas + VersionTag)
-│   └── globals.css           # Tailwind + custom styles + font CSS variables
+│   ├── layout.tsx              # Root layout with providers (Auth, Canvas, Content)
+│   ├── page.tsx                # Main page (renders Canvas + VersionTag)
+│   └── globals.css             # Tailwind + custom styles + font CSS vars + vote effect animations
 ├── components/
 │   ├── canvas/
-│   │   ├── Canvas.tsx            # Main canvas + right-click menu + marquee select + add text mode
-│   │   ├── CanvasBlock.tsx       # Draggable/resizable block wrapper + pendingPosRef jitter fix
-│   │   └── TextBlockRenderer.tsx # Text display + inline editing + Ctrl+B/I/U shortcuts
+│   │   ├── Canvas.tsx              # Main canvas + right-click menu + marquee select + add text mode
+│   │   ├── CanvasBlock.tsx         # Draggable/resizable block + vote arrows + report/dismiss buttons
+│   │   ├── TextBlockRenderer.tsx   # Text display + inline editing + Ctrl+B/I/U + vote CSS effects
+│   │   └── VoteOutlines.tsx        # SVG vote outlines (disabled — replaced by CSS text effects)
 │   ├── panel/
-│   │   ├── UnifiedPanel.tsx      # Main panel with 4 tabs + admin icons
-│   │   ├── EditorTab.tsx         # Block styling controls (font, size, color, align, B/I/U/S)
-│   │   ├── ChatTab.tsx           # Real-time chat messages
-│   │   ├── MembersTab.tsx        # User directory with stats
-│   │   ├── CommunityTab.tsx      # Chat/Members subtab toggle (legacy, not used by panel)
-│   │   ├── DonateTab.tsx         # Stripe donation flow (used by DonateModal only)
-│   │   ├── ProfilePanel.tsx      # User info, pledge, account actions
-│   │   ├── ContentPanel.tsx      # Content CMS wrapper (admin-only)
-│   │   ├── ContentTab.tsx        # CMS for UI text with 80+ registered keys
-│   │   └── CampaignPanel.tsx     # Campaign controls + member count + stats (admin-only)
+│   │   ├── UnifiedPanel.tsx        # Main panel with 4 tabs + admin icons
+│   │   ├── EditorTab.tsx           # Block styling (font, size, color, align, B/I/U/S, link)
+│   │   ├── ChatTab.tsx             # Real-time chat messages
+│   │   ├── MembersTab.tsx          # User directory + admin: delete/ban/promote buttons
+│   │   ├── DonateTab.tsx           # Stripe donation flow (used by DonateModal only)
+│   │   ├── ProfilePanel.tsx        # User info, pledge, account actions
+│   │   ├── ContentPanel.tsx        # Content CMS wrapper (admin-only)
+│   │   ├── ContentTab.tsx          # CMS for UI text with 80+ registered keys
+│   │   ├── CampaignPanel.tsx       # Campaign controls: timer, goal, lock, reset votes (admin-only)
+│   │   ├── HistoryPanel.tsx        # History wrapper (admin-only)
+│   │   └── HistoryTab.tsx          # Deletion + edit history with restore and delete
 │   ├── chat/
-│   │   ├── MessageList.tsx       # Chat message display
-│   │   └── MessageInput.tsx      # Chat input field
-│   ├── AuthModal.tsx             # Login/signup modal
-│   ├── CampaignBanner.tsx        # Always-visible banner (inert teaser or active campaign)
-│   ├── DonateModal.tsx           # Stripe checkout modal (opened from campaign banner)
-│   ├── EditableText.tsx          # Inline editable text (ctrl+click for admin)
-│   ├── IntroHint.tsx             # Intro card for visitors (Heroicons)
-│   └── VersionTag.tsx            # Git commit hash display
+│   │   ├── MessageList.tsx         # Chat message display
+│   │   └── MessageInput.tsx        # Chat input field
+│   ├── AuthModal.tsx               # Login/signup modal + banned email check
+│   ├── CampaignBanner.tsx          # Always-visible banner (inert teaser or active campaign)
+│   ├── DonateModal.tsx             # Stripe checkout modal (opened from campaign banner)
+│   ├── EditableText.tsx            # Inline editable text (ctrl+click for admin)
+│   ├── IntroHint.tsx               # Intro card for visitors (Heroicons)
+│   └── VersionTag.tsx              # Git commit hash display
 ├── contexts/
-│   ├── AuthContext.tsx           # Firebase auth state + user profile
-│   ├── CanvasContext.tsx         # Canvas blocks state + selection + isAddTextMode + undo/redo
-│   └── ContentContext.tsx        # Site content CMS state + getText() + updateText()
+│   ├── AuthContext.tsx             # Firebase auth + real-time profile listener + auto-signout
+│   ├── CanvasContext.tsx           # Canvas blocks state + selection + isAddTextMode + undo/redo
+│   └── ContentContext.tsx          # Site content CMS state + getText() + updateText()
 ├── hooks/
-│   ├── useDragResize.ts          # Drag/resize logic for blocks (8-direction handles)
-│   └── useFirestoreChat.ts       # Chat hook with Firestore
+│   ├── useDragResize.ts            # Drag/resize logic for blocks (8-direction handles)
+│   └── useFirestoreChat.ts         # Chat hook with Firestore
 ├── lib/
-│   ├── firebase.ts               # Firebase init (uses 'main' database)
-│   ├── admin.ts                  # Admin email check
-│   ├── campaignStorage.ts        # Firestore ops for campaign settings
-│   ├── canvasStorage.ts          # Firestore ops for canvas blocks + voting + brightness
-│   ├── chatStorage.ts            # Firestore ops for chat messages
-│   ├── contentStorage.ts         # Firestore ops for site content CMS
-│   ├── overlapDetection.ts       # Block collision detection for Add Text
-│   ├── permissions.ts            # Block edit permission checks
-│   ├── pledgeStorage.ts          # Firestore ops for pledges
-│   ├── sanitize.ts               # Input sanitization utilities (HTML + inline styles)
-│   ├── selectionFormat.ts        # Multi-select formatting + inline tag wrapping
-│   └── userStorage.ts            # Firestore ops for user profiles + cascade delete
+│   ├── firebase.ts                 # Firebase init (uses 'main' database)
+│   ├── admin.ts                    # Super admin email check
+│   ├── overlapDetection.ts         # Block collision detection for Add Text
+│   ├── permissions.ts              # Block edit permission checks
+│   ├── sanitize.ts                 # Input sanitization utilities (HTML + inline styles)
+│   ├── selectionFormat.ts          # Multi-select formatting + inline tag wrapping
+│   ├── voteEffects.ts              # Vote-driven CSS text effects (4-tier escalation)
+│   └── storage/                    # Firestore CRUD operations
+│       ├── adminStorage.ts             # Dynamic admin collection
+│       ├── bannedEmailsStorage.ts      # Email bans (email as doc ID)
+│       ├── campaignStorage.ts          # Campaign settings
+│       ├── canvasStorage.ts            # Canvas blocks + voting + brightness
+│       ├── chatStorage.ts              # Chat messages
+│       ├── contentStorage.ts           # Site content CMS
+│       ├── deletionStorage.ts          # Deletion history + audit log
+│       ├── editHistoryStorage.ts       # Content edit snapshots
+│       ├── pledgeStorage.ts            # Pledges
+│       └── userStorage.ts              # User profiles + cascade delete
 └── types/
-    └── canvas.ts                 # TextBlock, CanvasBlock, TextStyle types + 12 font vars
+    └── canvas.ts                   # TextBlock, CanvasBlock, TextStyle types + 12 font vars
 
 functions/
-├── src/index.ts                  # Stripe checkout + webhook handlers
-└── package.json                  # Node 20, firebase-functions, stripe
+├── src/index.ts                    # Stripe checkout + webhook handlers
+└── package.json                    # Node 20, firebase-functions, stripe
 
 scripts/
-├── migrate-users.js              # Sync Firebase Auth users to Firestore
-├── delete-user.js                # Delete a user by email (cascade)
-└── randomize-fonts.js            # Randomize fonts for all existing blocks
+├── migrate-users.js                # Sync Firebase Auth users to Firestore
+├── delete-user.js                  # Delete a user by email (cascade)
+└── randomize-fonts.js              # Randomize fonts for all existing blocks
 
 tests/
-└── drag-jitter.spec.ts           # Playwright E2E test for drag behavior
+└── drag-jitter.spec.ts             # Playwright E2E test for drag behavior
 ```
 
 ## Canvas Constants
@@ -150,8 +169,12 @@ DESKTOP_FOCUS_WIDTH = 900 // Desktop content area (px)
     backgroundColor?: string
     marquee?: boolean     // scrolling text effect (defined but not rendered)
   }
-  brightness: number    // 0-100, votes affect this (default: 50)
-  voters: string[]      // user IDs who have voted
+  brightness: number      // 0-100, votes affect this (default: 50)
+  voters: string[]        // legacy: user IDs who have voted
+  votersUp?: string[]     // user IDs who voted up
+  votersDown?: string[]   // user IDs who voted down
+  reportedBy?: string[]          // user IDs who reported this block
+  dismissedReporters?: string[]  // user IDs whose reports were dismissed (can't re-report)
   createdBy: string
   createdAt: number
   updatedAt: number
@@ -225,6 +248,50 @@ DESKTOP_FOCUS_WIDTH = 900 // Desktop content area (px)
   email: string | null
   status: 'completed'
   createdAt: Timestamp
+}
+```
+
+### `admins`
+```typescript
+{
+  // Document ID = email address
+  email: string
+  addedAt: number
+  addedBy: string     // uid of admin who promoted
+}
+```
+
+### `bannedEmails`
+```typescript
+{
+  // Document ID = email address (O(1) lookup)
+  email: string
+  bannedAt: number
+  bannedBy: string    // uid of admin who banned
+  reason?: string
+}
+```
+
+### `deletedBlocks`
+```typescript
+{
+  blockId: string             // original block ID
+  content: string             // block content at time of deletion
+  createdBy: string           // original creator UID
+  deletedBy: string           // UID of user who deleted
+  deletedAt: number
+  reason: 'self' | 'admin' | 'vote' | 'cascade' | 'report'
+  style: TextStyle            // preserved for history display
+}
+```
+
+### `blockEdits`
+```typescript
+{
+  blockId: string             // which block was edited
+  previousContent: string     // content BEFORE the edit
+  editedBy: string            // UID of editor
+  editedAt: number
 }
 ```
 
@@ -312,16 +379,21 @@ npx playwright test                # Run tests
 ## Features
 
 - **Canvas Editor**: Admin/pledged users can add text blocks, drag to reposition, resize via 8 handles
-- **Add Text Mode**: Cursor-following preview shows placement validity (green = valid, red = overlapping). Shows "Click to place" on desktop, "Tap to place" on mobile. Text cannot overlap existing blocks.
-- **Voting**: Brightness-based voting; each vote changes brightness by ±5, block deleted at 0
+- **Add Text Mode**: Cursor-following preview shows placement validity (green = valid, red = overlapping). Preview color matches placed block color. Shows "Click to place" on desktop, "Tap to place" on mobile.
+- **Voting**: Brightness-based voting with directional tracking (up/down); each vote changes brightness by ±5, block deleted at 0. Toggle behavior: same-direction tap is no-op, opposite removes vote.
+- **Vote Text Effects**: CSS effects escalate with upvotes — static glow (1) → pulsing glow (2) → hue-cycling (3-4) → rainbow gradient (5+). See `voteEffects.ts`.
+- **Reporting**: Users can report blocks (⚠ button). Admins see yellow border on reported blocks, can dismiss reports or delete. Dismissed reporters can't re-report that block.
+- **History**: Deletion audit log with restore capability. Tracks reason (self/admin/vote/cascade/report). Edit history shows previous content versions. Admin can delete history entries.
 - **Chat**: Persistent community chat using Firestore (last 100 messages)
 - **Real-time**: All changes sync instantly across clients via Firestore listeners
 - **Content CMS**: Admin can ctrl+click any EditableText to edit inline; 80+ keys registered in ContentTab
-- **Campaign System**: Three states — inert teaser (member count), active (timer + progress + donate), expired (locked)
+- **Campaign System**: Three states — inert teaser, active (timer + progress + donate), expired (locked)
 - **Multi-select**: Ctrl+click or marquee drag to select multiple blocks for batch editing
 - **Undo/Redo**: Session-only history (Ctrl+Z / Ctrl+Y), max 50 entries
 - **Copy/Paste**: Session-only clipboard (Ctrl+C / Ctrl+V), pastes at cursor position
-- **Inline Formatting**: Ctrl+B (bold), Ctrl+I (italic), Ctrl+U (underline) while editing text
+- **Inline Formatting**: Ctrl+B (bold), Ctrl+I (italic), Ctrl+U (underline), inline links via toolbar
+- **Admin Moderation**: Multi-admin system, user deletion (cascade), email banning, report dismissal
+- **Auto Sign-out**: Real-time profile listener; if admin deletes a user's profile, they're signed out instantly
 - **Drag Jitter Fix**: `pendingPosRef` pattern holds optimistic position until Firestore confirms update
 
 ## Panel Structure
@@ -329,23 +401,24 @@ npx playwright test                # Run tests
 The bottom panel has 4 tabs on left + icon buttons on right:
 
 ```
-[ Editor ] [ Chat ● ] [ Members ] [ Profile ]    [📝] [📊] [˅]
-←──────────── tabs ─────────────→                ←─ icons ─→
+[ Editor ] [ Chat ● ] [ Members ] [ Profile ]    [🕐] [📝] [📊] [˅]
+←──────────── tabs ─────────────→                ←── icons ──→
 ```
 
 **Left side (tabs):**
 | Tab | Content |
 |-----|---------|
-| **Editor** | Block styling (font, size, color, alignment, bold/italic/underline/strikethrough) |
+| **Editor** | Block styling (font, size, color, alignment, bold/italic/underline/strikethrough, link) |
 | **Chat** | Real-time community chat (green dot = connected) |
-| **Members** | User directory with blocks, votes, pledge, join date |
+| **Members** | User directory + admin buttons (delete, ban/unban, promote/demote) |
 | **Profile** | User info, pledge, account actions, sign out |
 
-**Right side (icons):**
+**Right side (icons, admin-only except collapse):**
 | Icon | Content |
 |------|---------|
+| **History** (clock, amber) | Deletion + edit history with restore/delete (admin-only) |
 | **Content** (pencil, amber) | Content CMS for UI text (admin-only) |
-| **Campaign** (chart, amber) | Timer, lock, goal, member count, stats (admin-only) |
+| **Campaign** (chart, amber) | Timer, goal, lock, reset votes — two compact rows (admin-only) |
 | **Collapse** (chevron) | Minimize/expand panel |
 
 **Donate**: Not a panel tab. Donations are accessed via the campaign banner's Donate button (only visible during active campaign).
@@ -386,7 +459,21 @@ The bottom panel has 4 tabs on left + icon buttons on right:
 - Each vote changes brightness by ±5
 - Opacity maps to brightness: 0% → 0.2 opacity, 100% → 1.0 opacity
 - Block deleted when brightness reaches 0
-- Each user can only vote once per block (tracked in `voters` array)
+- Directional tracking: `votersUp[]` and `votersDown[]` arrays (legacy `voters[]` still supported)
+- Toggle behavior: tapping the same direction is a no-op; opposite direction removes existing vote
+- Only upvotes earn visual text effects (CSS glow/shimmer/rainbow)
+- Vote clearing (admin) reverses brightness changes atomically via Firestore `increment()`
+
+### Vote Text Effects (4 tiers)
+| Upvotes | Effect | CSS |
+|---------|--------|-----|
+| 0 | None | Just brightness/opacity |
+| 1 | Static glow | `text-shadow` in block's color |
+| 2 | Pulsing glow | `vote-effect-glow` animation (drop-shadow breathes) |
+| 3-4 | Hue-cycling glow | `vote-effect-hue-cycle` (color slowly rotates via `hue-rotate` filter) |
+| 5+ | Rainbow gradient | `vote-effect-rainbow` (rainbow gradient flows through letterforms) |
+
+Effects defined in `globals.css`, tier mapping in `src/lib/voteEffects.ts`.
 
 ## Mobile Interactions
 
@@ -431,22 +518,26 @@ All content keys must be registered in `DEFAULT_CONTENT` array in `ContentTab.ts
    - Auto-locks canvas editing
    - Donate button hidden
 
-### Admin Controls (Campaign Panel)
-- **Start Timer**: Begins 2-week countdown (shows member count threshold warning)
-- **Reset Timer**: Stops and clears countdown
-- **Set Goal**: Update funding target
-- **Lock/Unlock**: Prevent/allow block editing
-- **Reset Brightness**: Reset all blocks to default brightness
+### Admin Controls (Campaign Panel — two compact rows)
+- **Row 1**: Timer [Start/Reset] [Lock/Unlock] [Reset Votes]
+- **Row 2**: Goal $ [input] [Set]
 
 ## User Account Deletion
 
-Full cascade when user deletes account (via ProfilePanel):
-1. Clears all votes from `voters` arrays
+### Self-deletion (via ProfilePanel)
+Full cascade:
+1. Clears all votes from `voters`, `votersUp`, `votersDown` arrays (reverses brightness)
 2. Deletes all blocks created by user
 3. Deletes all chat messages by user
 4. Deletes pledge record
 5. Deletes user profile
 6. Deletes Firebase Auth account
+
+### Admin deletion (via MembersTab)
+Same cascade as self-deletion, except:
+- Firebase Auth account is NOT deleted (no server-side admin SDK)
+- Deleted user is signed out automatically via real-time profile listener
+- Admin can additionally ban the user's email to prevent re-signup
 
 ## Block Permissions
 

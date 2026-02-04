@@ -14,7 +14,7 @@ import {
   arrayRemove,
 } from 'firebase/firestore'
 import { deleteUser } from 'firebase/auth'
-import { getDb, getAuth } from './firebase'
+import { getDb, getAuth } from '../firebase'
 import { increment } from 'firebase/firestore'
 import { VOTE_BRIGHTNESS_CHANGE, DEFAULT_BRIGHTNESS, CanvasBlock } from '@/types/canvas'
 import { logDeletion } from './deletionStorage'

@@ -11,7 +11,7 @@ import {
   limit,
   Unsubscribe,
 } from 'firebase/firestore'
-import { getDb } from './firebase'
+import { getDb } from '../firebase'
 
 const COLLECTION_NAME = 'chatMessages'
 const MESSAGE_LIMIT = 100 // Keep last 100 messages

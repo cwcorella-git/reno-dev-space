@@ -1,9 +1,9 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { subscribeToDeletions, deleteHistoryEntry, DeletionEntry } from '@/lib/deletionStorage'
-import { subscribeToBlockEdits, EditHistoryEntry } from '@/lib/editHistoryStorage'
-import { restoreBlock } from '@/lib/canvasStorage'
+import { subscribeToDeletions, deleteHistoryEntry, DeletionEntry } from '@/lib/storage/deletionStorage'
+import { subscribeToBlockEdits, EditHistoryEntry } from '@/lib/storage/editHistoryStorage'
+import { restoreBlock } from '@/lib/storage/canvasStorage'
 import { findOpenPosition } from '@/lib/overlapDetection'
 import { useCanvas } from '@/contexts/CanvasContext'
 

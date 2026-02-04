@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { useContent } from '@/contexts/ContentContext'
-import { ContentEntry } from '@/lib/contentStorage'
+import { ContentEntry } from '@/lib/storage/contentStorage'
 
 // Default content items that should always be visible in admin
 const DEFAULT_CONTENT: Array<{ id: string; category: string; description: string; defaultValue: string }> = [

@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { subscribeToUsers, getUserStats, UserProfile, UserStats, adminDeleteUser } from '@/lib/userStorage'
-import { addAdmin, removeAdmin } from '@/lib/adminStorage'
-import { subscribeToBannedEmails, banEmail, unbanEmail } from '@/lib/bannedEmailsStorage'
+import { subscribeToUsers, getUserStats, UserProfile, UserStats, adminDeleteUser } from '@/lib/storage/userStorage'
+import { addAdmin, removeAdmin } from '@/lib/storage/adminStorage'
+import { subscribeToBannedEmails, banEmail, unbanEmail } from '@/lib/storage/bannedEmailsStorage'
 import { SUPER_ADMIN_EMAIL } from '@/lib/admin'
 import { EditableText } from '../EditableText'
 

@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
-import { subscribeToContent, updateContent as updateContentStorage, ContentEntry } from '@/lib/contentStorage'
+import { subscribeToContent, updateContent as updateContentStorage, ContentEntry } from '@/lib/storage/contentStorage'
 import { useAuth } from './AuthContext'
 
 interface ContentContextType {

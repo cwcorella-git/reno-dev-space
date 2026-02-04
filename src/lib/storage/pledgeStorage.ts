@@ -9,7 +9,7 @@ import {
   query,
   Unsubscribe,
 } from 'firebase/firestore'
-import { getDb } from './firebase'
+import { getDb } from '../firebase'
 
 const PLEDGES_COLLECTION = 'pledges'
 

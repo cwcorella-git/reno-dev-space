@@ -12,8 +12,8 @@ import {
 import { doc, setDoc, getDoc, onSnapshot as onDocSnapshot } from 'firebase/firestore'
 import { getAuth, getDb } from '@/lib/firebase'
 import { isAdmin as checkIsAdmin } from '@/lib/admin'
-import { subscribeToAdmins } from '@/lib/adminStorage'
-import { setPledge } from '@/lib/pledgeStorage'
+import { subscribeToAdmins } from '@/lib/storage/adminStorage'
+import { setPledge } from '@/lib/storage/pledgeStorage'
 
 interface UserProfile {
   uid: string

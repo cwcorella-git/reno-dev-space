@@ -12,7 +12,7 @@ import {
   getDocs,
   Unsubscribe,
 } from 'firebase/firestore'
-import { getDb } from './firebase'
+import { getDb } from '../firebase'
 import { CanvasBlock } from '@/types/canvas'
 
 const COLLECTION_NAME = 'deletedBlocks'

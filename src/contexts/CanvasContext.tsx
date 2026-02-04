@@ -43,10 +43,10 @@ import {
   restoreBlock,
   restoreBlocks,
   updateBlockFull,
-} from '@/lib/canvasStorage'
-import { logDeletion, removeReportEntry, removeAllReportEntries } from '@/lib/deletionStorage'
-import { logContentEdit } from '@/lib/editHistoryStorage'
-import { subscribeToPledges, Pledge } from '@/lib/pledgeStorage'
+} from '@/lib/storage/canvasStorage'
+import { logDeletion, removeReportEntry, removeAllReportEntries } from '@/lib/storage/deletionStorage'
+import { logContentEdit } from '@/lib/storage/editHistoryStorage'
+import { subscribeToPledges, Pledge } from '@/lib/storage/pledgeStorage'
 import { useAuth } from './AuthContext'
 
 interface CanvasContextType {

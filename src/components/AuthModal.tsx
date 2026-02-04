@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useContent } from '@/contexts/ContentContext'
-import { isEmailBanned } from '@/lib/bannedEmailsStorage'
+import { isEmailBanned } from '@/lib/storage/bannedEmailsStorage'
 import { EditableText } from './EditableText'
 
 interface AuthModalProps {

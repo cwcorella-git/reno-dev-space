@@ -13,7 +13,7 @@ import {
   getDoc,
   getDocs,
 } from 'firebase/firestore'
-import { getDb } from './firebase'
+import { getDb } from '../firebase'
 import {
   CanvasBlock,
   TextBlock,

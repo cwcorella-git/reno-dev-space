@@ -10,8 +10,8 @@ import {
   lockCampaign,
   unlockCampaign,
   CampaignSettings,
-} from '@/lib/campaignStorage'
-import { resetAllBrightness } from '@/lib/canvasStorage'
+} from '@/lib/storage/campaignStorage'
+import { resetAllBrightness } from '@/lib/storage/canvasStorage'
 
 export function CampaignPanel() {
   const { user, isAdmin } = useAuth()

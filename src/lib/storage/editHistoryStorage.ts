@@ -9,7 +9,7 @@ import {
   orderBy,
   Unsubscribe,
 } from 'firebase/firestore'
-import { getDb } from './firebase'
+import { getDb } from '../firebase'
 
 const COLLECTION_NAME = 'blockEdits'
 

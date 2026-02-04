@@ -8,7 +8,7 @@ import {
   increment,
   Unsubscribe,
 } from 'firebase/firestore'
-import { getDb } from './firebase'
+import { getDb } from '../firebase'
 
 const SETTINGS_COLLECTION = 'settings'
 const CAMPAIGN_DOC = 'campaign'
