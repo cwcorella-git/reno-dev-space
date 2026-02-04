@@ -188,8 +188,9 @@ interface VoteOutlinesProps {
 }
 
 export function VoteOutlines({ block }: VoteOutlinesProps) {
-  const voteCount = block.voters?.length ?? 0
-  const numOutlines = voteCount > 0 ? Math.min(3, Math.max(1, Math.ceil(voteCount / 2))) : 0
+  // Only upvotes earn dancing outlines
+  const upvoteCount = block.votersUp?.length ?? 0
+  const numOutlines = upvoteCount > 0 ? Math.min(3, Math.max(1, Math.ceil(upvoteCount / 2))) : 0
   const containerRef = useRef<HTMLDivElement>(null)
   const [dims, setDims] = useState({ w: 0, h: 0 })
 

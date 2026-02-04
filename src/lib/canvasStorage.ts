@@ -320,6 +320,8 @@ export async function resetAllBrightness(): Promise<number> {
       updateDoc(doc(db, COLLECTION_NAME, docSnapshot.id), {
         brightness: DEFAULT_BRIGHTNESS,
         voters: [],
+        votersUp: [],
+        votersDown: [],
         updatedAt: Date.now(),
       })
     )
