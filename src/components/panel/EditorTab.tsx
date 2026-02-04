@@ -190,7 +190,7 @@ export function EditorTab() {
           <select
             value={textBlock.style.fontFamily || 'Inter'}
             onChange={(e) => applyStyle({ fontFamily: e.target.value })}
-            className="h-7 px-1.5 bg-white/10 border border-white/20 rounded text-sm w-20 sm:w-24"
+            className="h-7 px-1.5 bg-white/10 border border-white/20 rounded text-sm w-24 sm:w-28"
           >
             {FONTS.map((font) => (
               <option key={font.value} value={font.value}>
