@@ -72,7 +72,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Real-time listener on user profile doc.
           // If admin deletes the profile, this fires with exists()=false
           // and we auto-sign the user out.
-          unsubProfile = onDocSnapshot(doc(db, 'users', user.uid), async (snap) => {
+          const profileRef = doc(db, 'users', user.uid)
+
+          const onProfileSnapshot = async (snap: import('firebase/firestore').DocumentSnapshot) => {
             if (snap.exists()) {
               setProfile(snap.data() as UserProfile)
             } else {
@@ -81,7 +83,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               await signOut(auth)
             }
             setLoading(false)
-          })
+          }
+
+          const onProfileError = (error: Error) => {
+            // Auth token may not be ready yet (cached session restoring).
+            // Retry after a short delay to let the token propagate.
+            console.warn('[AuthContext] Profile listener error, retrying:', error.message)
+            setTimeout(() => {
+              if (unsubProfile) { unsubProfile(); unsubProfile = null }
+              unsubProfile = onDocSnapshot(profileRef, onProfileSnapshot, (retryError) => {
+                console.warn('[AuthContext] Profile retry also failed:', retryError.message)
+                setLoading(false)
+              })
+            }, 1500)
+          }
+
+          unsubProfile = onDocSnapshot(profileRef, onProfileSnapshot, onProfileError)
         } else {
           setProfile(null)
           setLoading(false)
