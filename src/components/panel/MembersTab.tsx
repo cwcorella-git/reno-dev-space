@@ -146,10 +146,14 @@ export function MembersTab() {
                       </span>
                     )}
                     {adminEmails.has(u.email.toLowerCase()) || u.email.toLowerCase() === SUPER_ADMIN_EMAIL.toLowerCase() ? (
-                      <span className="text-[10px] bg-amber-600/50 px-1.5 py-0.5 rounded text-amber-200">admin</span>
+                      <span className="text-[10px] bg-amber-600/50 px-1.5 py-0.5 rounded text-amber-200">
+                        <EditableText id="members.badge.admin" defaultValue="admin" category="members" />
+                      </span>
                     ) : null}
                     {bannedEmails.has(u.email.toLowerCase()) && (
-                      <span className="text-[10px] bg-red-600/50 px-1.5 py-0.5 rounded text-red-200">banned</span>
+                      <span className="text-[10px] bg-red-600/50 px-1.5 py-0.5 rounded text-red-200">
+                        <EditableText id="members.badge.banned" defaultValue="banned" category="members" />
+                      </span>
                     )}
                   </div>
                 </td>

@@ -12,6 +12,7 @@ import {
   wrapSelectionWithLink,
 } from '@/lib/selectionFormat'
 import { EditableText } from '@/components/EditableText'
+import { useContent } from '@/contexts/ContentContext'
 import { checkDOMOverlap, estimateRectAfterFontSizeChange } from '@/lib/overlapDetection'
 
 // Fonts loaded via Next.js Google Fonts (see layout.tsx)
@@ -33,6 +34,7 @@ const FONTS = [
 
 export function EditorTab() {
   const { user, isAdmin } = useAuth()
+  const { getText } = useContent()
   const {
     blocks,
     selectedBlockId,
@@ -135,14 +137,14 @@ export function EditorTab() {
   const applyLink = useCallback(() => {
     const container = getSelectedBlockElement()
     if (!container) {
-      alert('Select some text first')
+      alert(getText('editor.alert.selectText', 'Select some text first'))
       return
     }
-    const url = prompt('Enter URL:')
+    const url = prompt(getText('editor.prompt.enterUrl', 'Enter URL:'))
     if (url) {
       wrapSelectionWithLink(url, container)
     }
-  }, [])
+  }, [getText])
 
   // Close color picker on click outside
   useEffect(() => {

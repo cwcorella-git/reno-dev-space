@@ -2,6 +2,7 @@
 
 import { useAuth } from '@/contexts/AuthContext'
 import { ContentTab } from './ContentTab'
+import { EditableText } from '@/components/EditableText'
 
 export function ContentPanel() {
   const { user, isAdmin } = useAuth()
@@ -9,7 +10,7 @@ export function ContentPanel() {
   if (!user || !isAdmin) {
     return (
       <div className="p-4 text-center text-gray-400">
-        Admin access required
+        <EditableText id="panel.admin.required" defaultValue="Admin access required" category="panel" />
       </div>
     )
   }

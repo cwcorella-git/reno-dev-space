@@ -53,10 +53,13 @@ const DEFAULT_CONTENT: Array<{ id: string; category: string; description: string
   { id: 'panel.members.error', category: 'panel', description: 'Members error text', defaultValue: 'Error loading members:' },
   { id: 'panel.members.empty', category: 'panel', description: 'No members text', defaultValue: 'No members yet. Be the first to join!' },
   { id: 'panel.members.emptyHint', category: 'panel', description: 'No members hint for signed in user', defaultValue: "(You're signed in but your profile may not be in the database yet)" },
+  { id: 'panel.admin.required', category: 'panel', description: 'Admin access guard message', defaultValue: 'Admin access required' },
   // Editor
   { id: 'editor.hint.select', category: 'editor', description: 'No block selected hint', defaultValue: 'Select a text block to edit' },
   { id: 'editor.hint.ownBlocks', category: 'editor', description: 'Cannot edit hint', defaultValue: 'You can only edit your own blocks' },
   { id: 'editor.button.delete', category: 'editor', description: 'Delete block button', defaultValue: 'Delete Block' },
+  { id: 'editor.alert.selectText', category: 'editor', description: 'Alert when no text selected for link', defaultValue: 'Select some text first' },
+  { id: 'editor.prompt.enterUrl', category: 'editor', description: 'Prompt for link URL', defaultValue: 'Enter URL:' },
   // Chat
   { id: 'chat.status.connected', category: 'chat', description: 'Connected status', defaultValue: 'Connected' },
   { id: 'chat.status.connecting', category: 'chat', description: 'Connecting status', defaultValue: 'Connecting...' },
@@ -74,6 +77,8 @@ const DEFAULT_CONTENT: Array<{ id: string; category: string; description: string
   { id: 'members.header.joined', category: 'members', description: 'Joined column header', defaultValue: 'Joined' },
   { id: 'members.badge.you', category: 'members', description: 'Current user badge', defaultValue: 'you' },
   { id: 'members.badge.backer', category: 'members', description: 'Backer badge', defaultValue: 'backer' },
+  { id: 'members.badge.admin', category: 'members', description: 'Admin badge in members list', defaultValue: 'admin' },
+  { id: 'members.badge.banned', category: 'members', description: 'Banned badge in members list', defaultValue: 'banned' },
   // Donate
   { id: 'donate.label.or', category: 'donate', description: 'Or label between presets and custom', defaultValue: 'or' },
   { id: 'donate.placeholder.custom', category: 'donate', description: 'Custom amount placeholder', defaultValue: 'Custom' },
@@ -104,12 +109,27 @@ const DEFAULT_CONTENT: Array<{ id: string; category: string; description: string
   { id: 'campaign.banner.goal', category: 'campaign', description: 'Goal reached text', defaultValue: 'GOAL!' },
   { id: 'campaign.banner.complete', category: 'campaign', description: 'Campaign complete text', defaultValue: 'Complete' },
   { id: 'campaign.banner.donate', category: 'campaign', description: 'Banner donate button', defaultValue: 'Donate' },
+  { id: 'campaign.confirm.resetBrightness', category: 'campaign', description: 'Reset brightness confirmation', defaultValue: 'Reset brightness for all blocks?' },
+  { id: 'campaign.button.cancel', category: 'campaign', description: 'Cancel button in campaign panel', defaultValue: 'Cancel' },
+  { id: 'campaign.button.confirm', category: 'campaign', description: 'Confirm button in campaign panel', defaultValue: 'Confirm' },
+  { id: 'campaign.label.timer', category: 'campaign', description: 'Timer section label', defaultValue: 'Timer' },
+  { id: 'campaign.button.reset', category: 'campaign', description: 'Reset timer button', defaultValue: 'Reset' },
+  { id: 'campaign.button.start', category: 'campaign', description: 'Start timer button', defaultValue: 'Start' },
+  { id: 'campaign.button.unlock', category: 'campaign', description: 'Unlock editing button', defaultValue: 'Unlock' },
+  { id: 'campaign.button.lock', category: 'campaign', description: 'Lock editing button', defaultValue: 'Lock' },
+  { id: 'campaign.button.resetVotes', category: 'campaign', description: 'Reset votes button', defaultValue: 'Reset Votes' },
+  { id: 'campaign.label.goal', category: 'campaign', description: 'Goal section label', defaultValue: 'Goal' },
+  { id: 'campaign.button.set', category: 'campaign', description: 'Set goal button', defaultValue: 'Set' },
+  { id: 'campaign.status.resetBrightness', category: 'campaign', description: 'Reset brightness status message', defaultValue: 'Reset brightness for {count} block(s)' },
   // Canvas
   { id: 'canvas.empty.title', category: 'canvas', description: 'Empty canvas title', defaultValue: 'Your canvas is empty' },
   { id: 'canvas.empty.subtitle', category: 'canvas', description: 'Empty canvas subtitle', defaultValue: 'Tap the + button or right-click to add text' },
   { id: 'canvas.addText.overlapping', category: 'canvas', description: 'Overlap warning', defaultValue: "Can't place here – overlapping" },
   { id: 'canvas.addText.clickToPlace', category: 'canvas', description: 'Click to place hint', defaultValue: 'Click to place text' },
   { id: 'canvas.contextMenu.addText', category: 'canvas', description: 'Context menu add text', defaultValue: 'Add Text' },
+  { id: 'canvas.label.desktopView', category: 'canvas', description: 'Desktop view overlay label', defaultValue: 'desktop view' },
+  { id: 'canvas.label.mobileView', category: 'canvas', description: 'Mobile view overlay label', defaultValue: 'mobile view' },
+  { id: 'canvas.placeholder.text', category: 'canvas', description: 'Empty text block placeholder', defaultValue: 'Click to edit' },
 ]
 
 export function ContentTab() {

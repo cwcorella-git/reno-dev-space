@@ -503,7 +503,7 @@ export function Canvas() {
               title="Desktop focus zone (900px)"
             >
               <div className="absolute top-2 right-2 text-[10px] text-indigo-400/40 whitespace-nowrap">
-                desktop view
+                <EditableText id="canvas.label.desktopView" defaultValue="desktop view" category="canvas" />
               </div>
             </div>
           )}
@@ -516,7 +516,7 @@ export function Canvas() {
               title="Mobile safe zone (375px)"
             >
               <div className="absolute top-2 left-1/2 -translate-x-1/2 text-[10px] text-white/30 whitespace-nowrap">
-                mobile view
+                <EditableText id="canvas.label.mobileView" defaultValue="mobile view" category="canvas" />
               </div>
             </div>
           )}

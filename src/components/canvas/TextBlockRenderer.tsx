@@ -5,8 +5,7 @@ import { TextBlock, DEFAULT_BRIGHTNESS } from '@/types/canvas'
 import { sanitizeHtml } from '@/lib/sanitize'
 import { wrapSelectionWithTag } from '@/lib/selectionFormat'
 import { getVoteEffects, getUpvoteCount } from '@/lib/voteEffects'
-
-const PLACEHOLDER_TEXT = 'Click to edit'
+import { useContent } from '@/contexts/ContentContext'
 
 interface TextBlockRendererProps {
   block: TextBlock
@@ -21,6 +20,7 @@ export function TextBlockRenderer({
   onContentChange,
   onEditComplete,
 }: TextBlockRendererProps) {
+  const { getText } = useContent()
   const editorRef = useRef<HTMLDivElement>(null)
   // Check if empty (strip HTML tags to check for actual text content)
   const textContent = block.content?.replace(/<[^>]*>/g, '').trim() || ''
@@ -142,7 +142,7 @@ export function TextBlockRenderer({
         className="whitespace-nowrap opacity-40 italic"
         style={style}
       >
-        {PLACEHOLDER_TEXT}
+        {getText('canvas.placeholder.text', 'Click to edit')}
       </div>
     )
   }

@@ -12,9 +12,12 @@ import {
   CampaignSettings,
 } from '@/lib/storage/campaignStorage'
 import { resetAllBrightness } from '@/lib/storage/canvasStorage'
+import { useContent } from '@/contexts/ContentContext'
+import { EditableText } from '@/components/EditableText'
 
 export function CampaignPanel() {
   const { user, isAdmin } = useAuth()
+  const { getText } = useContent()
 
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
@@ -33,7 +36,7 @@ export function CampaignPanel() {
   if (!user || !isAdmin) {
     return (
       <div className="p-4 text-center text-gray-400">
-        Admin access required
+        <EditableText id="panel.admin.required" defaultValue="Admin access required" category="panel" />
       </div>
     )
   }
@@ -75,7 +78,7 @@ export function CampaignPanel() {
   const handleResetBrightness = async () => {
     setActionLoading(true)
     const count = await resetAllBrightness()
-    showStatus('success', `Reset brightness for ${count} block(s)`)
+    showStatus('success', getText('campaign.status.resetBrightness', `Reset brightness for ${count} block(s)`))
     setConfirmAction(null)
     setActionLoading(false)
   }
@@ -93,10 +96,12 @@ export function CampaignPanel() {
       {confirmAction && (
         <div className="p-4 bg-red-900/30">
           <p className="text-sm text-white mb-3">
-            {confirmAction === 'brightness' && 'Reset brightness for all blocks?'}
+            {confirmAction === 'brightness' && <EditableText id="campaign.confirm.resetBrightness" defaultValue="Reset brightness for all blocks?" category="campaign" />}
           </p>
           <div className="flex gap-2">
-            <button onClick={() => setConfirmAction(null)} disabled={actionLoading} className="flex-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-sm">Cancel</button>
+            <button onClick={() => setConfirmAction(null)} disabled={actionLoading} className="flex-1 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded text-sm">
+              <EditableText id="campaign.button.cancel" defaultValue="Cancel" category="campaign" />
+            </button>
             <button
               onClick={() => {
                 if (confirmAction === 'brightness') handleResetBrightness()
@@ -104,7 +109,7 @@ export function CampaignPanel() {
               disabled={actionLoading}
               className="flex-1 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-sm"
             >
-              {actionLoading ? '...' : 'Confirm'}
+              {actionLoading ? '...' : <EditableText id="campaign.button.confirm" defaultValue="Confirm" category="campaign" />}
             </button>
           </div>
         </div>
@@ -114,27 +119,37 @@ export function CampaignPanel() {
         <div className="p-4 space-y-3">
           {/* Timer + Lock */}
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">Timer</span>
+            <span className="text-xs text-gray-400"><EditableText id="campaign.label.timer" defaultValue="Timer" category="campaign" /></span>
             <div className="flex items-center gap-2">
               {timerActive ? (
-                <button onClick={handleResetTimer} disabled={actionLoading} className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium disabled:opacity-50">Reset</button>
+                <button onClick={handleResetTimer} disabled={actionLoading} className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium disabled:opacity-50">
+                  <EditableText id="campaign.button.reset" defaultValue="Reset" category="campaign" />
+                </button>
               ) : (
-                <button onClick={handleStartTimer} disabled={actionLoading} className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50">Start</button>
+                <button onClick={handleStartTimer} disabled={actionLoading} className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50">
+                  <EditableText id="campaign.button.start" defaultValue="Start" category="campaign" />
+                </button>
               )}
               <button onClick={handleToggleLock} disabled={actionLoading} className={`px-3 py-1 rounded text-xs font-medium disabled:opacity-50 ${settings?.isLocked ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-300'}`}>
-                {settings?.isLocked ? 'Unlock' : 'Lock'}
+                {settings?.isLocked
+                  ? <EditableText id="campaign.button.unlock" defaultValue="Unlock" category="campaign" />
+                  : <EditableText id="campaign.button.lock" defaultValue="Lock" category="campaign" />}
               </button>
-              <button onClick={() => setConfirmAction('brightness')} disabled={actionLoading} className="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 rounded text-xs disabled:opacity-50">Reset Votes</button>
+              <button onClick={() => setConfirmAction('brightness')} disabled={actionLoading} className="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 rounded text-xs disabled:opacity-50">
+                <EditableText id="campaign.button.resetVotes" defaultValue="Reset Votes" category="campaign" />
+              </button>
             </div>
           </div>
 
           {/* Goal */}
           <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">Goal</span>
+            <span className="text-xs text-gray-400"><EditableText id="campaign.label.goal" defaultValue="Goal" category="campaign" /></span>
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-gray-500">$</span>
               <input type="number" value={goalInput} onChange={(e) => setGoalInput(e.target.value)} className="w-20 px-2 py-1 bg-white/10 border border-white/20 rounded text-white text-xs text-right" />
-              <button onClick={handleUpdateGoal} disabled={actionLoading} className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs disabled:opacity-50">Set</button>
+              <button onClick={handleUpdateGoal} disabled={actionLoading} className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs disabled:opacity-50">
+                <EditableText id="campaign.button.set" defaultValue="Set" category="campaign" />
+              </button>
             </div>
           </div>
         </div>
