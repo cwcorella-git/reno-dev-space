@@ -15,7 +15,8 @@ import {
 } from 'firebase/firestore'
 import { deleteUser } from 'firebase/auth'
 import { getDb, getAuth } from './firebase'
-import { VOTE_BRIGHTNESS_CHANGE, CanvasBlock } from '@/types/canvas'
+import { increment } from 'firebase/firestore'
+import { VOTE_BRIGHTNESS_CHANGE, DEFAULT_BRIGHTNESS, CanvasBlock } from '@/types/canvas'
 import { logDeletion } from './deletionStorage'
 
 const BLOCKS_COLLECTION = 'canvasBlocks'
@@ -99,8 +100,7 @@ export async function getUserStats(uid: string): Promise<UserStats> {
   return { blocksCreated, votesGiven, pledgeAmount }
 }
 
-// Clear all votes by user (remove from voters, votersUp, and votersDown arrays)
-// Note: This doesn't adjust brightness since we don't know which direction they voted
+// Clear all votes by user (remove from voter arrays AND reverse brightness)
 export async function clearUserVotes(uid: string): Promise<number> {
   const db = getDb()
   const blocksSnapshot = await getDocs(collection(db, BLOCKS_COLLECTION))
@@ -110,18 +110,30 @@ export async function clearUserVotes(uid: string): Promise<number> {
 
   blocksSnapshot.forEach((docSnapshot) => {
     const data = docSnapshot.data()
-    const inVoters = data.voters?.includes(uid)
     const inVotersUp = data.votersUp?.includes(uid)
     const inVotersDown = data.votersDown?.includes(uid)
+    const inLegacyOnly = data.voters?.includes(uid) && !inVotersUp && !inVotersDown
 
-    if (inVoters || inVotersUp || inVotersDown) {
+    if (inVotersUp || inVotersDown || inLegacyOnly) {
       clearedCount++
+
+      // Reverse the brightness change if we know the direction
+      let brightnessAdj = 0
+      if (inVotersUp) brightnessAdj = -VOTE_BRIGHTNESS_CHANGE   // undo an upvote
+      else if (inVotersDown) brightnessAdj = VOTE_BRIGHTNESS_CHANGE  // undo a downvote
+      // Legacy voters (no direction info) — can't reverse, leave brightness as-is
+
+      const update: Record<string, unknown> = {
+        voters: arrayRemove(uid),
+        votersUp: arrayRemove(uid),
+        votersDown: arrayRemove(uid),
+      }
+      if (brightnessAdj !== 0) {
+        update.brightness = increment(brightnessAdj)
+      }
+
       promises.push(
-        updateDoc(doc(db, BLOCKS_COLLECTION, docSnapshot.id), {
-          voters: arrayRemove(uid),
-          votersUp: arrayRemove(uid),
-          votersDown: arrayRemove(uid),
-        })
+        updateDoc(doc(db, BLOCKS_COLLECTION, docSnapshot.id), update)
       )
     }
   })
