@@ -229,11 +229,11 @@ export function VoteOutlines({ block }: VoteOutlinesProps) {
         style: OUTLINE_STYLES[hash2 % OUTLINE_STYLES.length],
         color: OUTLINE_COLORS[hash % OUTLINE_COLORS.length],
         dashPattern: ['6 4', '3 3', '8 3 2 3', '4 2', '10 5'][hash % 5],
-        inset: -(1 + i * 2),
+        inset: -(i * 1.5),
         animClass: `dash-dance-${i + 1}`,
         opacity: 0.75 - i * 0.12,
         segments: 8 + i * 2,
-        amplitude: 4 + i * 2,
+        amplitude: 2 + i * 1,
         phase: (hash % 10) * 0.7,
       }
     })
