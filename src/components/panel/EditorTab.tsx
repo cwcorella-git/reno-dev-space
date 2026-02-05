@@ -7,6 +7,8 @@ import { isTextBlock, TextBlock, TEXT_COLORS } from '@/types/canvas'
 import { filterEditableBlocks } from '@/lib/permissions'
 import {
   getSelectedBlockElement,
+  getSelectionAnchor,
+  unwrapLink,
   wrapSelectionWithTag,
   wrapSelectionWithStyle,
   wrapSelectionWithLink,
@@ -135,9 +137,10 @@ export function EditorTab() {
     [applyStyle]
   )
 
-  // Apply link to selection
+  // Toggle link on selection.
+  // If cursor is inside an <a>, remove it. Otherwise prompt for URL and wrap.
   // prompt() destroys the selection and triggers blur, so we save the Range
-  // beforehand, restore it after, apply the link, then manually persist.
+  // beforehand, restore it after, then manually persist.
   const applyLink = useCallback(() => {
     const container = getSelectedBlockElement()
     if (!container) {
@@ -145,6 +148,19 @@ export function EditorTab() {
       return
     }
 
+    // Toggle OFF: if cursor/selection is inside a link, remove it
+    const existingAnchor = getSelectionAnchor(container)
+    if (existingAnchor) {
+      unwrapLink(existingAnchor)
+      const blockEl = container.closest('[data-block-id]')
+      const blockId = blockEl?.getAttribute('data-block-id')
+      if (blockId) {
+        updateContent(blockId, sanitizeHtml(container.innerHTML))
+      }
+      return
+    }
+
+    // Toggle ON: wrap selection with a link
     const selection = window.getSelection()
     if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
       alert(getText('editor.alert.selectText', 'Select some text first'))

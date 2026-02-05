@@ -154,6 +154,36 @@ function wrapSelectionWithTagFallback(
 }
 
 /**
+ * Find the closest <a> ancestor of the current selection within a container.
+ * Returns the anchor element or null.
+ */
+export function getSelectionAnchor(container: HTMLElement | null): HTMLAnchorElement | null {
+  if (!container) return null
+
+  const selection = window.getSelection()
+  if (!selection || selection.rangeCount === 0) return null
+
+  let node: Node | null = selection.getRangeAt(0).commonAncestorContainer
+  while (node && node !== container) {
+    if (node instanceof HTMLAnchorElement) return node
+    node = node.parentNode
+  }
+  return null
+}
+
+/**
+ * Remove the link from an anchor element, keeping its text content.
+ */
+export function unwrapLink(anchor: HTMLAnchorElement): void {
+  const parent = anchor.parentNode
+  if (!parent) return
+  while (anchor.firstChild) {
+    parent.insertBefore(anchor.firstChild, anchor)
+  }
+  parent.removeChild(anchor)
+}
+
+/**
  * Wrap the current selection with an anchor tag (link).
  * Returns true if selection was wrapped, false if no valid selection.
  */
@@ -180,7 +210,7 @@ export function wrapSelectionWithLink(
     anchor.href = href.startsWith('http') ? href : `https://${href}`
     anchor.target = '_blank'
     anchor.rel = 'noopener noreferrer'
-    anchor.className = 'text-indigo-400 hover:text-indigo-300 underline'
+    anchor.style.textDecoration = 'underline'
 
     range.surroundContents(anchor)
     selection.removeAllRanges()
@@ -193,7 +223,7 @@ export function wrapSelectionWithLink(
       anchor.href = href.startsWith('http') ? href : `https://${href}`
       anchor.target = '_blank'
       anchor.rel = 'noopener noreferrer'
-      anchor.className = 'text-indigo-400 hover:text-indigo-300 underline'
+      anchor.style.textDecoration = 'underline'
       anchor.appendChild(fragment)
       range.insertNode(anchor)
       selection.removeAllRanges()
