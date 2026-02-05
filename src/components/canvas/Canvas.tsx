@@ -9,7 +9,7 @@ import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
 import { incrementPageViews } from '@/lib/storage/campaignStorage'
-import { wouldOverlap } from '@/lib/overlapDetection'
+import { wouldOverlap, wouldOverlapDOM } from '@/lib/overlapDetection'
 import { filterEditableBlocks } from '@/lib/permissions'
 import { EditableText } from '@/components/EditableText'
 
@@ -145,7 +145,7 @@ export function Canvas() {
           const x = ((e.clientX - rect.left) / rect.width) * 100
           const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
 
-          if (wouldOverlap(x, y, blocks)) {
+          if (wouldOverlapDOM(canvas, x, y, canvasHeightPercent)) {
             return
           }
 
@@ -442,7 +442,7 @@ export function Canvas() {
       const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
 
       // Check if placement would be valid (not overlapping)
-      const isValid = !wouldOverlap(x, y, blocks)
+      const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent)
 
       setAddTextPreview({ x, y, isValid })
     }

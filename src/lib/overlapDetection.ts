@@ -1,8 +1,9 @@
 import { CanvasBlock } from '@/types/canvas'
 
 // Approximate dimensions for a new text block (percentages of canvas)
-const NEW_BLOCK_WIDTH = 5   // ~5% of canvas width (tight estimate)
-const NEW_BLOCK_HEIGHT = 1  // ~1% of canvas height (single line of text)
+// These match the preview box in Canvas.tsx (12% wide, 6% tall)
+const NEW_BLOCK_WIDTH = 12  // ~12% of canvas width
+const NEW_BLOCK_HEIGHT = 6  // ~6% of canvasHeightPercent
 
 // Padding between blocks (percentage) - zero to only flag true overlaps
 const OVERLAP_PADDING = 0
@@ -72,6 +73,39 @@ export function wouldBlockOverlap(
       newBottom + padding < other.y ||
       newY > otherBottom + padding
 
+    if (!noOverlap) return true
+  }
+  return false
+}
+
+/**
+ * DOM-based overlap check for Add Text placement.
+ * Uses getBoundingClientRect() on existing blocks for pixel-accurate hit zones,
+ * instead of the percentage-based estimates which underestimate block height.
+ */
+export function wouldOverlapDOM(
+  canvasElement: HTMLElement,
+  cursorX: number,            // percentage (0–100)
+  cursorY: number,            // percentage (0–canvasHeightPercent)
+  canvasHeightPercent: number
+): boolean {
+  const canvasRect = canvasElement.getBoundingClientRect()
+
+  // Convert new block's top-left from canvas percentages to screen pixels
+  const newLeft = canvasRect.left + (cursorX / 100) * canvasRect.width
+  const newTop = canvasRect.top + (cursorY / canvasHeightPercent) * canvasRect.height
+  // Estimate new block size in screen pixels (matches the 12% × 6% preview box)
+  const newRight = newLeft + (NEW_BLOCK_WIDTH / 100) * canvasRect.width
+  const newBottom = newTop + (NEW_BLOCK_HEIGHT / canvasHeightPercent) * canvasRect.height
+
+  const blockElements = canvasElement.querySelectorAll<HTMLElement>('[data-block-id]')
+  for (let i = 0; i < blockElements.length; i++) {
+    const blockRect = blockElements[i].getBoundingClientRect()
+    const noOverlap =
+      newRight <= blockRect.left ||
+      newLeft >= blockRect.right ||
+      newBottom <= blockRect.top ||
+      newTop >= blockRect.bottom
     if (!noOverlap) return true
   }
   return false
