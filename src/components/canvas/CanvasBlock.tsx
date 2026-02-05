@@ -51,6 +51,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     vote,
     report,
     dismissReport,
+    recordHistory,
   } = useCanvas()
 
   const isSelected = selectedBlockId === block.id
@@ -251,6 +252,9 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
             const deltaX = currentPos.x - startBlockX
             const deltaY = currentPos.y - startBlockY
 
+            // Record history before moving (captures before positions)
+            recordHistory('move', movableBlockIds)
+
             // Move all selected movable blocks by the same delta
             if (movableBlockIds.length > 1) {
               const moves = movableBlockIds.map(id => {
@@ -278,7 +282,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
     },
-    [isAdmin, isSelected, isEditing, canvasRef, block, moveBlock, moveBlocks, selectedBlockIds, blocks, user?.uid, canvasHeightPercent, setIsGroupDragging]
+    [isAdmin, isSelected, isEditing, canvasRef, block, moveBlock, moveBlocks, selectedBlockIds, blocks, user?.uid, canvasHeightPercent, setIsGroupDragging, recordHistory]
   )
 
   // Handle resize with local state for immediate feedback
@@ -335,6 +339,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
               setIsResizeOverlapping(false)
               return null
             }
+            recordHistory('resize', [block.id])
             resizeBlock(block.id, currentWidth.width, block.height)
           }
           setIsResizeOverlapping(false)
@@ -345,7 +350,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
     },
-    [isAdmin, isSelected, isEditing, canvasRef, block, resizeBlock]
+    [isAdmin, isSelected, isEditing, canvasRef, block, resizeBlock, recordHistory]
   )
 
   // Touch move handler (document-level for smooth dragging)
@@ -395,6 +400,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       if (isTouchDragging.current) {
         setDragPos((currentPos) => {
           if (currentPos) {
+            recordHistory('move', [block.id])
             moveBlock(block.id, currentPos.x, currentPos.y)
             // Keep dragPos until Firestore confirms (prevents jitter)
             pendingPosRef.current = { x: currentPos.x, y: currentPos.y }
@@ -408,7 +414,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       isTouchDragging.current = false
       touchStartPos.current = null
     },
-    [block.id, moveBlock, handleTouchMove]
+    [block.id, moveBlock, handleTouchMove, recordHistory]
   )
 
   // Touch start - begin hold timer
@@ -536,7 +542,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       data-block-id={block.id}
       style={blockStyle}
       className={`group
-        ${isAdmin ? 'cursor-move' : ''}
+        ${isAdmin ? (isDragging ? 'cursor-brand-grabbing' : 'cursor-brand-move') : ''}
         ${(isOverlapping || isResizeOverlapping)
           ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-transparent'
           : isSelected
@@ -686,19 +692,19 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       {isAdmin && isSelected && !isEditing && (
         <>
           <div
-            className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-500 cursor-se-resize rounded-sm"
+            className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-500 cursor-brand-nwse rounded-sm"
             onMouseDown={(e) => handleResizeStart(e, 'se')}
           />
           <div
-            className="absolute -bottom-1 -left-1 w-3 h-3 bg-indigo-500 cursor-sw-resize rounded-sm"
+            className="absolute -bottom-1 -left-1 w-3 h-3 bg-indigo-500 cursor-brand-nesw rounded-sm"
             onMouseDown={(e) => handleResizeStart(e, 'sw')}
           />
           <div
-            className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 cursor-ne-resize rounded-sm"
+            className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 cursor-brand-nesw rounded-sm"
             onMouseDown={(e) => handleResizeStart(e, 'ne')}
           />
           <div
-            className="absolute -top-1 -left-1 w-3 h-3 bg-indigo-500 cursor-nw-resize rounded-sm"
+            className="absolute -top-1 -left-1 w-3 h-3 bg-indigo-500 cursor-brand-nwse rounded-sm"
             onMouseDown={(e) => handleResizeStart(e, 'nw')}
           />
         </>

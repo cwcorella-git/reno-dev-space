@@ -107,7 +107,7 @@ export function TextBlockRenderer({
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
-        className="w-full h-full outline-none min-h-[1.5em] whitespace-pre-wrap break-words"
+        className="w-full h-full outline-none min-h-[1.5em] whitespace-pre-wrap break-words cursor-brand-text"
         style={style}
         onBlur={(e) => {
           // Get innerHTML and sanitize to keep only safe formatting

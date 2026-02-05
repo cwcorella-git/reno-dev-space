@@ -43,7 +43,7 @@ interface MarqueeState {
 
 export function Canvas() {
   const { user, isAdmin, loading: authLoading } = useAuth()
-  const { blocks, canvasRef, canAddText, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText, isAddTextMode, setIsAddTextMode, removeBlock, undo, redo, copyBlocks, pasteBlocks } = useCanvas()
+  const { blocks, canvasRef, canAddText, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText, isAddTextMode, setIsAddTextMode, removeBlocks, undo, redo, copyBlocks, pasteBlocks } = useCanvas()
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [marquee, setMarquee] = useState<MarqueeState | null>(null)
   const isMarqueeActive = useRef(false)
@@ -353,7 +353,9 @@ export function Canvas() {
             user?.uid,
             isAdmin
           )
-          deletableIds.forEach(id => removeBlock(id))
+          if (deletableIds.length > 0) {
+            removeBlocks(deletableIds)
+          }
         }
         return
       }
@@ -367,7 +369,7 @@ export function Canvas() {
     }
     document.addEventListener('keydown', handleKeyDown)
     return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [blocks, selectBlocks, selectBlock, setIsAddTextMode, selectedBlockIds, removeBlock, user?.uid, isAdmin, undo, redo, copyBlocks, pasteBlocks])
+  }, [blocks, selectBlocks, selectBlock, setIsAddTextMode, selectedBlockIds, removeBlocks, user?.uid, isAdmin, undo, redo, copyBlocks, pasteBlocks])
 
   // Dismiss context menu when clicking outside of it
   const contextMenuRef = useRef<HTMLDivElement>(null)
@@ -507,7 +509,11 @@ export function Canvas() {
           {/* On mobile: offset so safe zone center aligns with container */}
           <div
             ref={canvasRef}
-            className={`relative bg-brand-dark ${marquee ? 'select-none' : ''}`}
+            className={`relative bg-brand-dark ${marquee ? 'select-none' : ''} ${
+              isAddTextMode
+                ? (addTextPreview && !addTextPreview.isValid ? 'cursor-brand-no' : 'cursor-brand-cross')
+                : 'cursor-brand-arrow'
+            }`}
             style={{
               width: `${DESIGN_WIDTH}px`,
               minHeight: `${canvasHeightPx}px`,

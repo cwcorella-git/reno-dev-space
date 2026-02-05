@@ -10,13 +10,14 @@ import {
   RefObject,
   useRef,
 } from 'react'
-import { CanvasBlock, TextBlock } from '@/types/canvas'
+import { CanvasBlock, TextBlock, VOTE_BRIGHTNESS_CHANGE } from '@/types/canvas'
 
 // History entry for undo/redo (session-only)
 interface HistoryEntry {
-  type: 'add' | 'delete' | 'move' | 'resize' | 'style' | 'content'
+  type: 'add' | 'delete' | 'move' | 'resize' | 'style' | 'content' | 'vote'
   timestamp: number
   blockSnapshots: Record<string, CanvasBlock>  // Before state (full blocks)
+  afterSnapshots?: Record<string, CanvasBlock>  // After state (populated lazily during undo)
   deletedBlocks?: CanvasBlock[]  // Blocks that were deleted (for undo of delete)
   createdIds?: string[]  // IDs of blocks that were created (for undo of add)
 }
@@ -75,6 +76,7 @@ interface CanvasContextType {
   updateContent: (id: string, content: string) => Promise<void>
   updateStyle: (id: string, style: Partial<TextBlock['style']>) => Promise<void>
   removeBlock: (id: string) => Promise<void>
+  removeBlocks: (ids: string[]) => Promise<void>
   bringBlockToFront: (id: string) => Promise<void>
   sendBlockToBack: (id: string) => Promise<void>
 
@@ -85,7 +87,12 @@ interface CanvasContextType {
   report: (id: string) => Promise<void>
   dismissReport: (id: string) => Promise<void>
 
-  // Undo/Redo (session-only)
+  // History (session-only)
+  recordHistory: (
+    type: HistoryEntry['type'],
+    affectedBlockIds: string[],
+    options?: { deletedBlocks?: CanvasBlock[]; createdIds?: string[] }
+  ) => void
   undo: () => Promise<void>
   redo: () => Promise<void>
   canUndo: boolean
@@ -217,7 +224,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     updateHistoryState()
   }, [blocks, updateHistoryState])
 
-  // Undo last action
+  // Undo last action (deferred afterSnapshot capture for redo support)
   const undo = useCallback(async () => {
     if (historyIndexRef.current < 0) return
 
@@ -227,8 +234,11 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     try {
       switch (entry.type) {
         case 'add':
-          // Undo add = delete the created blocks
+          // Undo add = capture created blocks for redo, then delete them
           if (entry.createdIds) {
+            entry.deletedBlocks = entry.createdIds
+              .map(id => blocks.find(b => b.id === id))
+              .filter((b): b is CanvasBlock => !!b)
             await Promise.all(entry.createdIds.map(id => deleteBlock(id)))
           }
           break
@@ -244,13 +254,28 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         case 'resize':
         case 'style':
         case 'content':
-          // Undo changes = restore previous state
+        case 'vote': {
+          // Check if this vote caused a deletion
+          if (entry.type === 'vote' && entry.deletedBlocks && entry.deletedBlocks.length > 0) {
+            await restoreBlocks(entry.deletedBlocks)
+            break
+          }
+          // Capture current state as afterSnapshots (for redo)
+          if (!entry.afterSnapshots) {
+            entry.afterSnapshots = {}
+            for (const id of Object.keys(entry.blockSnapshots)) {
+              const current = blocks.find(b => b.id === id)
+              if (current) entry.afterSnapshots[id] = { ...current }
+            }
+          }
+          // Restore before state
           await Promise.all(
             Object.entries(entry.blockSnapshots).map(([id, snapshot]) =>
               updateBlockFull(id, snapshot)
             )
           )
           break
+        }
       }
 
       historyIndexRef.current--
@@ -258,9 +283,9 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     } catch (error) {
       console.error('[CanvasContext] Undo failed:', error)
     }
-  }, [updateHistoryState])
+  }, [blocks, updateHistoryState])
 
-  // Redo last undone action
+  // Redo last undone action (uses afterSnapshots captured during undo)
   const redo = useCallback(async () => {
     if (historyIndexRef.current >= historyRef.current.length - 1) return
 
@@ -271,11 +296,10 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     try {
       switch (entry.type) {
         case 'add':
-          // Redo add = re-create the blocks (they should still exist in createdIds context)
-          // Since we can't easily recreate, we'll restore from blockSnapshots of the next state
-          // Actually for add, blockSnapshots contains the BEFORE state (empty)
-          // We need to look at the deletedBlocks from the UNDO we're redoing
-          // Simpler: just skip redo for add operations for now
+          // Redo add = restore blocks captured during undo
+          if (entry.deletedBlocks) {
+            await restoreBlocks(entry.deletedBlocks)
+          }
           break
 
         case 'delete':
@@ -289,10 +313,20 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         case 'resize':
         case 'style':
         case 'content':
-          // For redo, we need to look at the NEXT entry's blockSnapshots to get the "after" state
-          // This is complex - for now, we'll rely on the fact that the user can just redo the action
-          // Actually, we should store the AFTER state too for proper redo
-          // Simplified: just move the pointer, the Firestore state already reflects the change
+        case 'vote':
+          // Check if this vote caused a deletion
+          if (entry.type === 'vote' && entry.deletedBlocks && entry.deletedBlocks.length > 0) {
+            await Promise.all(entry.deletedBlocks.map(b => deleteBlock(b.id)))
+            break
+          }
+          // Apply afterSnapshots (captured during undo)
+          if (entry.afterSnapshots) {
+            await Promise.all(
+              Object.entries(entry.afterSnapshots).map(([id, snapshot]) =>
+                updateBlockFull(id, snapshot)
+              )
+            )
+          }
           break
       }
 
@@ -340,11 +374,12 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
       }
     }
 
-    // Select the pasted blocks
+    // Record history for the paste operation
     if (newIds.length > 0) {
+      recordHistory('add', [], { createdIds: newIds })
       selectBlocks(newIds)
     }
-  }, [clipboard, user, blocks, selectBlocks])
+  }, [clipboard, user, blocks, selectBlocks, recordHistory])
 
   // Get max z-index for new blocks
   const getMaxZIndex = useCallback(() => {
@@ -357,6 +392,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
       if (!canAddText || !user) return null
       try {
         const id = await addTextBlock(x, y, user.uid, '', getMaxZIndex(), color)
+        recordHistory('add', [], { createdIds: [id] })
         setSelectedBlockId(id)
         return id
       } catch (error) {
@@ -364,7 +400,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         return null
       }
     },
-    [canAddText, user, getMaxZIndex]
+    [canAddText, user, getMaxZIndex, recordHistory]
   )
 
   const moveBlock = useCallback(
@@ -411,15 +447,18 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
       if (!isAdmin) return
       try {
         const block = blocks.find((b) => b.id === id)
-        if (block && block.content !== content && user) {
-          logContentEdit(id, block.content, user.uid).catch(() => {})
+        if (block && block.content !== content) {
+          recordHistory('content', [id])
+          if (user) {
+            logContentEdit(id, block.content, user.uid).catch(() => {})
+          }
         }
         await updateTextContent(id, content)
       } catch (error) {
         console.error('[CanvasContext] Failed to update content:', error)
       }
     },
-    [isAdmin, blocks, user]
+    [isAdmin, blocks, user, recordHistory]
   )
 
   const updateStyle = useCallback(
@@ -460,6 +499,44 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     [isAdmin, user, blocks, selectedBlockId, recordHistory]
   )
 
+  // Batch delete multiple blocks with a single history entry (for multi-select Delete key)
+  const removeBlocks = useCallback(
+    async (ids: string[]): Promise<void> => {
+      if (!user) return
+      const deletableBlocks = ids
+        .map(id => blocks.find(b => b.id === id))
+        .filter((b): b is CanvasBlock => {
+          if (!b) return false
+          const isOwnBlock = b.createdBy === user.uid
+          const isReported = (b.reportedBy?.length ?? 0) > 0
+          return isOwnBlock || (isAdmin && isReported)
+        })
+
+      if (deletableBlocks.length === 0) return
+
+      try {
+        // One history entry for the entire batch
+        recordHistory('delete', deletableBlocks.map(b => b.id), { deletedBlocks: deletableBlocks })
+
+        await Promise.all(
+          deletableBlocks.map(async (block) => {
+            const reason = block.createdBy === user.uid ? 'self' : 'admin'
+            await logDeletion(block, reason, user.uid)
+            await deleteBlock(block.id)
+          })
+        )
+
+        // Clear selection for deleted blocks
+        if (selectedBlockId && ids.includes(selectedBlockId)) {
+          setSelectedBlockId(null)
+        }
+      } catch (error) {
+        console.error('[CanvasContext] Failed to remove blocks:', error)
+      }
+    },
+    [isAdmin, user, blocks, selectedBlockId, recordHistory]
+  )
+
   const bringBlockToFront = useCallback(
     async (id: string): Promise<void> => {
       if (!isAdmin) return
@@ -490,11 +567,30 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
       if (!user) return false
       try {
         const block = blocks.find(b => b.id === id)
+        if (!block) return false
+
+        // We must detect no-ops BEFORE recordHistory because recordHistory pushes
+        // synchronously. If we recorded first and checked voteBrightness (async) after,
+        // the user could Ctrl+Z during the await and undo a phantom entry.
+        // No-op detection (mirrors voteBrightness logic to avoid junk history entries)
+        const votedUp = block.votersUp?.includes(user.uid) ?? false
+        const votedDown = block.votersDown?.includes(user.uid) ?? false
+        const isLegacy = (block.voters?.includes(user.uid) ?? false) && !votedUp && !votedDown
+        const isNoOp = (direction === 'up' && votedUp) || (direction === 'down' && votedDown) || isLegacy
+
+        if (!isNoOp) {
+          // Will this vote delete the block?
+          const isUnvote = (direction === 'up' && votedDown) || (direction === 'down' && votedUp)
+          const wouldDelete = !isUnvote && direction === 'down' &&
+            (block.brightness ?? 50) <= VOTE_BRIGHTNESS_CHANGE
+          recordHistory('vote', [id], {
+            deletedBlocks: wouldDelete ? [{ ...block }] : undefined,
+          })
+        }
+
         const wasDeleted = await voteBrightness(id, user.uid, direction)
         if (wasDeleted) {
-          if (block) {
-            await logDeletion(block, 'vote', user.uid)
-          }
+          await logDeletion(block, 'vote', user.uid)
           if (selectedBlockId === id) {
             setSelectedBlockId(null)
           }
@@ -505,7 +601,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         return false
       }
     },
-    [user, blocks, selectedBlockId]
+    [user, blocks, selectedBlockId, recordHistory]
   )
 
   // Toggle report on a block
@@ -576,11 +672,13 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         updateContent,
         updateStyle,
         removeBlock,
+        removeBlocks,
         bringBlockToFront,
         sendBlockToBack,
         vote,
         report,
         dismissReport,
+        recordHistory,
         undo,
         redo,
         canUndo,

@@ -45,6 +45,7 @@ export function EditorTab() {
     updateStyle,
     updateContent,
     removeBlock,
+    recordHistory,
   } = useCanvas()
   const [showColorPicker, setShowColorPicker] = useState(false)
   const colorPickerRef = useRef<HTMLDivElement>(null)
@@ -80,9 +81,12 @@ export function EditorTab() {
   // Apply style to all selected editable text blocks
   const applyStyle = useCallback(
     (style: Partial<TextBlock['style']>) => {
+      if (editableTextBlockIds.length > 0) {
+        recordHistory('style', editableTextBlockIds)
+      }
       editableTextBlockIds.forEach(id => updateStyle(id, style))
     },
-    [editableTextBlockIds, updateStyle]
+    [editableTextBlockIds, updateStyle, recordHistory]
   )
 
   // Check if increasing font size would cause any selected block to overlap
