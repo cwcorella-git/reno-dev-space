@@ -483,7 +483,7 @@ export function Canvas() {
       {/* Scroll container - wraps the scaled design canvas */}
       <div
         ref={scrollContainerRef}
-        className="min-h-screen w-full overflow-y-auto overflow-x-hidden bg-brand-dark"
+        className="h-screen w-full overflow-y-auto overflow-x-hidden bg-brand-dark"
         onClick={(e) => {
           // Click on page background (not canvas) also deselects
           if (e.target === e.currentTarget || e.target === scrollContainerRef.current) {
