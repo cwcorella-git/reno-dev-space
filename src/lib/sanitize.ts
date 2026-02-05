@@ -5,7 +5,10 @@
  */
 
 // Allowed tags for rich text formatting
-const ALLOWED_TAGS = new Set(['b', 'i', 'u', 's', 'strong', 'em', 'span', 'br'])
+const ALLOWED_TAGS = new Set(['b', 'i', 'u', 's', 'strong', 'em', 'span', 'br', 'a'])
+
+// Block-level tags that represent line breaks (contentEditable uses <div> for Enter key)
+const BLOCK_TAGS = new Set(['div', 'p', 'li', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'blockquote'])
 
 // Allowed CSS properties for inline styles
 const ALLOWED_STYLE_PROPS = new Set([
@@ -64,8 +67,12 @@ export function sanitizeHtml(html: string): string {
 
       // Check if tag is allowed
       if (!ALLOWED_TAGS.has(tagName)) {
-        // Not allowed - return just the text content as a text node
+        // Not allowed — strip the tag but keep children
         const fragment = document.createDocumentFragment()
+        // Block-level elements represent line breaks (e.g. <div> from Enter key)
+        if (BLOCK_TAGS.has(tagName)) {
+          fragment.appendChild(document.createElement('br'))
+        }
         for (const child of Array.from(element.childNodes)) {
           const processed = processNode(child)
           if (processed) fragment.appendChild(processed)
@@ -81,6 +88,16 @@ export function sanitizeHtml(html: string): string {
         const sanitizedStyle = sanitizeStyle(element.getAttribute('style') || '')
         if (sanitizedStyle) {
           clean.setAttribute('style', sanitizedStyle)
+        }
+      }
+
+      // Allow href and target on <a> tags (for inline links)
+      if (tagName === 'a') {
+        const href = element.getAttribute('href') || ''
+        if (href && !href.startsWith('javascript:')) {
+          clean.setAttribute('href', href)
+          clean.setAttribute('target', '_blank')
+          clean.setAttribute('rel', 'noopener noreferrer')
         }
       }
 
