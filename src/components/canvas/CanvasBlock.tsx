@@ -3,7 +3,7 @@
 import { useCallback, useRef, useState, useEffect } from 'react'
 import { CanvasBlock as CanvasBlockType, isTextBlock } from '@/types/canvas'
 import { TextBlockRenderer } from './TextBlockRenderer'
-import { useCanvas } from '@/contexts/CanvasContext'
+import { useCanvas, DESIGN_HEIGHT } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { filterEditableBlocks } from '@/lib/permissions'
 import { wouldBlockOverlap, checkDOMOverlap } from '@/lib/overlapDetection'
@@ -519,15 +519,16 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
 
   const isInteracting = isDragging || isResizing || isHolding
 
-  // Convert y from canvasHeightPercent-relative to 100%-relative for CSS
-  // y is stored as percentage of canvasHeightPercent (e.g., y=50 means 50% of canvasHeightPercent)
-  // CSS top needs to be percentage of actual element height
-  const displayTopPercent = (displayY / canvasHeightPercent) * 100
+  // Convert y to absolute pixels within the design canvas.
+  // block.y is stored as percentage of canvasHeightPercent (100 = one DESIGN_HEIGHT).
+  // Using pixels instead of percentages decouples block positions from canvas height,
+  // so blocks never shift when the canvas grows or shrinks.
+  const displayTopPx = (displayY / 100) * DESIGN_HEIGHT
 
   const blockStyle: React.CSSProperties = {
     position: 'absolute',
     left: `${displayX}%`,
-    top: `${displayTopPercent}%`,
+    top: `${displayTopPx}px`,
     width: displayWidth > 0 ? `${displayWidth}%` : 'auto',
     minWidth: '80px',
     zIndex: block.zIndex,

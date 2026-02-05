@@ -553,7 +553,6 @@ export function Canvas() {
             style={{
               width: `${DESIGN_WIDTH}px`,
               minHeight: `${canvasHeightPx}px`,
-              transition: 'min-height 150ms ease-out',
               transform: isMobileView
                 ? `scale(${scale}) translateX(-${mobileOffset}px)`
                 : `translateX(-50%) scale(${scale})`,
