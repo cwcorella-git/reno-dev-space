@@ -293,10 +293,18 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
 
       const rect = canvas.getBoundingClientRect()
       const startX = e.clientX
-      const startWidth = block.width
+
+      // For auto-width blocks (width === 0), measure the actual DOM width
+      // so the block doesn't snap to 'auto' at the start of resize
+      const measuredWidth = block.width > 0
+        ? block.width
+        : blockRef.current
+          ? (blockRef.current.getBoundingClientRect().width / rect.width) * 100
+          : 10
+      const startWidth = measuredWidth
 
       setIsResizing(true)
-      setResizeWidth({ width: block.width })
+      setResizeWidth({ width: measuredWidth })
 
       const handleMouseMove = (moveEvent: MouseEvent) => {
         const deltaX = ((moveEvent.clientX - startX) / rect.width) * 100
