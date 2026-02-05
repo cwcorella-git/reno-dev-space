@@ -60,21 +60,47 @@ export function Canvas() {
   const [isMobileView, setIsMobileView] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
-  // Calculate canvas height in pixels based on lowest block + one screen of empty space
-  // Y coordinates are percentages where 100 = DESIGN_HEIGHT (900px)
-  const canvasHeightPx = useMemo(() => {
-    if (blocks.length === 0) return DESIGN_HEIGHT // Default to one screen height
-
-    // Find the lowest block (highest y value + estimated height)
-    // Y is percentage, so y=100 means 100% of DESIGN_HEIGHT
-    const lowestBottom = Math.max(...blocks.map(b => b.y + 10))
-
-    // Convert to pixels and ensure at least one full screen of empty space below
-    // lowestBottom is percentage, convert to pixels then add DESIGN_HEIGHT
-    const minHeightPx = (lowestBottom / 100) * DESIGN_HEIGHT + DESIGN_HEIGHT
-
-    return Math.max(DESIGN_HEIGHT, minHeightPx)
+  // Fast initial estimate based on block Y positions (before DOM is available)
+  const estimatedHeightPx = useMemo(() => {
+    if (blocks.length === 0) return DESIGN_HEIGHT
+    const lowestBottom = Math.max(...blocks.map(b => b.y + (b.height || 10)))
+    return Math.max(DESIGN_HEIGHT, (lowestBottom / 100) * DESIGN_HEIGHT + DESIGN_HEIGHT)
   }, [blocks])
+
+  // DOM-measured height: updated after render and on block resizes
+  const [measuredHeightPx, setMeasuredHeightPx] = useState(DESIGN_HEIGHT)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const measure = () => {
+      const blockEls = canvas.querySelectorAll<HTMLElement>('[data-block-id]')
+      if (blockEls.length === 0) { setMeasuredHeightPx(DESIGN_HEIGHT); return }
+      const canvasRect = canvas.getBoundingClientRect()
+      const currentScale = canvasRect.width / DESIGN_WIDTH
+      if (currentScale <= 0) return
+      let lowestBottom = 0
+      blockEls.forEach(el => {
+        const bottom = (el.getBoundingClientRect().bottom - canvasRect.top) / currentScale
+        if (bottom > lowestBottom) lowestBottom = bottom
+      })
+      // One full screen of padding below the lowest block
+      setMeasuredHeightPx(Math.max(DESIGN_HEIGHT, lowestBottom + DESIGN_HEIGHT))
+    }
+
+    // Measure after DOM commits
+    measure()
+
+    // Re-measure when any block element resizes (font changes, text edits, etc.)
+    const observer = new ResizeObserver(measure)
+    canvas.querySelectorAll<HTMLElement>('[data-block-id]').forEach(el => observer.observe(el))
+
+    return () => observer.disconnect()
+  }, [blocks])
+
+  // Use whichever is larger: the fast estimate or the DOM measurement
+  const canvasHeightPx = Math.max(estimatedHeightPx, measuredHeightPx)
 
   // For coordinate calculations, we need the height as a percentage (100 = one screen)
   const canvasHeightPercent = (canvasHeightPx / DESIGN_HEIGHT) * 100
