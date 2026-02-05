@@ -60,6 +60,14 @@ export function Canvas() {
   const [isMobileView, setIsMobileView] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
+  // Initialize custom cursor body class from localStorage
+  useEffect(() => {
+    const pref = localStorage.getItem('rds-custom-cursors')
+    // Default to enabled if no preference stored
+    if (pref !== 'off') document.body.classList.add('custom-cursors')
+    else document.body.classList.remove('custom-cursors')
+  }, [])
+
   // Fast initial estimate based on block Y positions (before DOM is available)
   const estimatedHeightPx = useMemo(() => {
     if (blocks.length === 0) return DESIGN_HEIGHT
@@ -77,12 +85,12 @@ export function Canvas() {
     const measure = () => {
       const blockEls = canvas.querySelectorAll<HTMLElement>('[data-block-id]')
       if (blockEls.length === 0) { setMeasuredHeightPx(DESIGN_HEIGHT); return }
-      const canvasRect = canvas.getBoundingClientRect()
-      const currentScale = canvasRect.width / DESIGN_WIDTH
-      if (currentScale <= 0) return
       let lowestBottom = 0
       blockEls.forEach(el => {
-        const bottom = (el.getBoundingClientRect().bottom - canvasRect.top) / currentScale
+        // Use offset properties instead of getBoundingClientRect — offset values
+        // reflect the CSS layout box only, ignoring filter effects (drop-shadow,
+        // hue-rotate) that expand the visual bounding rect and cause scroll jitter.
+        const bottom = el.offsetTop + el.offsetHeight
         if (bottom > lowestBottom) lowestBottom = bottom
       })
       // One full screen of padding below the lowest block
