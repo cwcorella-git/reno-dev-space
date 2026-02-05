@@ -22,6 +22,7 @@ Tracking polish work, bugs, and feature ideas for Reno Dev Space.
 ## Features
 
 - [ ] **Stripe go-live** - Switch from test mode to live payments (see CLAUDE.md Go-Live Checklist).
+- [ ] **Live cursor presence** - Show other users' cursors in real-time with name labels and editing previews. Architecture designed (Firestore `presence` collection, 200ms throttled writes, 30s TTL). Custom SVG cursors already shipped; presence is the next phase.
 
 ## Performance
 

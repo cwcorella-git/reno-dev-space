@@ -63,7 +63,7 @@ src/
 ├── app/
 │   ├── layout.tsx              # Root layout with providers (Auth, Canvas, Content)
 │   ├── page.tsx                # Main page (renders Canvas + VersionTag)
-│   └── globals.css             # Tailwind + custom styles + font CSS vars + vote effect animations
+│   └── globals.css             # Tailwind + custom styles + font CSS vars + vote effects + brand cursors
 ├── components/
 │   ├── canvas/
 │   │   ├── Canvas.tsx              # Main canvas + right-click menu + marquee select + add text mode
@@ -93,7 +93,7 @@ src/
 │   └── VersionTag.tsx              # Git commit hash display
 ├── contexts/
 │   ├── AuthContext.tsx             # Firebase auth + real-time profile listener + auto-signout
-│   ├── CanvasContext.tsx           # Canvas blocks state + selection + isAddTextMode + undo/redo
+│   ├── CanvasContext.tsx           # Canvas blocks + selection + undo/redo (all action types) + history
 │   └── ContentContext.tsx          # Site content CMS state + getText() + updateText()
 ├── hooks/
 │   ├── useDragResize.ts            # Drag/resize logic for blocks (8-direction handles)
@@ -389,11 +389,12 @@ npx playwright test                # Run tests
 - **Content CMS**: Admin can ctrl+click any EditableText to edit inline; 80+ keys registered in ContentTab
 - **Campaign System**: Three states — inert teaser, active (timer + progress + donate), expired (locked)
 - **Multi-select**: Ctrl+click or marquee drag to select multiple blocks for batch editing
-- **Undo/Redo**: Session-only history (Ctrl+Z / Ctrl+Y), max 50 entries
+- **Undo/Redo**: Comprehensive session-only history (Ctrl+Z / Ctrl+Y), max 50 entries. Covers all canvas actions: move, resize, add, delete, style, content, vote. Uses deferred after-state capture (snapshots taken lazily during undo to avoid async Firestore timing issues). Batch operations (multi-select style, multi-delete) produce one undo step.
 - **Copy/Paste**: Session-only clipboard (Ctrl+C / Ctrl+V), pastes at cursor position
 - **Inline Formatting**: Ctrl+B (bold), Ctrl+I (italic), Ctrl+U (underline), inline links via toolbar
 - **Admin Moderation**: Multi-admin system, user deletion (cascade), email banning, report dismissal
 - **Auto Sign-out**: Real-time profile listener; if admin deletes a user's profile, they're signed out instantly
+- **Custom Cursors**: 8 minimal geometric SVG cursors (indigo/white) as CSS data URIs in `globals.css`. Arrow, move, grabbing, text, crosshair, not-allowed, nwse-resize, nesw-resize. Applied across Canvas, CanvasBlock, and TextBlockRenderer.
 - **Drag Jitter Fix**: `pendingPosRef` pattern holds optimistic position until Firestore confirms update
 
 ## Panel Structure
@@ -474,6 +475,23 @@ The bottom panel has 4 tabs on left + icon buttons on right:
 | 5+ | Rainbow gradient | `vote-effect-rainbow` (rainbow gradient flows through letterforms) |
 
 Effects defined in `globals.css`, tier mapping in `src/lib/voteEffects.ts`.
+
+## Custom Cursors
+
+8 branded SVG cursors replace browser defaults across the canvas. Defined as inline data URIs in `globals.css` to avoid `basePath` resolution issues on GitHub Pages.
+
+| Class | Cursor | Where Used |
+|-------|--------|------------|
+| `cursor-brand-arrow` | Indigo arrow pointer | Canvas background (default) |
+| `cursor-brand-move` | Four-way arrow | Admin hovering over draggable blocks |
+| `cursor-brand-grabbing` | Closed fist | Actively dragging a block |
+| `cursor-brand-text` | I-beam | ContentEditable when editing text |
+| `cursor-brand-cross` | Crosshair with indigo ring | Add-text mode (valid placement) |
+| `cursor-brand-no` | Red circle with slash | Add-text mode (overlapping/invalid) |
+| `cursor-brand-nwse` | Diagonal double arrow ↘↖ | SE/NW resize handles |
+| `cursor-brand-nesw` | Diagonal double arrow ↗↙ | SW/NE resize handles |
+
+All use `!important` to override Tailwind utility classes. Palette: white (`#fff`) strokes, indigo-400 (`#818cf8`) accent, red-500 (`#ef4444`) for not-allowed.
 
 ## Mobile Interactions
 

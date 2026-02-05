@@ -16,10 +16,11 @@ A collaborative space for indie game developers in Reno. Features a canvas-based
 - **Reporting** — Users can report blocks; admins see reports, can dismiss or delete
 - **History** — Deletion audit log with restore capability + edit history for content changes
 - **Admin Moderation** — Multi-admin system with user deletion, email banning, and report dismissal
-- **Undo/Redo** — Session-based history with Ctrl+Z / Ctrl+Y
+- **Undo/Redo** — Comprehensive session-based history (Ctrl+Z / Ctrl+Y) for all canvas actions: move, resize, add, delete, style, content, vote
 - **Copy/Paste** — Duplicate blocks with Ctrl+C / Ctrl+V
 - **Multi-select** — Ctrl+click or marquee drag to select multiple blocks for batch editing
 - **Inline Formatting** — Ctrl+B/I/U for bold, italic, underline; inline links via toolbar
+- **Custom Cursors** — 8 branded SVG cursors (indigo/white) replace browser defaults across the canvas
 - **12 Google Fonts** — Random font and color assigned to new blocks
 
 ## Tech Stack
