@@ -60,14 +60,6 @@ export function Canvas() {
   const [isMobileView, setIsMobileView] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
-  // Initialize custom cursor body class from localStorage
-  useEffect(() => {
-    const pref = localStorage.getItem('rds-custom-cursors')
-    // Default to enabled if no preference stored
-    if (pref !== 'off') document.body.classList.add('custom-cursors')
-    else document.body.classList.remove('custom-cursors')
-  }, [])
-
   // Fast initial estimate based on block Y positions (before DOM is available)
   const estimatedHeightPx = useMemo(() => {
     if (blocks.length === 0) return DESIGN_HEIGHT
@@ -517,11 +509,7 @@ export function Canvas() {
           {/* On mobile: offset so safe zone center aligns with container */}
           <div
             ref={canvasRef}
-            className={`relative bg-brand-dark ${marquee ? 'select-none' : ''} ${
-              isAddTextMode
-                ? (addTextPreview && !addTextPreview.isValid ? 'cursor-brand-no' : 'cursor-brand-cross')
-                : 'cursor-brand-arrow'
-            }`}
+            className={`relative bg-brand-dark ${marquee ? 'select-none' : ''}`}
             style={{
               width: `${DESIGN_WIDTH}px`,
               minHeight: `${canvasHeightPx}px`,

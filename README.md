@@ -20,7 +20,6 @@ A collaborative space for indie game developers in Reno. Features a canvas-based
 - **Copy/Paste** — Duplicate blocks with Ctrl+C / Ctrl+V
 - **Multi-select** — Ctrl+click or marquee drag to select multiple blocks for batch editing
 - **Inline Formatting** — Ctrl+B/I/U for bold, italic, underline; inline links via toolbar
-- **Custom Cursors** — 8 branded SVG cursors (indigo/white) replace browser defaults across the canvas
 - **12 Google Fonts** — Random font and color assigned to new blocks
 
 ## Tech Stack

@@ -542,7 +542,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       data-block-id={block.id}
       style={blockStyle}
       className={`group
-        ${isAdmin ? (isDragging ? 'cursor-brand-grabbing' : 'cursor-brand-move') : ''}
+        ${isAdmin ? 'cursor-move' : ''}
         ${(isOverlapping || isResizeOverlapping)
           ? 'ring-2 ring-red-500 ring-offset-2 ring-offset-transparent'
           : isSelected
@@ -692,19 +692,19 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       {isAdmin && isSelected && !isEditing && (
         <>
           <div
-            className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-500 cursor-brand-nwse rounded-sm"
+            className="absolute -bottom-1 -right-1 w-3 h-3 bg-indigo-500 cursor-se-resize rounded-sm"
             onMouseDown={(e) => handleResizeStart(e, 'se')}
           />
           <div
-            className="absolute -bottom-1 -left-1 w-3 h-3 bg-indigo-500 cursor-brand-nesw rounded-sm"
+            className="absolute -bottom-1 -left-1 w-3 h-3 bg-indigo-500 cursor-sw-resize rounded-sm"
             onMouseDown={(e) => handleResizeStart(e, 'sw')}
           />
           <div
-            className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 cursor-brand-nesw rounded-sm"
+            className="absolute -top-1 -right-1 w-3 h-3 bg-indigo-500 cursor-ne-resize rounded-sm"
             onMouseDown={(e) => handleResizeStart(e, 'ne')}
           />
           <div
-            className="absolute -top-1 -left-1 w-3 h-3 bg-indigo-500 cursor-brand-nwse rounded-sm"
+            className="absolute -top-1 -left-1 w-3 h-3 bg-indigo-500 cursor-nw-resize rounded-sm"
             onMouseDown={(e) => handleResizeStart(e, 'nw')}
           />
         </>

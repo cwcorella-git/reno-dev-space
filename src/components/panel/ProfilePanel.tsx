@@ -16,12 +16,6 @@ export function ProfilePanel() {
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [confirmAction, setConfirmAction] = useState<string | null>(null)
   const [pledgeAmount, setPledgeAmount] = useState('')
-  const [customCursors, setCustomCursors] = useState(true)
-
-  useEffect(() => {
-    setCustomCursors(localStorage.getItem('rds-custom-cursors') !== 'off')
-  }, [])
-
   useEffect(() => {
     const unsubPledges = subscribeToPledges((p) => setPledges(p))
     const unsubSettings = subscribeToCampaignSettings((s) => setSettings(s))
@@ -174,31 +168,6 @@ export function ProfilePanel() {
               )}
             </div>
           )}
-
-          {/* Settings */}
-          <div className="pt-3 border-t border-white/10">
-            <p className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-2">Settings</p>
-            <label className="flex items-center justify-between">
-              <span className="text-sm text-gray-300">Custom cursors</span>
-              <button
-                onClick={() => {
-                  const next = !customCursors
-                  setCustomCursors(next)
-                  localStorage.setItem('rds-custom-cursors', next ? 'on' : 'off')
-                  if (next) document.body.classList.add('custom-cursors')
-                  else document.body.classList.remove('custom-cursors')
-                }}
-                className={`relative w-9 h-5 rounded-full transition-colors focus:outline-none ${customCursors ? 'bg-indigo-600' : 'bg-white/10'}`}
-                role="switch"
-                aria-checked={customCursors}
-              >
-                <span
-                  className="absolute left-0.5 top-0.5 w-4 h-4 rounded-full transition-transform bg-white"
-                  style={{ transform: customCursors ? 'translateX(16px)' : 'translateX(0)' }}
-                />
-              </button>
-            </label>
-          </div>
 
           {/* Account Actions */}
           <div className="pt-3 border-t border-white/10">

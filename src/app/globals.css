@@ -8,44 +8,6 @@
   --background-end-rgb: 30, 27, 75;
 }
 
-/* ── Brand cursors (inline SVG data URIs) ──
-   Minimal geometric cursors with dark halo for visibility on any background.
-   Each SVG draws the path twice: dark outline first, then bright fill on top.
-   Scoped under body.custom-cursors so users can toggle off via Profile settings.
-   Inline SVGs avoid basePath resolution issues on GitHub Pages. */
-
-body.custom-cursors .cursor-brand-arrow {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='26' viewBox='0 0 18 26'%3E%3Cpath d='M2 2L2 19 6 15 10 23 12 22 8 14 14 14Z' fill='%23020617' stroke='%23020617' stroke-width='2.5' stroke-linejoin='round'/%3E%3Cpath d='M2 2L2 19 6 15 10 23 12 22 8 14 14 14Z' fill='%236366f1' stroke='%23e0e7ff' stroke-width='1' stroke-linejoin='round'/%3E%3C/svg%3E") 2 2, default !important;
-}
-
-body.custom-cursors .cursor-brand-move {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M10 2l3 3h-2v4h4V7l3 3-3 3v-2h-4v4h2l-3 3-3-3h2v-4H5v2l-3-3 3-3v2h4V5H7z' fill='%23020617' stroke='%23020617' stroke-width='2' stroke-linejoin='round'/%3E%3Cpath d='M10 2l3 3h-2v4h4V7l3 3-3 3v-2h-4v4h2l-3 3-3-3h2v-4H5v2l-3-3 3-3v2h4V5H7z' fill='%236366f1' stroke='%23e0e7ff' stroke-width='.5' stroke-linejoin='round'/%3E%3C/svg%3E") 10 10, move !important;
-}
-
-body.custom-cursors .cursor-brand-grabbing {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='22' viewBox='0 0 20 22'%3E%3Cpath d='M4 11c0-1.5 1-2.5 2.5-2.5h7c1.5 0 2.5 1 2.5 2.5v6c0 2-1.5 3-3 3H7c-1.5 0-3-1-3-3z' fill='%23020617' stroke='%23020617' stroke-width='2.5'/%3E%3Cpath d='M7 8.5V6a1.5 1.5 0 013 0v2.5m0-2V5a1.5 1.5 0 013 0v3.5' stroke='%23020617' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3Cpath d='M4 11c0-1.5 1-2.5 2.5-2.5h7c1.5 0 2.5 1 2.5 2.5v6c0 2-1.5 3-3 3H7c-1.5 0-3-1-3-3z' fill='%236366f1' stroke='%23e0e7ff' stroke-width='1'/%3E%3Cpath d='M7 8.5V6a1.5 1.5 0 013 0v2.5m0-2V5a1.5 1.5 0 013 0v3.5' stroke='%23e0e7ff' stroke-width='1.2' stroke-linecap='round' fill='none'/%3E%3C/svg%3E") 10 10, grabbing !important;
-}
-
-body.custom-cursors .cursor-brand-text {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='22' viewBox='0 0 12 22'%3E%3Cpath d='M3 2h6M3 20h6M6 2v18' stroke='%23020617' stroke-width='4' stroke-linecap='round' fill='none'/%3E%3Cpath d='M3 2h6M3 20h6M6 2v18' stroke='%23c7d2fe' stroke-width='2' stroke-linecap='round' fill='none'/%3E%3C/svg%3E") 6 11, text !important;
-}
-
-body.custom-cursors .cursor-brand-cross {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='6' fill='none' stroke='%23020617' stroke-width='3'/%3E%3Cpath d='M10 2v4m0 8v4M2 10h4m8 0h4' stroke='%23020617' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='10' cy='10' r='6' fill='none' stroke='%236366f1' stroke-width='1.5'/%3E%3Cpath d='M10 2v4m0 8v4M2 10h4m8 0h4' stroke='%23e0e7ff' stroke-width='1.5' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='10' cy='10' r='1.5' fill='%23e0e7ff'/%3E%3C/svg%3E") 10 10, crosshair !important;
-}
-
-body.custom-cursors .cursor-brand-no {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Ccircle cx='10' cy='10' r='7' fill='none' stroke='%23020617' stroke-width='4'/%3E%3Cpath d='M5 15L15 5' stroke='%23020617' stroke-width='4' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='10' cy='10' r='7' fill='none' stroke='%23ef4444' stroke-width='2'/%3E%3Cpath d='M5 15L15 5' stroke='%23ef4444' stroke-width='2' stroke-linecap='round' fill='none'/%3E%3C/svg%3E") 10 10, not-allowed !important;
-}
-
-body.custom-cursors .cursor-brand-nwse {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M4 4l12 12M4 4h5M4 4v5M16 16h-5M16 16v-5' stroke='%23020617' stroke-width='4' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Cpath d='M4 4l12 12M4 4h5M4 4v5M16 16h-5M16 16v-5' stroke='%23c7d2fe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") 10 10, nwse-resize !important;
-}
-
-body.custom-cursors .cursor-brand-nesw {
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cpath d='M16 4L4 16M16 4h-5M16 4v5M4 16h5M4 16v-5' stroke='%23020617' stroke-width='4' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3Cpath d='M16 4L4 16M16 4h-5M16 4v5M4 16h5M4 16v-5' stroke='%23c7d2fe' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E") 10 10, nesw-resize !important;
-}
-
 /* Font family utilities using CSS variables from Next.js font loader */
 .font-sans {
   font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;

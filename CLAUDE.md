@@ -63,7 +63,7 @@ src/
 ├── app/
 │   ├── layout.tsx              # Root layout with providers (Auth, Canvas, Content)
 │   ├── page.tsx                # Main page (renders Canvas + VersionTag)
-│   └── globals.css             # Tailwind + custom styles + font CSS vars + vote effects + brand cursors
+│   └── globals.css             # Tailwind + custom styles + font CSS vars + vote effects
 ├── components/
 │   ├── canvas/
 │   │   ├── Canvas.tsx              # Main canvas + right-click menu + marquee select + add text mode
@@ -394,7 +394,6 @@ npx playwright test                # Run tests
 - **Inline Formatting**: Ctrl+B (bold), Ctrl+I (italic), Ctrl+U (underline), inline links via toolbar
 - **Admin Moderation**: Multi-admin system, user deletion (cascade), email banning, report dismissal
 - **Auto Sign-out**: Real-time profile listener; if admin deletes a user's profile, they're signed out instantly
-- **Custom Cursors**: 8 minimal geometric SVG cursors (indigo/white) as CSS data URIs in `globals.css`. Arrow, move, grabbing, text, crosshair, not-allowed, nwse-resize, nesw-resize. Applied across Canvas, CanvasBlock, and TextBlockRenderer.
 - **Drag Jitter Fix**: `pendingPosRef` pattern holds optimistic position until Firestore confirms update
 
 ## Panel Structure
@@ -475,23 +474,6 @@ The bottom panel has 4 tabs on left + icon buttons on right:
 | 5+ | Rainbow gradient | `vote-effect-rainbow` (rainbow gradient flows through letterforms) |
 
 Effects defined in `globals.css`, tier mapping in `src/lib/voteEffects.ts`.
-
-## Custom Cursors
-
-8 branded SVG cursors replace browser defaults across the canvas. Defined as inline data URIs in `globals.css` to avoid `basePath` resolution issues on GitHub Pages.
-
-| Class | Cursor | Where Used |
-|-------|--------|------------|
-| `cursor-brand-arrow` | Indigo arrow pointer | Canvas background (default) |
-| `cursor-brand-move` | Four-way arrow | Admin hovering over draggable blocks |
-| `cursor-brand-grabbing` | Closed fist | Actively dragging a block |
-| `cursor-brand-text` | I-beam | ContentEditable when editing text |
-| `cursor-brand-cross` | Crosshair with indigo ring | Add-text mode (valid placement) |
-| `cursor-brand-no` | Red circle with slash | Add-text mode (overlapping/invalid) |
-| `cursor-brand-nwse` | Diagonal double arrow ↘↖ | SE/NW resize handles |
-| `cursor-brand-nesw` | Diagonal double arrow ↗↙ | SW/NE resize handles |
-
-All use `!important` to override Tailwind utility classes. Palette: white (`#fff`) strokes, indigo-400 (`#818cf8`) accent, red-500 (`#ef4444`) for not-allowed.
 
 ## Mobile Interactions
 
