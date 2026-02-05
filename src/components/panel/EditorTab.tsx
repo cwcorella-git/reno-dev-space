@@ -282,32 +282,38 @@ export function EditorTab() {
             max="8"
             value={fontSizeInput}
             onChange={(e) => {
-              const val = parseFloat(e.target.value)
-              if (!isNaN(val) && val >= 0.5 && val <= 8) {
-                if (wouldFontSizeOverlap(val)) {
-                  // Revert — would overlap another block
-                  return
-                }
-                setFontSizeInput(e.target.value)
-                applyStyle({ fontSize: val })
-              } else {
-                setFontSizeInput(e.target.value)
-              }
+              // Only update local display — don't apply until commit
+              setFontSizeInput(e.target.value)
             }}
             onBlur={() => {
               const val = parseFloat(fontSizeInput)
               if (isNaN(val) || val < 0.5) {
-                if (!wouldFontSizeOverlap(0.5)) {
-                  setFontSizeInput('0.5')
-                  applyStyle({ fontSize: 0.5 })
-                }
-              } else if (val > 8) {
-                if (!wouldFontSizeOverlap(8)) {
-                  setFontSizeInput('8')
-                  applyStyle({ fontSize: 8 })
+                const fallback = 0.5
+                if (!wouldFontSizeOverlap(fallback)) {
+                  setFontSizeInput(fallback.toString())
+                  applyStyle({ fontSize: fallback })
                 } else {
                   setFontSizeInput((textBlock?.style.fontSize ?? 1).toString())
                 }
+              } else if (val > 8) {
+                const capped = 8
+                if (!wouldFontSizeOverlap(capped)) {
+                  setFontSizeInput(capped.toString())
+                  applyStyle({ fontSize: capped })
+                } else {
+                  setFontSizeInput((textBlock?.style.fontSize ?? 1).toString())
+                }
+              } else if (!wouldFontSizeOverlap(val)) {
+                setFontSizeInput(val.toString())
+                applyStyle({ fontSize: val })
+              } else {
+                // Overlap — revert to current block value
+                setFontSizeInput((textBlock?.style.fontSize ?? 1).toString())
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur()
               }
             }}
             className="w-10 h-7 px-1 bg-white/10 border border-white/20 rounded text-sm text-center"
