@@ -218,15 +218,30 @@ export function Canvas() {
         // Tiny drag = click on empty canvas → clear selection
         selectBlock(null)
       } else {
-        // Find blocks within the selection rectangle
+        // Measure actual rendered block dimensions from DOM
+        const canvas = canvasRef.current
+        const canvasRect = canvas?.getBoundingClientRect()
+        const blockDims: Record<string, { w: number; h: number }> = {}
+        if (canvas && canvasRect) {
+          canvas.querySelectorAll<HTMLElement>('[data-block-id]').forEach(el => {
+            const id = el.getAttribute('data-block-id')
+            if (id) {
+              const rect = el.getBoundingClientRect()
+              blockDims[id] = {
+                w: (rect.width / canvasRect.width) * 100,
+                h: (rect.height / canvasRect.height) * canvasHeightPercent,
+              }
+            }
+          })
+        }
+
         const selectedIds = blocks
           .filter((block) => {
-            // Check if block intersects with selection
             const blockLeft = block.x
             const blockTop = block.y
-            // Approximate block size for hit testing
-            const blockRight = block.x + (block.width || 10)
-            const blockBottom = block.y + 5 // Approximate height
+            const dims = blockDims[block.id]
+            const blockRight = block.x + (dims?.w ?? (block.width || 10))
+            const blockBottom = block.y + (dims?.h ?? 5)
 
             return !(blockRight < left || blockLeft > right || blockBottom < top || blockTop > bottom)
           })
@@ -241,8 +256,9 @@ export function Canvas() {
       }
 
       setMarquee(null)
-      // Reset immediately - we've already handled deselection in mouseup
-      isMarqueeActive.current = false
+      // Delay reset so the subsequent click event still sees isMarqueeActive=true
+      // and doesn't clear the selection. Browser fires: mouseup → click
+      setTimeout(() => { isMarqueeActive.current = false }, 0)
     }
 
     document.addEventListener('mousemove', handleMouseMove)
