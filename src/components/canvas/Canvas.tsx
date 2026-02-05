@@ -99,8 +99,31 @@ export function Canvas() {
     return () => observer.disconnect()
   }, [blocks])
 
-  // Use whichever is larger: the fast estimate or the DOM measurement
-  const canvasHeightPx = Math.max(estimatedHeightPx, measuredHeightPx)
+  // --- Grow-only canvas height (prevents bounce from estimate→measure double-change) ---
+  // The height floor grows immediately but only shrinks after a debounce,
+  // so the estimate→measure transition never causes a visible two-step shift.
+  const [heightFloor, setHeightFloor] = useState(DESIGN_HEIGHT)
+  const shrinkTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  const targetHeight = Math.max(estimatedHeightPx, measuredHeightPx)
+  const canvasHeightPx = Math.max(targetHeight, heightFloor)
+
+  useEffect(() => {
+    const target = Math.max(estimatedHeightPx, measuredHeightPx)
+    if (target > heightFloor) {
+      // Growing — raise the floor immediately
+      setHeightFloor(target)
+      if (shrinkTimerRef.current) clearTimeout(shrinkTimerRef.current)
+    } else if (target < heightFloor) {
+      // Shrinking — debounce so fast-estimate drop + slow-measure catch-up
+      // don't cause two separate height changes
+      if (shrinkTimerRef.current) clearTimeout(shrinkTimerRef.current)
+      shrinkTimerRef.current = setTimeout(() => {
+        setHeightFloor(target)
+      }, 300)
+    }
+    return () => { if (shrinkTimerRef.current) clearTimeout(shrinkTimerRef.current) }
+  }, [estimatedHeightPx, measuredHeightPx, heightFloor])
 
   // For coordinate calculations, we need the height as a percentage (100 = one screen)
   const canvasHeightPercent = (canvasHeightPx / DESIGN_HEIGHT) * 100
@@ -502,6 +525,7 @@ export function Canvas() {
       <div
         ref={scrollContainerRef}
         className="h-screen w-full overflow-y-auto overflow-x-hidden bg-brand-dark"
+        style={{ overflowAnchor: 'auto' }}
         onClick={(e) => {
           // Click on page background (not canvas) also deselects
           if (e.target === e.currentTarget || e.target === scrollContainerRef.current) {
@@ -529,6 +553,7 @@ export function Canvas() {
             style={{
               width: `${DESIGN_WIDTH}px`,
               minHeight: `${canvasHeightPx}px`,
+              transition: 'min-height 150ms ease-out',
               transform: isMobileView
                 ? `scale(${scale}) translateX(-${mobileOffset}px)`
                 : `translateX(-50%) scale(${scale})`,
