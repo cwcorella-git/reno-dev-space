@@ -11,6 +11,7 @@ import {
   wrapSelectionWithStyle,
   wrapSelectionWithLink,
 } from '@/lib/selectionFormat'
+import { sanitizeHtml } from '@/lib/sanitize'
 import { EditableText } from '@/components/EditableText'
 import { useContent } from '@/contexts/ContentContext'
 import { checkDOMOverlap, estimateRectAfterFontSizeChange } from '@/lib/overlapDetection'
@@ -40,6 +41,7 @@ export function EditorTab() {
     selectedBlockId,
     selectedBlockIds,
     updateStyle,
+    updateContent,
     removeBlock,
   } = useCanvas()
   const [showColorPicker, setShowColorPicker] = useState(false)
@@ -134,17 +136,45 @@ export function EditorTab() {
   )
 
   // Apply link to selection
+  // prompt() destroys the selection and triggers blur, so we save the Range
+  // beforehand, restore it after, apply the link, then manually persist.
   const applyLink = useCallback(() => {
     const container = getSelectedBlockElement()
     if (!container) {
       alert(getText('editor.alert.selectText', 'Select some text first'))
       return
     }
-    const url = prompt(getText('editor.prompt.enterUrl', 'Enter URL:'))
-    if (url) {
-      wrapSelectionWithLink(url, container)
+
+    const selection = window.getSelection()
+    if (!selection || selection.isCollapsed || selection.rangeCount === 0) {
+      alert(getText('editor.alert.selectText', 'Select some text first'))
+      return
     }
-  }, [getText])
+
+    // Save the range before prompt() steals focus and destroys it
+    const savedRange = selection.getRangeAt(0).cloneRange()
+
+    const url = prompt(getText('editor.prompt.enterUrl', 'Enter URL:'))
+    if (!url) return
+
+    // Restore the selection (DOM still exists due to React batching)
+    try {
+      selection.removeAllRanges()
+      selection.addRange(savedRange)
+    } catch {
+      return
+    }
+
+    // Apply the link to the restored selection
+    if (!wrapSelectionWithLink(url, container)) return
+
+    // Persist: blur already saved old content, overwrite with linked version
+    const blockEl = container.closest('[data-block-id]')
+    const blockId = blockEl?.getAttribute('data-block-id')
+    if (blockId) {
+      updateContent(blockId, sanitizeHtml(container.innerHTML))
+    }
+  }, [getText, updateContent])
 
   // Close color picker on click outside
   useEffect(() => {
