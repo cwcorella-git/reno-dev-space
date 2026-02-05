@@ -69,57 +69,184 @@ input[type="number"] {
 .dash-dance-2 { animation: dash-flow-2 3s linear infinite; }
 .dash-dance-3 { animation: dash-flow-3 4.5s linear infinite; }
 
-/* ── Vote text effects ── */
+/* ════════════════════════════════════════════════════════════════════
+   Vote-driven text effects (11 total)
+   CSS custom properties set by voteEffects.ts on each block:
+     --fx-speed:     animation duration multiplier (0.5=fast, 1.8=slow)
+     --fx-color:     block's text color
+     --fx-intensity: 1-5, distance above activation threshold
+   ════════════════════════════════════════════════════════════════════ */
 
-/* Tier 1: Soft glow pulse */
-@keyframes vote-glow-pulse {
-  0%, 100% { filter: drop-shadow(0 0 2px var(--glow-color, currentColor)); }
-  50%      { filter: drop-shadow(0 0 8px var(--glow-color, currentColor)); }
+/* --- 1. Glow Pulse: pulsing text-shadow in block's color --- */
+@keyframes fx-glow-pulse {
+  0%, 100% { text-shadow: 0 0 4px var(--fx-color, currentColor); }
+  50%      { text-shadow: 0 0 calc(6px + var(--fx-intensity, 1) * 4px) var(--fx-color, currentColor),
+                          0 0 calc(12px + var(--fx-intensity, 1) * 6px) var(--fx-color, currentColor); }
+}
+.vote-fx-glow-pulse {
+  animation: fx-glow-pulse calc(2.5s * var(--fx-speed, 1)) ease-in-out infinite;
 }
 
-.vote-effect-glow {
-  animation: vote-glow-pulse 2.5s ease-in-out infinite;
+/* --- 2. Hue Cycle: slow color rotation + glow --- */
+@keyframes fx-hue-cycle {
+  0%   { filter: hue-rotate(0deg); }
+  100% { filter: hue-rotate(360deg); }
+}
+.vote-fx-hue-cycle {
+  animation: fx-hue-cycle calc(4s * var(--fx-speed, 1)) linear infinite;
+  text-shadow: 0 0 6px var(--fx-color, currentColor);
 }
 
-/* Tier 2: Shimmer — animated gradient across text */
-@keyframes vote-shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position: 200% center; }
-}
-
-.vote-effect-shimmer {
-  background-size: 200% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: vote-shimmer 3s linear infinite;
-}
-
-/* Tier 3: Color-cycle hue rotation */
-@keyframes vote-hue-rotate {
-  0%   { filter: hue-rotate(0deg) drop-shadow(0 0 6px var(--glow-color, currentColor)); }
-  100% { filter: hue-rotate(360deg) drop-shadow(0 0 6px var(--glow-color, currentColor)); }
-}
-
-.vote-effect-hue-cycle {
-  animation: vote-hue-rotate 4s linear infinite;
-}
-
-/* Tier 4: Vibrant rainbow gradient through text + glow */
-@keyframes vote-rainbow {
+/* --- 3. Rainbow: flowing gradient through letterforms --- */
+@keyframes fx-rainbow {
   0%   { background-position: 0% center; }
   100% { background-position: 300% center; }
 }
-
-.vote-effect-rainbow {
-  background: linear-gradient(
-    90deg,
-    #f87171, #fbbf24, #34d399, #22d3ee, #818cf8, #e879f9, #f87171
-  );
+.vote-fx-rainbow {
+  background: linear-gradient(90deg,
+    #f87171, #fbbf24, #34d399, #22d3ee, #818cf8, #e879f9, #f87171);
   background-size: 300% auto;
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: vote-rainbow 4s linear infinite;
-  filter: drop-shadow(0 0 10px rgba(129, 140, 248, 0.5));
+  animation: fx-rainbow calc(4s * var(--fx-speed, 1)) linear infinite;
+  filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.4));
+}
+
+/* --- 4. Shine: diagonal highlight sweeps across text --- */
+@keyframes fx-shine {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+.vote-fx-shine {
+  background: linear-gradient(
+    105deg,
+    var(--fx-color, currentColor) 30%,
+    rgba(255,255,255,0.8) 50%,
+    var(--fx-color, currentColor) 70%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fx-shine calc(3s * var(--fx-speed, 1)) linear infinite;
+}
+
+/* --- 5. Buzz: rapid micro-vibration --- */
+@keyframes fx-buzz {
+  0%   { transform: translate(0, 0); }
+  10%  { transform: translate(calc(-1px * var(--fx-intensity, 1)), calc(1px * var(--fx-intensity, 1))); }
+  20%  { transform: translate(calc(1px * var(--fx-intensity, 1)), calc(-1px * var(--fx-intensity, 1))); }
+  30%  { transform: translate(calc(-1px * var(--fx-intensity, 1)), 0); }
+  40%  { transform: translate(calc(1px * var(--fx-intensity, 1)), calc(1px * var(--fx-intensity, 1))); }
+  50%  { transform: translate(0, calc(-1px * var(--fx-intensity, 1))); }
+  60%  { transform: translate(calc(1px * var(--fx-intensity, 1)), 0); }
+  70%  { transform: translate(calc(-1px * var(--fx-intensity, 1)), calc(-1px * var(--fx-intensity, 1))); }
+  80%  { transform: translate(0, calc(1px * var(--fx-intensity, 1))); }
+  90%  { transform: translate(calc(1px * var(--fx-intensity, 1)), 0); }
+  100% { transform: translate(0, 0); }
+}
+.vote-fx-buzz {
+  animation: fx-buzz calc(0.4s * var(--fx-speed, 1)) linear infinite;
+}
+
+/* --- 6. Breathing: gentle scale pulse --- */
+@keyframes fx-breathing {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(calc(1 + 0.01 * var(--fx-intensity, 1))); }
+}
+.vote-fx-breathing {
+  animation: fx-breathing calc(3s * var(--fx-speed, 1)) ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* --- 7. Sparkle: twinkling dots at corners via pseudo-elements --- */
+@keyframes fx-sparkle-before {
+  0%, 100% { opacity: 0; transform: translate(-4px, -4px) scale(0); }
+  25%      { opacity: 1; transform: translate(-6px, -6px) scale(1); }
+  50%      { opacity: 0; transform: translate(-2px, -8px) scale(0.5); }
+}
+@keyframes fx-sparkle-after {
+  0%, 100% { opacity: 0; transform: translate(4px, 4px) scale(0); }
+  50%      { opacity: 1; transform: translate(6px, 2px) scale(1); }
+  75%      { opacity: 0; transform: translate(8px, -2px) scale(0.5); }
+}
+.vote-fx-sparkle {
+  position: relative;
+}
+.vote-fx-sparkle::before,
+.vote-fx-sparkle::after {
+  content: '';
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  background: var(--fx-color, white);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.vote-fx-sparkle::before {
+  top: 0; left: 0;
+  animation: fx-sparkle-before calc(1.5s * var(--fx-speed, 1)) ease-in-out infinite;
+}
+.vote-fx-sparkle::after {
+  bottom: 0; right: 0;
+  animation: fx-sparkle-after calc(1.8s * var(--fx-speed, 1)) ease-in-out infinite;
+}
+
+/* --- 8. Neon Flicker: intermittent brightness like a bad neon sign --- */
+@keyframes fx-neon-flicker {
+  0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {
+    text-shadow: 0 0 4px var(--fx-color, currentColor),
+                 0 0 calc(8px * var(--fx-intensity, 1)) var(--fx-color, currentColor);
+    opacity: 1;
+  }
+  20%, 24%, 55% {
+    text-shadow: none;
+    opacity: 0.7;
+  }
+}
+.vote-fx-neon-flicker {
+  animation: fx-neon-flicker calc(3s * var(--fx-speed, 1)) ease-in-out infinite;
+}
+
+/* --- 9. Glitch: color channel split + horizontal offset --- */
+@keyframes fx-glitch {
+  0%, 100% { text-shadow: none; transform: translate(0); }
+  10%      { text-shadow: calc(-2px * var(--fx-intensity, 1)) 0 #ff0000,
+                          calc(2px * var(--fx-intensity, 1)) 0 #00ffff;
+             transform: translate(calc(1px * var(--fx-intensity, 1)), 0); }
+  20%      { text-shadow: calc(2px * var(--fx-intensity, 1)) 0 #ff0000,
+                          calc(-2px * var(--fx-intensity, 1)) 0 #00ffff;
+             transform: translate(calc(-1px * var(--fx-intensity, 1)), 0); }
+  30%, 90% { text-shadow: none; transform: translate(0); }
+}
+.vote-fx-glitch {
+  animation: fx-glitch calc(2s * var(--fx-speed, 1)) steps(1, end) infinite;
+}
+
+/* --- 10. Shadow Depth: animated 3D text-shadow layers --- */
+@keyframes fx-shadow-depth {
+  0%, 100% {
+    text-shadow:
+      1px 1px 0 rgba(0,0,0,0.3),
+      calc(2px * var(--fx-intensity, 1)) calc(2px * var(--fx-intensity, 1)) 0 rgba(0,0,0,0.2);
+  }
+  50% {
+    text-shadow:
+      calc(3px * var(--fx-intensity, 1)) calc(3px * var(--fx-intensity, 1)) 0 rgba(0,0,0,0.3),
+      calc(5px * var(--fx-intensity, 1)) calc(5px * var(--fx-intensity, 1)) 0 rgba(0,0,0,0.15),
+      calc(7px * var(--fx-intensity, 1)) calc(7px * var(--fx-intensity, 1)) 0 rgba(0,0,0,0.08);
+  }
+}
+.vote-fx-shadow-depth {
+  animation: fx-shadow-depth calc(3s * var(--fx-speed, 1)) ease-in-out infinite;
+}
+
+/* --- 11. Blur Pulse: focus/unfocus camera effect --- */
+@keyframes fx-blur-pulse {
+  0%, 100% { filter: blur(0); }
+  50%      { filter: blur(calc(0.5px * var(--fx-intensity, 1))); }
+}
+.vote-fx-blur-pulse {
+  animation: fx-blur-pulse calc(3s * var(--fx-speed, 1)) ease-in-out infinite;
 }

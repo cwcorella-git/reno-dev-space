@@ -1,82 +1,100 @@
-import { TextBlock } from '@/types/canvas'
+import { TextBlock, TextEffectName, ALL_EFFECT_NAMES, TextEffectsSettings } from '@/types/canvas'
 
 /**
- * Vote-driven text effects system.
+ * Vote-driven text effects system (v2 — hash-based assignment).
  *
- * Instead of SVG outlines around blocks, this applies CSS effects
- * directly to the text: glows, shimmers, gradients, hue rotations.
- * Effects escalate with more upvotes across 4 tiers.
+ * Each block is deterministically assigned one of 11 CSS effects based on
+ * a hash of its Firestore document ID. The effect activates when the block's
+ * upvote count reaches the admin-configured threshold, and intensity scales
+ * with additional votes.
  *
- * Tier 0 — 0 upvotes:  No effects (just brightness/opacity)
- * Tier 1 — 1 upvote:   Static glow (text-shadow in block's color)
- * Tier 2 — 2 upvotes:  Pulsing glow animation
- * Tier 3 — 3-4 upvotes: Hue-cycling glow (color shifts + pulses)
- * Tier 4 — 5+ upvotes:  Rainbow gradient through letterforms + glow
+ * Admin controls (Firestore settings/textEffects):
+ *   enabled         — master on/off
+ *   disabledEffects — per-effect toggles
+ *   threshold       — min upvotes to activate (default: 2)
+ *   intensity       — animation speed: low (slow), medium, high (fast)
  */
 
 export interface VoteEffectResult {
-  /** Extra inline styles to merge onto the text element */
+  /** Extra inline styles (CSS custom properties for the animation) */
   style: React.CSSProperties
-  /** CSS class names to add (space-separated) */
+  /** CSS class name: vote-fx-{effectName} or empty */
   className: string
 }
 
-/**
- * Map upvote count to CSS effect properties.
- * Effects are cumulative-feeling but each tier replaces the previous.
- */
-export function getVoteEffects(upvotes: number, blockColor: string): VoteEffectResult {
-  // Tier 0: nothing
-  if (upvotes === 0) {
-    return { className: '', style: {} }
-  }
-
-  // Tier 1: static glow — just a colored text-shadow, no animation
-  // First vote gives the text a soft halo in its own color
-  if (upvotes === 1) {
-    return {
-      className: '',
-      style: {
-        textShadow: `0 0 6px ${blockColor}88, 0 0 12px ${blockColor}44`,
-      },
-    }
-  }
-
-  // Tier 2: pulsing glow — the shadow breathes in and out
-  if (upvotes === 2) {
-    return {
-      className: 'vote-effect-glow',
-      style: {
-        '--glow-color': blockColor,
-        textShadow: `0 0 8px ${blockColor}66`,
-      } as React.CSSProperties,
-    }
-  }
-
-  // Tier 3: hue-cycling glow — color slowly rotates, feels alive
-  if (upvotes <= 4) {
-    return {
-      className: 'vote-effect-hue-cycle',
-      style: {
-        '--glow-color': blockColor,
-        textShadow: `0 0 10px ${blockColor}88, 0 0 20px ${blockColor}44`,
-      } as React.CSSProperties,
-    }
-  }
-
-  // Tier 4: rainbow gradient through the text + glow
-  // The ultimate tier — text becomes a flowing rainbow
-  return {
-    className: 'vote-effect-rainbow',
-    style: {
-      textShadow: `0 0 12px rgba(129, 140, 248, 0.4), 0 0 24px rgba(129, 140, 248, 0.2)`,
-    },
-  }
+/** Speed multipliers: higher = slower animation */
+const INTENSITY_MULTIPLIER: Record<string, number> = {
+  low: 1.8,
+  medium: 1.0,
+  high: 0.5,
 }
 
 /**
- * Convenience: extract upvote count from a block.
+ * djb2 hash — fast, good distribution for short strings.
+ * Returns an unsigned 32-bit integer.
  */
+function hashString(str: string): number {
+  let hash = 5381
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash + str.charCodeAt(i)) >>> 0
+  }
+  return hash
+}
+
+/**
+ * Determine which effect a block gets based on its ID.
+ * Only picks from effects that are currently enabled.
+ */
+export function getEffectForBlock(
+  blockId: string,
+  settings: TextEffectsSettings
+): TextEffectName | null {
+  const enabledEffects = ALL_EFFECT_NAMES.filter(
+    (name) => !settings.disabledEffects.includes(name)
+  )
+  if (enabledEffects.length === 0) return null
+
+  const hash = hashString(blockId)
+  return enabledEffects[hash % enabledEffects.length]
+}
+
+/**
+ * Get the CSS class + inline styles for a block's vote-driven text effect.
+ *
+ * Returns empty when: master disabled, below threshold, editing, or
+ * the assigned effect is individually disabled.
+ */
+export function getVoteEffects(
+  blockId: string,
+  upvotes: number,
+  blockColor: string,
+  settings: TextEffectsSettings,
+  isEditing?: boolean
+): VoteEffectResult {
+  const empty: VoteEffectResult = { className: '', style: {} }
+
+  if (!settings.enabled) return empty
+  if (upvotes < settings.threshold) return empty
+  if (isEditing) return empty
+
+  const effect = getEffectForBlock(blockId, settings)
+  if (!effect) return empty
+
+  const speedMultiplier = INTENSITY_MULTIPLIER[settings.intensity] ?? 1.0
+  // Intensity: how far above threshold (1 = just reached, capped at 5)
+  const intensityScale = Math.min(upvotes - settings.threshold + 1, 5)
+
+  return {
+    className: `vote-fx-${effect}`,
+    style: {
+      '--fx-speed': `${speedMultiplier}`,
+      '--fx-color': blockColor,
+      '--fx-intensity': `${intensityScale}`,
+    } as React.CSSProperties,
+  }
+}
+
+/** Convenience: extract upvote count from a block */
 export function getUpvoteCount(block: TextBlock): number {
   return block.votersUp?.length ?? 0
 }

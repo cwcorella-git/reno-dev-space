@@ -6,6 +6,7 @@ import { sanitizeHtml } from '@/lib/sanitize'
 import { wrapSelectionWithTag } from '@/lib/selectionFormat'
 import { getVoteEffects, getUpvoteCount } from '@/lib/voteEffects'
 import { useContent } from '@/contexts/ContentContext'
+import { useEffects } from '@/contexts/EffectsContext'
 
 interface TextBlockRendererProps {
   block: TextBlock
@@ -21,6 +22,7 @@ export function TextBlockRenderer({
   onEditComplete,
 }: TextBlockRendererProps) {
   const { getText } = useContent()
+  const { settings: effectsSettings } = useEffects()
   const editorRef = useRef<HTMLDivElement>(null)
   // Check if empty (strip HTML tags to check for actual text content)
   const textContent = block.content?.replace(/<[^>]*>/g, '').trim() || ''
@@ -68,9 +70,9 @@ export function TextBlockRenderer({
     return legacyMap[font] || 'var(--font-inter)'
   }
 
-  // Vote-driven text effects (glow, shimmer, etc.)
+  // Vote-driven text effects (11 hash-assigned CSS animations)
   const upvotes = getUpvoteCount(block)
-  const voteEffects = getVoteEffects(upvotes, block.style.color)
+  const voteEffects = getVoteEffects(block.id, upvotes, block.style.color, effectsSettings, isEditing)
 
   const style = {
     fontSize: `${block.style.fontSize}rem`,

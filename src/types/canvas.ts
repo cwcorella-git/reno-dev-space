@@ -117,3 +117,49 @@ export const DEFAULT_BLOCK_SIZE = {
   width: 20,
   height: 0, // auto
 }
+
+// ── Vote-driven text effects ──────────────────────────────────────
+
+/** All available text effect names (11 total) */
+export type TextEffectName =
+  | 'glow-pulse'
+  | 'hue-cycle'
+  | 'rainbow'
+  | 'shine'
+  | 'buzz'
+  | 'breathing'
+  | 'sparkle'
+  | 'neon-flicker'
+  | 'glitch'
+  | 'shadow-depth'
+  | 'blur-pulse'
+
+/** Ordered list for iteration and hash-based assignment */
+export const ALL_EFFECT_NAMES: TextEffectName[] = [
+  'glow-pulse',
+  'hue-cycle',
+  'rainbow',
+  'shine',
+  'buzz',
+  'breathing',
+  'sparkle',
+  'neon-flicker',
+  'glitch',
+  'shadow-depth',
+  'blur-pulse',
+]
+
+/** Firestore document shape for settings/textEffects */
+export interface TextEffectsSettings {
+  enabled: boolean
+  disabledEffects: TextEffectName[]
+  threshold: number                        // Min upvotes to activate (default: 2)
+  intensity: 'low' | 'medium' | 'high'    // Animation speed multiplier
+}
+
+export const DEFAULT_EFFECTS_SETTINGS: TextEffectsSettings = {
+  enabled: true,
+  disabledEffects: [],
+  threshold: 2,
+  intensity: 'medium',
+}

@@ -17,6 +17,7 @@ import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CanvasProvider } from '@/contexts/CanvasContext'
 import { ContentProvider } from '@/contexts/ContentContext'
+import { EffectsProvider } from '@/contexts/EffectsContext'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const jetbrainsMono = JetBrains_Mono({ subsets: ['latin'], variable: '--font-jetbrains-mono' })
@@ -53,7 +54,9 @@ export default function RootLayout({
         <AuthProvider>
           <ContentProvider>
             <CanvasProvider>
-              {children}
+              <EffectsProvider>
+                {children}
+              </EffectsProvider>
             </CanvasProvider>
           </ContentProvider>
         </AuthProvider>
