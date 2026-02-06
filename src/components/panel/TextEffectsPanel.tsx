@@ -1,6 +1,7 @@
 'use client'
 
 import { useAuth } from '@/contexts/AuthContext'
+import { useContent } from '@/contexts/ContentContext'
 import { useEffects } from '@/contexts/EffectsContext'
 import { ALL_EFFECT_NAMES, TextEffectName } from '@/types/canvas'
 import { setEffectsEnabled, setDisabledEffects, setTestMode } from '@/lib/storage/effectsStorage'
@@ -19,12 +20,13 @@ const EFFECT_LABELS: Record<TextEffectName, string> = {
 
 export function TextEffectsPanel() {
   const { user, isAdmin } = useAuth()
+  const { getText } = useContent()
   const { settings } = useEffects()
 
   if (!user || !isAdmin) {
     return (
       <div className="p-4 text-center text-gray-400">
-        Admin access required
+        {getText('panel.admin.required', 'Admin access required')}
       </div>
     )
   }
@@ -54,12 +56,12 @@ export function TextEffectsPanel() {
           }`} />
         </button>
         <span className="text-sm text-white font-medium">
-          Celebrations {settings.enabled ? 'On' : 'Off'}
+          {getText('effects.toggle.celebrations', 'Celebrations')} {settings.enabled ? getText('effects.toggle.on', 'On') : getText('effects.toggle.off', 'Off')}
         </span>
       </div>
 
       <p className="text-xs text-gray-400">
-        One-shot effects that play when a block receives an upvote. Visible only to the voter.
+        {getText('effects.description', 'One-shot effects that play when a block receives an upvote. Visible only to the voter.')}
       </p>
 
       {/* Divider */}
@@ -92,8 +94,8 @@ export function TextEffectsPanel() {
       {/* Test Mode - unlimited voting with random effects */}
       <div className="flex items-center justify-between">
         <div>
-          <span className="text-sm text-white font-medium">Test Mode</span>
-          <p className="text-xs text-gray-400">Unlimited votes, random effects</p>
+          <span className="text-sm text-white font-medium">{getText('effects.testMode.label', 'Test Mode')}</span>
+          <p className="text-xs text-gray-400">{getText('effects.testMode.description', 'Unlimited votes, random effects')}</p>
         </div>
         <button
           onClick={() => setTestMode(!settings.testMode)}

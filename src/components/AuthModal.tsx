@@ -143,12 +143,14 @@ export function AuthModal({ onClose }: AuthModalProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                 </svg>
                 <div>
-                  <h3 className="text-green-200 font-semibold mb-1">Check your email</h3>
+                  <h3 className="text-green-200 font-semibold mb-1">
+                    {getText('auth.verification.header', 'Check your email')}
+                  </h3>
                   <p className="text-green-200/80 text-sm">
-                    We sent a verification link to <strong>{email}</strong>
+                    {getText('auth.verification.sentTo', 'We sent a verification link to')} <strong>{email}</strong>
                   </p>
                   <p className="text-green-200/60 text-xs mt-2">
-                    ⚠️ Check your spam folder — it often ends up there!
+                    ⚠️ {getText('auth.verification.checkSpam', 'Check your spam folder — it often ends up there!')}
                   </p>
                 </div>
               </div>
@@ -157,7 +159,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
               onClick={onClose}
               className="w-full bg-brand-primary hover:bg-brand-secondary text-white py-3 rounded-lg font-semibold transition-colors"
             >
-              Got it
+              {getText('auth.verification.gotIt', 'Got it')}
             </button>
           </div>
         ) : (

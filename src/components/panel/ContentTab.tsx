@@ -38,6 +38,11 @@ const DEFAULT_CONTENT: Array<{ id: string; category: string; description: string
   { id: 'auth.toggle.createAccount', category: 'auth', description: 'Create account link text', defaultValue: 'Create an account' },
   { id: 'auth.error.displayName', category: 'auth', description: 'Display name error', defaultValue: 'Please enter a display name' },
   { id: 'auth.error.pledgeAmount', category: 'auth', description: 'Pledge amount error', defaultValue: 'Please enter a pledge amount ($20 minimum)' },
+  { id: 'auth.error.banned', category: 'auth', description: 'Banned email error', defaultValue: 'This email address has been banned' },
+  { id: 'auth.verification.header', category: 'auth', description: 'Verification email header', defaultValue: 'Check your email' },
+  { id: 'auth.verification.sentTo', category: 'auth', description: 'Verification sent message', defaultValue: 'We sent a verification link to' },
+  { id: 'auth.verification.checkSpam', category: 'auth', description: 'Spam folder warning', defaultValue: 'Check your spam folder — it often ends up there!' },
+  { id: 'auth.verification.gotIt', category: 'auth', description: 'Got it button', defaultValue: 'Got it' },
   // Panel
   { id: 'panel.button.signIn', category: 'panel', description: 'Sign in button (logged out)', defaultValue: 'Sign In' },
   { id: 'panel.button.cancel', category: 'panel', description: 'Cancel add text button', defaultValue: 'Cancel' },
@@ -102,6 +107,16 @@ const DEFAULT_CONTENT: Array<{ id: string; category: string; description: string
   { id: 'profile.button.deleteContent', category: 'profile', description: 'Delete content button', defaultValue: 'Delete Content' },
   { id: 'profile.button.deleteAccount', category: 'profile', description: 'Delete account button', defaultValue: 'Delete Account' },
   { id: 'profile.button.signOut', category: 'profile', description: 'Sign out button', defaultValue: 'Sign Out' },
+  { id: 'profile.verification.notVerified', category: 'profile', description: 'Email not verified warning', defaultValue: 'Email not verified' },
+  { id: 'profile.verification.resend', category: 'profile', description: 'Resend verification button', defaultValue: 'Resend' },
+  { id: 'profile.verification.sent', category: 'profile', description: 'Verification sent success', defaultValue: 'Verification email sent! Check your spam folder.' },
+  // Effects
+  { id: 'effects.toggle.celebrations', category: 'effects', description: 'Celebrations toggle label', defaultValue: 'Celebrations' },
+  { id: 'effects.toggle.on', category: 'effects', description: 'On state', defaultValue: 'On' },
+  { id: 'effects.toggle.off', category: 'effects', description: 'Off state', defaultValue: 'Off' },
+  { id: 'effects.description', category: 'effects', description: 'Effects panel description', defaultValue: 'One-shot effects that play when a block receives an upvote. Visible only to the voter.' },
+  { id: 'effects.testMode.label', category: 'effects', description: 'Test Mode label', defaultValue: 'Test Mode' },
+  { id: 'effects.testMode.description', category: 'effects', description: 'Test Mode description', defaultValue: 'Unlimited votes, random effects' },
   // Campaign banner
   { id: 'campaign.banner.teaser', category: 'campaign', description: 'Inert banner teaser text', defaultValue: 'A campaign is brewing...' },
   { id: 'campaign.banner.ready', category: 'campaign', description: 'Ready to launch text', defaultValue: "We're ready to launch!" },

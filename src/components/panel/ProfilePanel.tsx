@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useContent } from '@/contexts/ContentContext'
 import { EditableText } from '@/components/EditableText'
 import { subscribeToCampaignSettings, CampaignSettings } from '@/lib/storage/campaignStorage'
 import { clearUserVotes, deleteUserBlocks, deleteUserAccount } from '@/lib/storage/userStorage'
@@ -9,6 +10,7 @@ import { subscribeToPledges, setPledge, deletePledge, calculatePledgeSummary, Pl
 
 export function ProfilePanel() {
   const { user, profile, isAdmin, logout, resendVerificationEmail } = useAuth()
+  const { getText } = useContent()
 
   const [pledges, setPledges] = useState<Pledge[]>([])
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
@@ -103,7 +105,7 @@ export function ProfilePanel() {
     setActionLoading(true)
     try {
       await resendVerificationEmail()
-      showStatus('success', 'Verification email sent! Check your spam folder.')
+      showStatus('success', getText('profile.verification.sent', 'Verification email sent! Check your spam folder.'))
     } catch {
       showStatus('error', 'Failed to send verification email')
     }
@@ -153,13 +155,13 @@ export function ProfilePanel() {
               <p className="text-xs text-gray-400">{user.email}</p>
               {!user.emailVerified && (
                 <div className="mt-1 flex items-center gap-2">
-                  <span className="text-xs text-amber-400">⚠️ Email not verified</span>
+                  <span className="text-xs text-amber-400">⚠️ {getText('profile.verification.notVerified', 'Email not verified')}</span>
                   <button
                     onClick={handleResendVerification}
                     disabled={actionLoading}
                     className="text-xs text-indigo-400 hover:text-indigo-300 underline"
                   >
-                    Resend
+                    {getText('profile.verification.resend', 'Resend')}
                   </button>
                 </div>
               )}
