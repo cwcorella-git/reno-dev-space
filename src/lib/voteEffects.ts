@@ -1,33 +1,12 @@
-import { TextBlock, TextEffectName, ALL_EFFECT_NAMES, TextEffectsSettings } from '@/types/canvas'
+import { TextEffectName, ALL_EFFECT_NAMES, TextEffectsSettings } from '@/types/canvas'
 
 /**
- * Vote-driven text effects system (v2 — hash-based assignment).
+ * Vote celebration effect assignment (hash-based).
  *
- * Each block is deterministically assigned one of 11 CSS effects based on
- * a hash of its Firestore document ID. The effect activates when the block's
- * upvote count reaches the admin-configured threshold, and intensity scales
- * with additional votes.
- *
- * Admin controls (Firestore settings/textEffects):
- *   enabled         — master on/off
- *   disabledEffects — per-effect toggles
- *   threshold       — min upvotes to activate (default: 2)
- *   intensity       — animation speed: low (slow), medium, high (fast)
+ * Each block is deterministically assigned one of the 8 celebration effects
+ * based on a hash of its Firestore document ID. The effect plays once when
+ * the block receives an upvote.
  */
-
-export interface VoteEffectResult {
-  /** Extra inline styles (CSS custom properties for the animation) */
-  style: React.CSSProperties
-  /** CSS class name: vote-fx-{effectName} or empty */
-  className: string
-}
-
-/** Speed multipliers: higher = slower animation */
-const INTENSITY_MULTIPLIER: Record<string, number> = {
-  low: 1.8,
-  medium: 1.0,
-  high: 0.5,
-}
 
 /**
  * djb2 hash — fast, good distribution for short strings.
@@ -42,7 +21,7 @@ function hashString(str: string): number {
 }
 
 /**
- * Determine which effect a block gets based on its ID.
+ * Determine which celebration effect a block gets based on its ID.
  * Only picks from effects that are currently enabled.
  */
 export function getEffectForBlock(
@@ -59,42 +38,12 @@ export function getEffectForBlock(
 }
 
 /**
- * Get the CSS class + inline styles for a block's vote-driven text effect.
- *
- * Returns empty when: master disabled, below threshold, editing, or
- * the assigned effect is individually disabled.
+ * Get the celebration effect for a block, or null if celebrations are off.
  */
-export function getVoteEffects(
+export function getCelebrationEffect(
   blockId: string,
-  upvotes: number,
-  blockColor: string,
-  settings: TextEffectsSettings,
-  isEditing?: boolean
-): VoteEffectResult {
-  const empty: VoteEffectResult = { className: '', style: {} }
-
-  if (!settings.enabled) return empty
-  if (upvotes < settings.threshold) return empty
-  if (isEditing) return empty
-
-  const effect = getEffectForBlock(blockId, settings)
-  if (!effect) return empty
-
-  const speedMultiplier = INTENSITY_MULTIPLIER[settings.intensity] ?? 1.0
-  // Intensity: how far above threshold (1 = just reached, capped at 5)
-  const intensityScale = Math.min(upvotes - settings.threshold + 1, 5)
-
-  return {
-    className: `vote-fx-${effect}`,
-    style: {
-      '--fx-speed': `${speedMultiplier}`,
-      '--fx-color': blockColor,
-      '--fx-intensity': `${intensityScale}`,
-    } as React.CSSProperties,
-  }
-}
-
-/** Convenience: extract upvote count from a block */
-export function getUpvoteCount(block: TextBlock): number {
-  return block.votersUp?.length ?? 0
+  settings: TextEffectsSettings
+): TextEffectName | null {
+  if (!settings.enabled) return null
+  return getEffectForBlock(blockId, settings)
 }

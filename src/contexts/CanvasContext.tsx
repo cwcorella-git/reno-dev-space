@@ -83,6 +83,10 @@ interface CanvasContextType {
   // Voting (any logged-in user)
   vote: (id: string, direction: 'up' | 'down') => Promise<boolean>
 
+  // Celebration (client-side only, fires on upvote)
+  celebratingBlockId: string | null
+  clearCelebration: () => void
+
   // Reporting
   report: (id: string) => Promise<void>
   dismissReport: (id: string) => Promise<void>
@@ -116,6 +120,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
   const [isGroupDragging, setIsGroupDragging] = useState(false)
   const [loading, setLoading] = useState(true)
   const [hasPledged, setHasPledged] = useState(false)
+  const [celebratingBlockId, setCelebratingBlockId] = useState<string | null>(null)
   const canvasRef = useRef<HTMLDivElement | null>(null)
 
   // History for undo/redo (session-only, stored in ref to avoid re-renders on every action)
@@ -594,6 +599,9 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
           if (selectedBlockId === id) {
             setSelectedBlockId(null)
           }
+        } else if (direction === 'up' && !isNoOp) {
+          // Trigger one-shot celebration for the voter
+          setCelebratingBlockId(id)
         }
         return wasDeleted
       } catch (error) {
@@ -603,6 +611,8 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     },
     [user, blocks, selectedBlockId, recordHistory]
   )
+
+  const clearCelebration = useCallback(() => setCelebratingBlockId(null), [])
 
   // Toggle report on a block
   const report = useCallback(
@@ -676,6 +686,8 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         bringBlockToFront,
         sendBlockToBack,
         vote,
+        celebratingBlockId,
+        clearCelebration,
         report,
         dismissReport,
         recordHistory,

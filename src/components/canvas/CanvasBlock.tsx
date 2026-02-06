@@ -3,11 +3,13 @@
 import { useCallback, useRef, useState, useEffect } from 'react'
 import { CanvasBlock as CanvasBlockType, isTextBlock } from '@/types/canvas'
 import { TextBlockRenderer } from './TextBlockRenderer'
+import { CelebrationOverlay } from './CelebrationOverlay'
 import { useCanvas, DESIGN_HEIGHT } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { useEffects } from '@/contexts/EffectsContext'
+import { getCelebrationEffect } from '@/lib/voteEffects'
 import { filterEditableBlocks } from '@/lib/permissions'
 import { wouldBlockOverlap, checkDOMOverlap } from '@/lib/overlapDetection'
-import { VoteOutlines } from './VoteOutlines'
 
 interface CanvasBlockProps {
   block: CanvasBlockType
@@ -32,6 +34,7 @@ export const OVERFLOW_RIGHT = 10  // Allow blocks to go 10% past right edge (110
 
 export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
   const { user, isAdmin } = useAuth()
+  const { settings: effectsSettings } = useEffects()
   const {
     blocks,
     selectedBlockId,
@@ -49,6 +52,8 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     updateContent,
     removeBlock,
     vote,
+    celebratingBlockId,
+    clearCelebration,
     report,
     dismissReport,
     recordHistory,
@@ -569,8 +574,19 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     >
       {renderContent()}
 
-      {/* SVG outlines disabled — text effects now applied inside TextBlockRenderer */}
-      {/* <VoteOutlines block={block} /> */}
+      {/* One-shot celebration overlay (visible only to voter) */}
+      {celebratingBlockId === block.id && (() => {
+        const effect = getCelebrationEffect(block.id, effectsSettings)
+        if (!effect) return null
+        const color = isTextBlock(block) ? block.style.color : '#818cf8'
+        return (
+          <CelebrationOverlay
+            effect={effect}
+            color={color}
+            onComplete={clearCelebration}
+          />
+        )
+      })()}
 
       {/* Vote arrows - right side, shown on hover for logged-in users */}
       {user && !isEditing && !isDragging && (

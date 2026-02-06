@@ -4,9 +4,7 @@ import { useRef, useEffect } from 'react'
 import { TextBlock, DEFAULT_BRIGHTNESS } from '@/types/canvas'
 import { sanitizeHtml } from '@/lib/sanitize'
 import { wrapSelectionWithTag } from '@/lib/selectionFormat'
-import { getVoteEffects, getUpvoteCount } from '@/lib/voteEffects'
 import { useContent } from '@/contexts/ContentContext'
-import { useEffects } from '@/contexts/EffectsContext'
 
 interface TextBlockRendererProps {
   block: TextBlock
@@ -22,7 +20,6 @@ export function TextBlockRenderer({
   onEditComplete,
 }: TextBlockRendererProps) {
   const { getText } = useContent()
-  const { settings: effectsSettings } = useEffects()
   const editorRef = useRef<HTMLDivElement>(null)
   // Check if empty (strip HTML tags to check for actual text content)
   const textContent = block.content?.replace(/<[^>]*>/g, '').trim() || ''
@@ -70,10 +67,6 @@ export function TextBlockRenderer({
     return legacyMap[font] || 'var(--font-inter)'
   }
 
-  // Vote-driven text effects (11 hash-assigned CSS animations)
-  const upvotes = getUpvoteCount(block)
-  const voteEffects = getVoteEffects(block.id, upvotes, block.style.color, effectsSettings, isEditing)
-
   const style = {
     fontSize: `${block.style.fontSize}rem`,
     fontWeight: block.style.fontWeight,
@@ -84,7 +77,6 @@ export function TextBlockRenderer({
     textAlign: block.style.textAlign as 'left' | 'center' | 'right',
     backgroundColor: block.style.backgroundColor || 'transparent',
     opacity,
-    ...voteEffects.style,
   }
 
   // Focus and set initial content when entering edit mode
@@ -151,7 +143,7 @@ export function TextBlockRenderer({
 
   return (
     <div
-      className={`whitespace-pre-wrap break-words ${voteEffects.className}`}
+      className="whitespace-pre-wrap break-words"
       style={style}
       dangerouslySetInnerHTML={{ __html: block.content }}
     />

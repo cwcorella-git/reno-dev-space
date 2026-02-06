@@ -118,48 +118,38 @@ export const DEFAULT_BLOCK_SIZE = {
   height: 0, // auto
 }
 
-// ── Vote-driven text effects ──────────────────────────────────────
+// ── Vote celebration effects (one-shot on upvote) ─────────────────
 
-/** All available text effect names (11 total) */
+/** All available celebration effect names (8 total) */
 export type TextEffectName =
-  | 'glow-pulse'
-  | 'hue-cycle'
-  | 'rainbow'
-  | 'shine'
-  | 'buzz'
-  | 'breathing'
-  | 'sparkle'
-  | 'neon-flicker'
-  | 'glitch'
-  | 'shadow-depth'
-  | 'blur-pulse'
+  | 'ring-burst'
+  | 'confetti-pop'
+  | 'glow-flash'
+  | 'bounce-pop'
+  | 'shimmer-sweep'
+  | 'sparkle-burst'
+  | 'ripple'
+  | 'star-shower'
 
 /** Ordered list for iteration and hash-based assignment */
 export const ALL_EFFECT_NAMES: TextEffectName[] = [
-  'glow-pulse',
-  'hue-cycle',
-  'rainbow',
-  'shine',
-  'buzz',
-  'breathing',
-  'sparkle',
-  'neon-flicker',
-  'glitch',
-  'shadow-depth',
-  'blur-pulse',
+  'ring-burst',
+  'confetti-pop',
+  'glow-flash',
+  'bounce-pop',
+  'shimmer-sweep',
+  'sparkle-burst',
+  'ripple',
+  'star-shower',
 ]
 
 /** Firestore document shape for settings/textEffects */
 export interface TextEffectsSettings {
   enabled: boolean
   disabledEffects: TextEffectName[]
-  threshold: number                        // Min upvotes to activate (default: 2)
-  intensity: 'low' | 'medium' | 'high'    // Animation speed multiplier
 }
 
 export const DEFAULT_EFFECTS_SETTINGS: TextEffectsSettings = {
   enabled: true,
   disabledEffects: [],
-  threshold: 2,
-  intensity: 'medium',
 }

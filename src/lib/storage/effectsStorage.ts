@@ -58,13 +58,3 @@ export async function setDisabledEffects(disabledEffects: TextEffectName[]): Pro
   const db = getDb()
   await updateDoc(doc(db, SETTINGS_COLLECTION, EFFECTS_DOC), { disabledEffects })
 }
-
-export async function setEffectsThreshold(threshold: number): Promise<void> {
-  const db = getDb()
-  await updateDoc(doc(db, SETTINGS_COLLECTION, EFFECTS_DOC), { threshold })
-}
-
-export async function setEffectsIntensity(intensity: 'low' | 'medium' | 'high'): Promise<void> {
-  const db = getDb()
-  await updateDoc(doc(db, SETTINGS_COLLECTION, EFFECTS_DOC), { intensity })
-}
