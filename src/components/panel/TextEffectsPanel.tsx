@@ -11,9 +11,10 @@ const EFFECT_LABELS: Record<TextEffectName, string> = {
   'ring-burst':     'Ring Burst',
   'confetti-pop':   'Confetti Pop',
   'glow-flash':     'Glow Flash',
-  'pulse-pop':      'Pulse Pop',
+  'bounce-pop':     'Bounce Pop',
   'shimmer-sweep':  'Shimmer Sweep',
   'sparkle-burst':  'Sparkle Burst',
+  'ripple':         'Ripple',
   'star-shower':    'Star Shower',
 }
 

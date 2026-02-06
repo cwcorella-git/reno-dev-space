@@ -120,14 +120,15 @@ export const DEFAULT_BLOCK_SIZE = {
 
 // ── Vote celebration effects (one-shot on upvote) ─────────────────
 
-/** All available celebration effect names (7 total) */
+/** All available celebration effect names (8 total) */
 export type TextEffectName =
   | 'ring-burst'
   | 'confetti-pop'
   | 'glow-flash'
-  | 'pulse-pop'
+  | 'bounce-pop'
   | 'shimmer-sweep'
   | 'sparkle-burst'
+  | 'ripple'
   | 'star-shower'
 
 /** Ordered list for iteration and hash-based assignment */
@@ -135,9 +136,10 @@ export const ALL_EFFECT_NAMES: TextEffectName[] = [
   'ring-burst',
   'confetti-pop',
   'glow-flash',
-  'pulse-pop',
+  'bounce-pop',
   'shimmer-sweep',
   'sparkle-burst',
+  'ripple',
   'star-shower',
 ]
 
