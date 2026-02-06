@@ -3,7 +3,7 @@
 import { useAuth } from '@/contexts/AuthContext'
 import { useEffects } from '@/contexts/EffectsContext'
 import { ALL_EFFECT_NAMES, TextEffectName } from '@/types/canvas'
-import { setEffectsEnabled, setDisabledEffects } from '@/lib/storage/effectsStorage'
+import { setEffectsEnabled, setDisabledEffects, setTestMode } from '@/lib/storage/effectsStorage'
 
 /** Human-friendly labels for each celebration effect */
 const EFFECT_LABELS: Record<TextEffectName, string> = {
@@ -84,6 +84,27 @@ export function TextEffectsPanel() {
             </button>
           )
         })}
+      </div>
+
+      {/* Divider */}
+      <div className="border-t border-white/10" />
+
+      {/* Test Mode - unlimited voting with random effects */}
+      <div className="flex items-center justify-between">
+        <div>
+          <span className="text-sm text-white font-medium">Test Mode</span>
+          <p className="text-xs text-gray-400">Unlimited votes, random effects</p>
+        </div>
+        <button
+          onClick={() => setTestMode(!settings.testMode)}
+          className={`relative w-10 h-5 rounded-full transition-colors ${
+            settings.testMode ? 'bg-amber-500' : 'bg-white/20'
+          }`}
+        >
+          <span className={`absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform ${
+            settings.testMode ? 'translate-x-5' : ''
+          }`} />
+        </button>
       </div>
     </div>
   )

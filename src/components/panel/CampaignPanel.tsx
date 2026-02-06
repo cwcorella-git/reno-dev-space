@@ -12,8 +12,6 @@ import {
   CampaignSettings,
 } from '@/lib/storage/campaignStorage'
 import { resetAllBrightness } from '@/lib/storage/canvasStorage'
-import { subscribeToEffectsSettings, setTestMode } from '@/lib/storage/effectsStorage'
-import { TextEffectsSettings, DEFAULT_EFFECTS_SETTINGS } from '@/types/canvas'
 import { useContent } from '@/contexts/ContentContext'
 import { EditableText } from '@/components/EditableText'
 
@@ -22,7 +20,6 @@ export function CampaignPanel() {
   const { getText } = useContent()
 
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
-  const [effectsSettings, setEffectsSettings] = useState<TextEffectsSettings>(DEFAULT_EFFECTS_SETTINGS)
   const [actionLoading, setActionLoading] = useState(false)
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [confirmAction, setConfirmAction] = useState<string | null>(null)
@@ -33,11 +30,7 @@ export function CampaignPanel() {
       setSettings(s)
       setGoalInput(s.fundingGoal.toString())
     })
-    const unsubEffects = subscribeToEffectsSettings(setEffectsSettings)
-    return () => {
-      unsubSettings()
-      unsubEffects()
-    }
+    return () => unsubSettings()
   }, [])
 
   if (!user || !isAdmin) {
@@ -146,21 +139,6 @@ export function CampaignPanel() {
                 <EditableText id="campaign.button.resetVotes" defaultValue="Reset Votes" category="campaign" />
               </button>
             </div>
-          </div>
-
-          {/* Test Mode - unlimited voting with random effects */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400">Test Effects</span>
-            <button
-              onClick={() => setTestMode(!effectsSettings.testMode)}
-              className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
-                effectsSettings.testMode
-                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                  : 'bg-white/10 hover:bg-white/20 text-gray-300'
-              }`}
-            >
-              {effectsSettings.testMode ? 'On' : 'Off'}
-            </button>
           </div>
 
           {/* Goal */}
