@@ -578,6 +578,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
           effect={celebratingEffect}
           color={isTextBlock(block) ? block.style.color : '#818cf8'}
           onComplete={clearCelebration}
+          showLabel={isAdmin}
         />
       )}
 

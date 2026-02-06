@@ -82,6 +82,28 @@ input[type="number"] {
   z-index: 100;
 }
 
+/* Effect name label (admin only) */
+@keyframes celebrate-label-fade {
+  0% { opacity: 1; transform: translateY(0); }
+  70% { opacity: 1; transform: translateY(-8px); }
+  100% { opacity: 0; transform: translateY(-16px); }
+}
+.celebrate-label {
+  position: absolute;
+  top: -24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  white-space: nowrap;
+  animation: celebrate-label-fade 1s ease-out forwards;
+  z-index: 101;
+}
+
 /* --- 1. Ring Burst: expanding ring from center --- */
 @keyframes celebrate-ring-burst {
   0% {

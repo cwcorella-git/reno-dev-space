@@ -2,13 +2,26 @@
 
 import { TextEffectName } from '@/types/canvas'
 
+/** Human-friendly labels for display */
+const EFFECT_LABELS: Record<TextEffectName, string> = {
+  'ring-burst':     'Ring Burst',
+  'confetti-pop':   'Confetti Pop',
+  'glow-flash':     'Glow Flash',
+  'bounce-pop':     'Bounce Pop',
+  'shimmer-sweep':  'Shimmer Sweep',
+  'sparkle-burst':  'Sparkle Burst',
+  'ripple':         'Ripple',
+  'star-shower':    'Star Shower',
+}
+
 interface CelebrationOverlayProps {
   effect: TextEffectName
   color: string
   onComplete: () => void
+  showLabel?: boolean  // Admin-only: flash the effect name
 }
 
-export function CelebrationOverlay({ effect, color, onComplete }: CelebrationOverlayProps) {
+export function CelebrationOverlay({ effect, color, onComplete, showLabel }: CelebrationOverlayProps) {
   return (
     <div
       className={`celebrate-overlay celebrate-${effect}`}
@@ -19,6 +32,12 @@ export function CelebrationOverlay({ effect, color, onComplete }: CelebrationOve
           onComplete()
         }
       }}
-    />
+    >
+      {showLabel && (
+        <span className="celebrate-label">
+          {EFFECT_LABELS[effect]}
+        </span>
+      )}
+    </div>
   )
 }
