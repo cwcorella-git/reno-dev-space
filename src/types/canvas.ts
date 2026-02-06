@@ -147,9 +147,11 @@ export const ALL_EFFECT_NAMES: TextEffectName[] = [
 export interface TextEffectsSettings {
   enabled: boolean
   disabledEffects: TextEffectName[]
+  testMode?: boolean  // Admin testing: unlimited votes, random effects
 }
 
 export const DEFAULT_EFFECTS_SETTINGS: TextEffectsSettings = {
   enabled: true,
   disabledEffects: [],
+  testMode: false,
 }

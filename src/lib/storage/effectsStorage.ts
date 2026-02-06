@@ -58,3 +58,8 @@ export async function setDisabledEffects(disabledEffects: TextEffectName[]): Pro
   const db = getDb()
   await updateDoc(doc(db, SETTINGS_COLLECTION, EFFECTS_DOC), { disabledEffects })
 }
+
+export async function setTestMode(testMode: boolean): Promise<void> {
+  const db = getDb()
+  await updateDoc(doc(db, SETTINGS_COLLECTION, EFFECTS_DOC), { testMode })
+}

@@ -10,7 +10,10 @@ import {
   RefObject,
   useRef,
 } from 'react'
-import { CanvasBlock, TextBlock, VOTE_BRIGHTNESS_CHANGE } from '@/types/canvas'
+import { CanvasBlock, TextBlock, TextEffectName, VOTE_BRIGHTNESS_CHANGE } from '@/types/canvas'
+import { getCelebrationEffect, getRandomEffect } from '@/lib/voteEffects'
+import { subscribeToEffectsSettings } from '@/lib/storage/effectsStorage'
+import { TextEffectsSettings, DEFAULT_EFFECTS_SETTINGS } from '@/types/canvas'
 
 // History entry for undo/redo (session-only)
 interface HistoryEntry {
@@ -85,6 +88,7 @@ interface CanvasContextType {
 
   // Celebration (client-side only, fires on upvote)
   celebratingBlockId: string | null
+  celebratingEffect: TextEffectName | null
   clearCelebration: () => void
 
   // Reporting
@@ -121,6 +125,8 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const [hasPledged, setHasPledged] = useState(false)
   const [celebratingBlockId, setCelebratingBlockId] = useState<string | null>(null)
+  const [celebratingEffect, setCelebratingEffect] = useState<TextEffectName | null>(null)
+  const [effectsSettings, setEffectsSettings] = useState<TextEffectsSettings>(DEFAULT_EFFECTS_SETTINGS)
   const canvasRef = useRef<HTMLDivElement | null>(null)
 
   // History for undo/redo (session-only, stored in ref to avoid re-renders on every action)
@@ -151,6 +157,13 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     )
 
     return () => unsubscribe()
+  }, [])
+
+  // Subscribe to effects settings (for test mode)
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const unsub = subscribeToEffectsSettings(setEffectsSettings)
+    return () => unsub()
   }, [])
 
   // Subscribe to pledges to determine canAddText
@@ -574,6 +587,14 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         const block = blocks.find(b => b.id === id)
         if (!block) return false
 
+        // Test mode: skip actual voting, just trigger random celebration on upvote
+        if (effectsSettings.testMode && direction === 'up') {
+          const effect = getRandomEffect(effectsSettings)
+          setCelebratingBlockId(id)
+          setCelebratingEffect(effect)
+          return false
+        }
+
         // We must detect no-ops BEFORE recordHistory because recordHistory pushes
         // synchronously. If we recorded first and checked voteBrightness (async) after,
         // the user could Ctrl+Z during the await and undo a phantom entry.
@@ -601,7 +622,9 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
           }
         } else if (direction === 'up' && !isNoOp) {
           // Trigger one-shot celebration for the voter
+          const effect = getCelebrationEffect(id, effectsSettings)
           setCelebratingBlockId(id)
+          setCelebratingEffect(effect)
         }
         return wasDeleted
       } catch (error) {
@@ -609,10 +632,13 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         return false
       }
     },
-    [user, blocks, selectedBlockId, recordHistory]
+    [user, blocks, selectedBlockId, recordHistory, effectsSettings]
   )
 
-  const clearCelebration = useCallback(() => setCelebratingBlockId(null), [])
+  const clearCelebration = useCallback(() => {
+    setCelebratingBlockId(null)
+    setCelebratingEffect(null)
+  }, [])
 
   // Toggle report on a block
   const report = useCallback(
@@ -687,6 +713,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         sendBlockToBack,
         vote,
         celebratingBlockId,
+        celebratingEffect,
         clearCelebration,
         report,
         dismissReport,

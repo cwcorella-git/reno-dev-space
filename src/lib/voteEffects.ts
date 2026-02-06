@@ -47,3 +47,15 @@ export function getCelebrationEffect(
   if (!settings.enabled) return null
   return getEffectForBlock(blockId, settings)
 }
+
+/**
+ * Get a random enabled effect (for test mode).
+ */
+export function getRandomEffect(settings: TextEffectsSettings): TextEffectName | null {
+  if (!settings.enabled) return null
+  const enabledEffects = ALL_EFFECT_NAMES.filter(
+    (name) => !settings.disabledEffects.includes(name)
+  )
+  if (enabledEffects.length === 0) return null
+  return enabledEffects[Math.floor(Math.random() * enabledEffects.length)]
+}
