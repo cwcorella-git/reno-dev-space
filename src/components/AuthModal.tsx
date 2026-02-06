@@ -21,6 +21,7 @@ export function AuthModal({ onClose }: AuthModalProps) {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [signupSuccess, setSignupSuccess] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -53,6 +54,10 @@ export function AuthModal({ onClose }: AuthModalProps) {
           return
         }
         await signup(email, password, displayName, pledge)
+        // Show verification email sent message
+        setSignupSuccess(true)
+        setLoading(false)
+        return
       } else {
         // Login first, then check ban (requires auth to read Firestore)
         await login(email, password)
@@ -129,7 +134,34 @@ export function AuthModal({ onClose }: AuthModalProps) {
           )}
         </p>
 
-        {/* Form */}
+        {/* Signup success - verification email sent */}
+        {signupSuccess ? (
+          <div className="space-y-4">
+            <div className="bg-green-500/20 border border-green-500/50 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <svg className="w-6 h-6 text-green-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <div>
+                  <h3 className="text-green-200 font-semibold mb-1">Check your email</h3>
+                  <p className="text-green-200/80 text-sm">
+                    We sent a verification link to <strong>{email}</strong>
+                  </p>
+                  <p className="text-green-200/60 text-xs mt-2">
+                    ⚠️ Check your spam folder — it often ends up there!
+                  </p>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={onClose}
+              className="w-full bg-brand-primary hover:bg-brand-secondary text-white py-3 rounded-lg font-semibold transition-colors"
+            >
+              Got it
+            </button>
+          </div>
+        ) : (
+        /* Form */
         <form onSubmit={handleSubmit} className="space-y-4">
           {mode === 'signup' && (
             <div>
@@ -250,31 +282,34 @@ export function AuthModal({ onClose }: AuthModalProps) {
             )}
           </button>
         </form>
+        )}
 
-        {/* Toggle mode */}
-        <div className="mt-6 text-center text-sm text-gray-400">
-          {mode === 'signup' ? (
-            <>
-              <EditableText id="auth.toggle.hasAccount" defaultValue="Already have an account?" category="auth" />{' '}
-              <button
-                onClick={() => setMode('login')}
-                className="text-brand-accent hover:underline"
-              >
-                <EditableText id="auth.toggle.signIn" defaultValue="Sign in" category="auth" />
-              </button>
-            </>
-          ) : (
-            <>
-              <EditableText id="auth.toggle.newHere" defaultValue="New here?" category="auth" />{' '}
-              <button
-                onClick={() => setMode('signup')}
-                className="text-brand-accent hover:underline"
-              >
-                <EditableText id="auth.toggle.createAccount" defaultValue="Create an account" category="auth" />
-              </button>
-            </>
-          )}
-        </div>
+        {/* Toggle mode - only show when not in success state */}
+        {!signupSuccess && (
+          <div className="mt-6 text-center text-sm text-gray-400">
+            {mode === 'signup' ? (
+              <>
+                <EditableText id="auth.toggle.hasAccount" defaultValue="Already have an account?" category="auth" />{' '}
+                <button
+                  onClick={() => setMode('login')}
+                  className="text-brand-accent hover:underline"
+                >
+                  <EditableText id="auth.toggle.signIn" defaultValue="Sign in" category="auth" />
+                </button>
+              </>
+            ) : (
+              <>
+                <EditableText id="auth.toggle.newHere" defaultValue="New here?" category="auth" />{' '}
+                <button
+                  onClick={() => setMode('signup')}
+                  className="text-brand-accent hover:underline"
+                >
+                  <EditableText id="auth.toggle.createAccount" defaultValue="Create an account" category="auth" />
+                </button>
+              </>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

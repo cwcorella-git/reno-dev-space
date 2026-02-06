@@ -8,7 +8,7 @@ import { clearUserVotes, deleteUserBlocks, deleteUserAccount } from '@/lib/stora
 import { subscribeToPledges, setPledge, deletePledge, calculatePledgeSummary, Pledge } from '@/lib/storage/pledgeStorage'
 
 export function ProfilePanel() {
-  const { user, profile, isAdmin, logout } = useAuth()
+  const { user, profile, isAdmin, logout, resendVerificationEmail } = useAuth()
 
   const [pledges, setPledges] = useState<Pledge[]>([])
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
@@ -99,6 +99,17 @@ export function ProfilePanel() {
     setActionLoading(false)
   }
 
+  const handleResendVerification = async () => {
+    setActionLoading(true)
+    try {
+      await resendVerificationEmail()
+      showStatus('success', 'Verification email sent! Check your spam folder.')
+    } catch {
+      showStatus('error', 'Failed to send verification email')
+    }
+    setActionLoading(false)
+  }
+
   return (
     <div className="max-h-[400px] overflow-y-auto">
       {statusMessage && (
@@ -140,6 +151,18 @@ export function ProfilePanel() {
             <div>
               <p className="font-medium text-white">{displayName}</p>
               <p className="text-xs text-gray-400">{user.email}</p>
+              {!user.emailVerified && (
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-xs text-amber-400">⚠️ Email not verified</span>
+                  <button
+                    onClick={handleResendVerification}
+                    disabled={actionLoading}
+                    className="text-xs text-indigo-400 hover:text-indigo-300 underline"
+                  >
+                    Resend
+                  </button>
+                </div>
+              )}
             </div>
             {isAdmin && <span className="text-xs bg-amber-600/50 text-amber-200 px-2 py-0.5 rounded"><EditableText id="profile.badge.admin" defaultValue="Admin" category="profile" /></span>}
           </div>

@@ -8,6 +8,7 @@ import {
   signOut,
   onAuthStateChanged,
   updateProfile,
+  sendEmailVerification,
 } from 'firebase/auth'
 import { doc, setDoc, getDoc, onSnapshot as onDocSnapshot } from 'firebase/firestore'
 import { getAuth, getDb } from '@/lib/firebase'
@@ -33,6 +34,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>
+  resendVerificationEmail: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -124,6 +126,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Update Firebase Auth profile
     await updateProfile(user, { displayName })
 
+    // Send verification email
+    await sendEmailVerification(user)
+
     // Create Firestore profile
     const userProfile: UserProfile = {
       uid: user.uid,
@@ -166,10 +171,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const resendVerificationEmail = async () => {
+    if (!user) return
+    await sendEmailVerification(user)
+  }
+
   const isAdmin = checkIsAdmin(user?.email, adminEmails)
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, isAdmin, adminEmails, signup, login, logout, updateUserProfile }}>
+    <AuthContext.Provider value={{ user, profile, loading, isAdmin, adminEmails, signup, login, logout, updateUserProfile, resendVerificationEmail }}>
       {children}
     </AuthContext.Provider>
   )
