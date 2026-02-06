@@ -135,6 +135,11 @@ export function MembersTab() {
                     <span className={`font-medium truncate max-w-[100px] ${!hasPledge && !isCurrentUser ? 'text-gray-400' : ''}`}>
                       {u.displayName}
                     </span>
+                    {u.emailVerified && (
+                      <span className="text-[10px] text-sky-400" title="Email verified">
+                        ✓
+                      </span>
+                    )}
                     {isCurrentUser && (
                       <span className="text-[10px] bg-indigo-600 px-1.5 py-0.5 rounded text-white">
                         <EditableText id="members.badge.you" defaultValue="you" category="members" />

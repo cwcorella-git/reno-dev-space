@@ -30,6 +30,7 @@ export interface UserProfile {
   displayName: string
   bio?: string
   createdAt: number
+  emailVerified?: boolean
 }
 
 export interface UserStats {

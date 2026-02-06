@@ -10,7 +10,7 @@ import {
   updateProfile,
   sendEmailVerification,
 } from 'firebase/auth'
-import { doc, setDoc, getDoc, onSnapshot as onDocSnapshot } from 'firebase/firestore'
+import { doc, setDoc, getDoc, updateDoc, onSnapshot as onDocSnapshot } from 'firebase/firestore'
 import { getAuth, getDb } from '@/lib/firebase'
 import { isAdmin as checkIsAdmin } from '@/lib/admin'
 import { subscribeToAdmins } from '@/lib/storage/adminStorage'
@@ -22,6 +22,7 @@ interface UserProfile {
   displayName: string
   bio?: string
   createdAt: number
+  emailVerified?: boolean
 }
 
 interface AuthContextType {
@@ -78,7 +79,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           const onProfileSnapshot = async (snap: import('firebase/firestore').DocumentSnapshot) => {
             if (snap.exists()) {
-              setProfile(snap.data() as UserProfile)
+              const profileData = snap.data() as UserProfile
+              setProfile(profileData)
+
+              // Sync emailVerified from Firebase Auth to Firestore if it changed
+              if (user.emailVerified && !profileData.emailVerified) {
+                updateDoc(doc(db, 'users', user.uid), { emailVerified: true }).catch(() => {})
+              }
             } else {
               // Profile was deleted (admin cascade) — force sign out
               setProfile(null)
