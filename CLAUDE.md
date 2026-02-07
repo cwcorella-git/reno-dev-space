@@ -369,6 +369,30 @@ node scripts/delete-user.js
 node scripts/randomize-fonts.js
 ```
 
+### Backup & Restore
+
+```bash
+# Export all Firestore data + Auth users to JSON
+node scripts/backup-firestore.js
+# Output: scripts/backups/backup-YYYY-MM-DD-HHmmss/
+
+# Preview what would be restored (no changes made)
+node scripts/restore-firestore.js scripts/backups/backup-2024-01-15-143022 --dry-run
+
+# Restore all collections from backup
+node scripts/restore-firestore.js scripts/backups/backup-2024-01-15-143022
+
+# Restore only a specific collection
+node scripts/restore-firestore.js scripts/backups/backup-2024-01-15-143022 --collection canvasBlocks
+```
+
+**Backup contents:**
+- `firestore.json` — All 11 collections (canvasBlocks, users, pledges, etc.)
+- `auth-users.json` — Firebase Auth user metadata (passwords cannot be exported)
+- `manifest.json` — Backup stats and timestamp
+
+**Recommended schedule:** Run weekly or before major changes. Store backups off-site (Google Drive, S3, etc.).
+
 ### Playwright E2E Tests
 
 ```bash

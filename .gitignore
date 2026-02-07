@@ -37,6 +37,9 @@ yarn-error.log*
 **/serviceAccountKey.json
 **/service-account*.json
 
+# Firestore backups (contain sensitive data)
+scripts/backups/
+
 # Vercel
 .vercel
 
