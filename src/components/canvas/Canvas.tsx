@@ -549,7 +549,7 @@ export function Canvas() {
           {/* On mobile: offset so safe zone center aligns with container */}
           <div
             ref={canvasRef}
-            className={`relative bg-brand-dark ${marquee ? 'select-none' : ''}`}
+            className="relative bg-brand-dark select-none"
             style={{
               width: `${DESIGN_WIDTH}px`,
               minHeight: `${canvasHeightPx}px`,

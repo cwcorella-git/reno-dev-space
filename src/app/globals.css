@@ -22,6 +22,14 @@ body {
     );
   min-height: 100vh;
   overflow: hidden;
+  user-select: none; /* Prevent accidental text selection except in editable fields */
+  -webkit-user-select: none;
+}
+
+/* Allow text selection in editable fields */
+input, textarea, [contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
 }
 
 /* Custom scrollbar for chat */
