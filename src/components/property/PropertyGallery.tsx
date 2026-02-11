@@ -41,7 +41,7 @@ export function PropertyGallery() {
     return (
       <div
         className="absolute left-1/2 -translate-x-1/2"
-        style={{ top: '66.7%', width: '375px' }}
+        style={{ top: '66.7%', width: '340px' }}
       >
         <div className="px-4 py-4 text-center text-gray-400">
           <p className="text-sm">Loading properties...</p>
@@ -55,7 +55,7 @@ export function PropertyGallery() {
       <>
         <div
           className="absolute left-1/2 -translate-x-1/2 border border-white/10 rounded-lg"
-          style={{ top: '66.7%', width: '375px' }}
+          style={{ top: '66.7%', width: '340px' }}
         >
           <div className="px-4 py-4 text-center">
             <p className="text-sm text-gray-400 mb-2">No rental properties yet. Be the first to suggest one!</p>
@@ -84,7 +84,7 @@ export function PropertyGallery() {
     <>
       <div
         className="absolute left-1/2 -translate-x-1/2 border border-white/10 rounded-lg"
-        style={{ top: '66.7%', width: '375px' }}
+        style={{ top: '66.7%', width: '340px' }}
       >
         <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-3">

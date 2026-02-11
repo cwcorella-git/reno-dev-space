@@ -111,7 +111,7 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
       <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
 
       {/* Modal */}
-      <div className="relative bg-gray-900 border border-white/10 rounded-2xl shadow-2xl w-[90%] max-w-md max-h-[85vh] overflow-y-auto p-6">
+      <div className="relative bg-gray-900 border border-white/10 rounded-2xl shadow-2xl w-[90%] max-w-[340px] max-h-[85vh] overflow-y-auto p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-bold text-white">Add Rental Property</h2>
