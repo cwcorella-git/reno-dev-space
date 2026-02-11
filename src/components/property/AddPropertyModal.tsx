@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, DragEvent, useEffect } from 'react'
+import { useState, useRef, DragEvent } from 'react'
 import { addProperty } from '@/lib/storage/propertyStorage'
 import { useAuth } from '@/contexts/AuthContext'
 import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline'
@@ -101,14 +101,6 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
     }
   }
 
-  // Disable body scrolling when modal is open
-  useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = ''
-    }
-  }, [])
-
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
@@ -118,11 +110,8 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
       {/* Backdrop */}
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal - wider and fits between banner (56px) and panel (160px) */}
-      <div
-        className="relative bg-gray-900 border border-white/10 rounded-2xl shadow-2xl w-[95%] max-w-[600px] overflow-y-auto p-6"
-        style={{ maxHeight: 'calc(100vh - 240px)' }}
-      >
+      {/* Modal - matches panel width exactly, no scrolling */}
+      <div className="relative bg-gray-900 border border-white/10 rounded-2xl shadow-2xl w-[calc(100%-1rem)] sm:min-w-[500px] sm:max-w-[700px] p-6">
         {/* Header */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-1">

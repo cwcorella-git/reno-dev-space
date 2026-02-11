@@ -7,11 +7,15 @@ import { useAuth } from '@/contexts/AuthContext'
 import { PropertyCarousel } from './PropertyCarousel'
 import { AddPropertyModal } from './AddPropertyModal'
 
-export function PropertyGallery() {
+interface PropertyGalleryProps {
+  showAddModal: boolean
+  onShowAddModalChange: (show: boolean) => void
+}
+
+export function PropertyGallery({ showAddModal, onShowAddModalChange }: PropertyGalleryProps) {
   const [properties, setProperties] = useState<RentalProperty[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
-  const [showAddModal, setShowAddModal] = useState(false)
   const { user } = useAuth()
 
   // Subscribe to properties
@@ -61,7 +65,7 @@ export function PropertyGallery() {
             <p className="text-sm text-gray-400 mb-2">No rental properties yet. Be the first to suggest one!</p>
             {user && (
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={() => onShowAddModalChange(true)}
                 className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 Add Property
@@ -72,8 +76,8 @@ export function PropertyGallery() {
 
         {showAddModal && (
           <AddPropertyModal
-            onClose={() => setShowAddModal(false)}
-            onSuccess={() => setShowAddModal(false)}
+            onClose={() => onShowAddModalChange(false)}
+            onSuccess={() => onShowAddModalChange(false)}
           />
         )}
       </>
@@ -91,7 +95,7 @@ export function PropertyGallery() {
             <h3 className="text-sm font-semibold text-white">Potential Spaces</h3>
             {user && (
               <button
-                onClick={() => setShowAddModal(true)}
+                onClick={() => onShowAddModalChange(true)}
                 className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
               >
                 + Add Property
@@ -109,12 +113,12 @@ export function PropertyGallery() {
 
       {showAddModal && (
         <AddPropertyModal
-          onClose={() => setShowAddModal(false)}
+          onClose={() => onShowAddModalChange(false)}
           onSuccess={(propertyId) => {
             // Jump to newly added property
             const idx = properties.findIndex(p => p.id === propertyId)
             if (idx !== -1) setCurrentIndex(idx)
-            setShowAddModal(false)
+            onShowAddModalChange(false)
           }}
         />
       )}

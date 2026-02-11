@@ -61,6 +61,9 @@ export function Canvas() {
   const [isMobileView, setIsMobileView] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
+  // Property modal state (lifted to control panel visibility and scrolling)
+  const [showPropertyModal, setShowPropertyModal] = useState(false)
+
   // Fast initial estimate based on block Y positions (before DOM is available)
   const estimatedHeightPx = useMemo(() => {
     if (blocks.length === 0) return DESIGN_HEIGHT
@@ -158,6 +161,30 @@ export function Canvas() {
     window.addEventListener('resize', updateScale)
     return () => window.removeEventListener('resize', updateScale)
   }, [])
+
+  // Lock scrolling when property modal is open
+  useEffect(() => {
+    if (showPropertyModal) {
+      // Disable body scrolling
+      document.body.style.overflow = 'hidden'
+      // Disable canvas scrolling
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.style.overflow = 'hidden'
+      }
+    } else {
+      // Restore scrolling
+      document.body.style.overflow = ''
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.style.overflow = 'auto'
+      }
+    }
+    return () => {
+      document.body.style.overflow = ''
+      if (scrollContainerRef.current) {
+        scrollContainerRef.current.style.overflow = 'auto'
+      }
+    }
+  }, [showPropertyModal])
 
   const handleCanvasClick = useCallback(
     (e: React.MouseEvent) => {
@@ -679,7 +706,10 @@ export function Canvas() {
           )}
 
             {/* Rental property gallery */}
-            <PropertyGallery />
+            <PropertyGallery
+              showAddModal={showPropertyModal}
+              onShowAddModalChange={setShowPropertyModal}
+            />
           </div>
         </div>
       </div>
@@ -704,7 +734,7 @@ export function Canvas() {
       )}
 
       {/* Unified panel with editor + chat tabs */}
-      <UnifiedPanel />
+      {!showPropertyModal && <UnifiedPanel />}
 
       {/* Intro hint for non-logged-in users */}
       {!user && <IntroHint />}
