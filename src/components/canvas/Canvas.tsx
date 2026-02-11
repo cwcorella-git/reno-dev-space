@@ -678,6 +678,8 @@ export function Canvas() {
             </div>
           )}
 
+            {/* Rental property gallery */}
+            <PropertyGallery />
           </div>
         </div>
       </div>
@@ -703,9 +705,6 @@ export function Canvas() {
 
       {/* Unified panel with editor + chat tabs */}
       <UnifiedPanel />
-
-      {/* Rental property gallery */}
-      <PropertyGallery />
 
       {/* Intro hint for non-logged-in users */}
       {!user && <IntroHint />}
