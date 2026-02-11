@@ -5,14 +5,12 @@ import { RentalProperty } from '@/types/property'
 import { subscribeToProperties } from '@/lib/storage/propertyStorage'
 import { useAuth } from '@/contexts/AuthContext'
 import { PropertyCarousel } from './PropertyCarousel'
-import { AddPropertyModal } from './AddPropertyModal'
 
 interface PropertyGalleryProps {
-  showAddModal: boolean
-  onShowAddModalChange: (show: boolean) => void
+  onAddPropertyClick: () => void
 }
 
-export function PropertyGallery({ showAddModal, onShowAddModalChange }: PropertyGalleryProps) {
+export function PropertyGallery({ onAddPropertyClick }: PropertyGalleryProps) {
   const [properties, setProperties] = useState<RentalProperty[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
   const [loading, setLoading] = useState(true)
@@ -65,7 +63,7 @@ export function PropertyGallery({ showAddModal, onShowAddModalChange }: Property
             <p className="text-sm text-gray-400 mb-2">No rental properties yet. Be the first to suggest one!</p>
             {user && (
               <button
-                onClick={() => onShowAddModalChange(true)}
+                onClick={onAddPropertyClick}
                 className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
               >
                 Add Property
@@ -73,13 +71,6 @@ export function PropertyGallery({ showAddModal, onShowAddModalChange }: Property
             )}
           </div>
         </div>
-
-        {showAddModal && (
-          <AddPropertyModal
-            onClose={() => onShowAddModalChange(false)}
-            onSuccess={() => onShowAddModalChange(false)}
-          />
-        )}
       </>
     )
   }
@@ -95,7 +86,7 @@ export function PropertyGallery({ showAddModal, onShowAddModalChange }: Property
             <h3 className="text-sm font-semibold text-white">Potential Spaces</h3>
             {user && (
               <button
-                onClick={() => onShowAddModalChange(true)}
+                onClick={onAddPropertyClick}
                 className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
               >
                 + Add Property
@@ -110,18 +101,6 @@ export function PropertyGallery({ showAddModal, onShowAddModalChange }: Property
           />
         </div>
       </div>
-
-      {showAddModal && (
-        <AddPropertyModal
-          onClose={() => onShowAddModalChange(false)}
-          onSuccess={(propertyId) => {
-            // Jump to newly added property
-            const idx = properties.findIndex(p => p.id === propertyId)
-            if (idx !== -1) setCurrentIndex(idx)
-            onShowAddModalChange(false)
-          }}
-        />
-      )}
     </>
   )
 }

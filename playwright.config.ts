@@ -20,8 +20,8 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3000/reno-dev-space',
-    // Dev server serves at /reno-dev-space due to Next.js basePath
+    url: 'http://localhost:3000',
+    // Dev server serves at root in development (basePath only in production)
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
   },

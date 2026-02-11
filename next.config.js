@@ -15,8 +15,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  basePath: '/reno-dev-space',
-  assetPrefix: '/reno-dev-space/',
+  // Only use basePath in production (for GitHub Pages)
+  basePath: process.env.NODE_ENV === 'production' ? '/reno-dev-space' : '',
+  assetPrefix: process.env.NODE_ENV === 'production' ? '/reno-dev-space/' : '',
   env: {
     NEXT_PUBLIC_COMMIT_SHA: commitSha,
     NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),

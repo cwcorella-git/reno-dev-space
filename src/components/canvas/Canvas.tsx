@@ -9,6 +9,7 @@ import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
 import { PropertyGallery } from '@/components/property/PropertyGallery'
+import { AddPropertyModal } from '@/components/property/AddPropertyModal'
 import { incrementPageViews } from '@/lib/storage/campaignStorage'
 import { wouldOverlap, wouldOverlapDOM } from '@/lib/overlapDetection'
 import { filterEditableBlocks } from '@/lib/permissions'
@@ -706,13 +707,18 @@ export function Canvas() {
           )}
 
             {/* Rental property gallery */}
-            <PropertyGallery
-              showAddModal={showPropertyModal}
-              onShowAddModalChange={setShowPropertyModal}
-            />
+            <PropertyGallery onAddPropertyClick={() => setShowPropertyModal(true)} />
           </div>
         </div>
       </div>
+
+      {/* Property modal - rendered outside canvas to avoid transform issues */}
+      {showPropertyModal && (
+        <AddPropertyModal
+          onClose={() => setShowPropertyModal(false)}
+          onSuccess={() => setShowPropertyModal(false)}
+        />
+      )}
 
       {/* Context Menu */}
       {contextMenu && (
