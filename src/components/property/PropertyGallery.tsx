@@ -39,8 +39,11 @@ export function PropertyGallery() {
 
   if (loading) {
     return (
-      <div className="w-full">
-        <div className="max-w-4xl mx-auto px-4 py-4 text-center text-gray-400">
+      <div
+        className="absolute left-1/2 -translate-x-1/2"
+        style={{ top: '66.7%', width: '375px' }}
+      >
+        <div className="px-4 py-4 text-center text-gray-400">
           <p className="text-sm">Loading properties...</p>
         </div>
       </div>
@@ -50,8 +53,11 @@ export function PropertyGallery() {
   if (properties.length === 0) {
     return (
       <>
-        <div className="w-full bg-gradient-to-r from-slate-900/95 via-gray-900/95 to-slate-900/95 backdrop-blur-sm border-t border-white/10 mt-8">
-          <div className="max-w-4xl mx-auto px-4 py-4 text-center">
+        <div
+          className="absolute left-1/2 -translate-x-1/2 border border-white/10 rounded-lg"
+          style={{ top: '66.7%', width: '375px' }}
+        >
+          <div className="px-4 py-4 text-center">
             <p className="text-sm text-gray-400 mb-2">No rental properties yet. Be the first to suggest one!</p>
             {user && (
               <button
@@ -76,8 +82,11 @@ export function PropertyGallery() {
 
   return (
     <>
-      <div className="w-full bg-gradient-to-r from-slate-900/95 via-gray-900/95 to-slate-900/95 backdrop-blur-sm border-t border-white/10 mt-8">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+      <div
+        className="absolute left-1/2 -translate-x-1/2 border border-white/10 rounded-lg"
+        style={{ top: '66.7%', width: '375px' }}
+      >
+        <div className="px-4 py-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-white">Potential Spaces</h3>
             {user && (

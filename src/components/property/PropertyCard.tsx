@@ -15,7 +15,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
   return (
     <div
-      className={`group relative rounded-xl overflow-hidden bg-white/5 backdrop-blur-sm border border-white/10 transition-all duration-300 ${
+      className={`group relative rounded-lg overflow-hidden border border-white/10 transition-all duration-300 ${
         isArchived ? 'grayscale' : ''
       }`}
       style={{ opacity }}
@@ -32,9 +32,9 @@ export function PropertyCard({ property }: PropertyCardProps) {
       {/* Vote controls (right side, hover-to-reveal) */}
       <PropertyVoteControls property={property} />
 
-      <div className="flex flex-col md:flex-row gap-4 p-4">
-        {/* Image (60% width on desktop) */}
-        <div className="w-full md:w-3/5 flex-shrink-0">
+      <div className="flex flex-col gap-3 p-3">
+        {/* Image */}
+        <div className="w-full">
           <img
             src={property.imageUrl}
             alt={property.address}
@@ -42,22 +42,20 @@ export function PropertyCard({ property }: PropertyCardProps) {
           />
         </div>
 
-        {/* Details (40% width on desktop) */}
-        <div className="flex-1 flex flex-col justify-between">
-          <div>
-            <h4 className="font-semibold text-white text-lg mb-2">{property.address}</h4>
+        {/* Details */}
+        <div>
+          <h4 className="font-semibold text-white text-base mb-1">{property.address}</h4>
 
-            <p className="text-indigo-300 font-medium mb-3">
-              {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : '???'}
-            </p>
+          <p className="text-indigo-300 font-medium text-sm mb-2">
+            {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : '???'}
+          </p>
 
-            <p className="text-sm text-gray-300 leading-relaxed">
-              {property.description}
-            </p>
-          </div>
+          <p className="text-xs text-gray-300 leading-relaxed mb-2">
+            {property.description}
+          </p>
 
           {/* Metadata */}
-          <div className="mt-4 text-xs text-gray-500">
+          <div className="text-xs text-gray-500">
             <p>Added {new Date(property.createdAt).toLocaleDateString()}</p>
           </div>
         </div>
