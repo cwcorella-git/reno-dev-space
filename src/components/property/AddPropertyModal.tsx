@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, DragEvent } from 'react'
+import { useState, useRef, DragEvent, useEffect } from 'react'
 import { addProperty } from '@/lib/storage/propertyStorage'
 import { useAuth } from '@/contexts/AuthContext'
 import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline'
@@ -101,6 +101,14 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
     }
   }
 
+  // Disable body scrolling when modal is open
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center"
@@ -108,29 +116,38 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
       onKeyDown={handleKeyDown}
     >
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
 
-      {/* Modal */}
-      <div className="relative bg-gray-900 border border-white/10 rounded-2xl shadow-2xl w-[90%] max-w-[340px] max-h-[85vh] overflow-y-auto p-6">
+      {/* Modal - wider and fits between banner (56px) and panel (160px) */}
+      <div
+        className="relative bg-gray-900 border border-white/10 rounded-2xl shadow-2xl w-[95%] max-w-[600px] overflow-y-auto p-6"
+        style={{ maxHeight: 'calc(100vh - 240px)' }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-bold text-white">Add Rental Property</h2>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/10 transition-colors text-gray-400 hover:text-white"
-            aria-label="Close"
-          >
-            <XMarkIcon className="w-5 h-5" />
-          </button>
+        <div className="mb-4">
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-xl font-bold text-white">Add Rental Property</h2>
+            <button
+              onClick={onClose}
+              className="w-9 h-9 flex items-center justify-center rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-gray-300 hover:text-white"
+              aria-label="Close"
+              title="Close (ESC)"
+            >
+              <XMarkIcon className="w-6 h-6" />
+            </button>
+          </div>
+          <p className="text-xs text-gray-500">
+            Press <kbd className="px-1.5 py-0.5 bg-gray-800 border border-gray-700 rounded text-gray-400">ESC</kbd> to close or click outside
+          </p>
         </div>
 
         {/* Image Upload Zone */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-300 mb-1.5">
             Image <span className="text-red-400">*</span>
           </label>
           {imagePreview ? (
-            <div className="relative">
+            <div className="relative max-w-md mx-auto">
               <img
                 src={imagePreview}
                 alt="Property preview"
@@ -149,7 +166,7 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
             </div>
           ) : (
             <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors cursor-pointer ${
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
                 dragActive
                   ? 'border-indigo-500 bg-indigo-500/10'
                   : 'border-white/20 hover:border-white/40'
@@ -179,8 +196,8 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
         </div>
 
         {/* Address */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-300 mb-1.5">
             Address <span className="text-red-400">*</span>
           </label>
           <input
@@ -194,8 +211,8 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
         </div>
 
         {/* Cost */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-300 mb-1.5">
             Monthly Rent (optional)
           </label>
           <div className="relative">
@@ -213,32 +230,32 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
               disabled={uploading}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 mt-0.5">
             Leave blank to show &quot;???&quot;
           </p>
         </div>
 
         {/* Description */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-300 mb-2">
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-300 mb-1.5">
             Why is this a good space? <span className="text-red-400">*</span>
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Great location near downtown, 1500 sq ft, flexible lease terms..."
-            rows={4}
+            rows={3}
             className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"
             disabled={uploading}
           />
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-xs text-gray-500 mt-0.5">
             {description.length} / 20 characters minimum
           </p>
         </div>
 
         {/* Error */}
         {error && (
-          <div className="mb-4 p-3 bg-red-600/20 border border-red-600/50 rounded-lg text-sm text-red-300">
+          <div className="mb-3 p-2.5 bg-red-600/20 border border-red-600/50 rounded-lg text-sm text-red-300">
             {error}
           </div>
         )}
