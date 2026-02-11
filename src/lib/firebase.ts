@@ -1,6 +1,7 @@
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app'
 import { getAuth, Auth } from 'firebase/auth'
 import { getFirestore, Firestore } from 'firebase/firestore'
+import { getStorage, FirebaseStorage } from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -15,6 +16,7 @@ const firebaseConfig = {
 let app: FirebaseApp | null = null
 let auth: Auth | null = null
 let db: Firestore | null = null
+let storage: FirebaseStorage | null = null
 
 function getApp(): FirebaseApp {
   if (typeof window === 'undefined') {
@@ -44,8 +46,15 @@ function getDbInstance(): Firestore {
   return db
 }
 
+function getStorageInstance(): FirebaseStorage {
+  if (!storage) {
+    storage = getStorage(getApp())
+  }
+  return storage
+}
+
 // Export getters that lazily initialize
-export { getAuthInstance as getAuth, getDbInstance as getDb }
+export { getAuthInstance as getAuth, getDbInstance as getDb, getStorageInstance as getStorageClient }
 
 // For backwards compatibility - these will throw on SSR but work on client
 export const authGetter = {

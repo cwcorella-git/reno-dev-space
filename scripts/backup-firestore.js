@@ -34,6 +34,7 @@ const COLLECTIONS = [
   'deletedBlocks',
   'blockEdits',
   'donations',
+  'rentalProperties',
 ]
 
 // Load service account

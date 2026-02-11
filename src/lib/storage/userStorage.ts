@@ -18,6 +18,7 @@ import { getDb, getAuth } from '../firebase'
 import { increment } from 'firebase/firestore'
 import { VOTE_BRIGHTNESS_CHANGE, DEFAULT_BRIGHTNESS, CanvasBlock } from '@/types/canvas'
 import { logDeletion } from './deletionStorage'
+import { clearUserPropertyVotes, deleteUserProperties } from './propertyStorage'
 
 const BLOCKS_COLLECTION = 'canvasBlocks'
 const USERS_COLLECTION = 'users'
@@ -202,12 +203,14 @@ export async function deleteUserAccount(uid: string): Promise<{
   votesCleared: number
   blocksDeleted: number
   messagesDeleted: number
+  propertiesDeleted: number
 }> {
   const db = getDb()
   const auth = getAuth()
 
-  // 1. Clear votes
+  // 1. Clear votes (canvas blocks + properties)
   const votesCleared = await clearUserVotes(uid)
+  const propertyVotesCleared = await clearUserPropertyVotes(uid)
 
   // 2. Delete blocks
   const blocksDeleted = await deleteUserBlocks(uid)
@@ -215,18 +218,21 @@ export async function deleteUserAccount(uid: string): Promise<{
   // 3. Delete messages
   const messagesDeleted = await deleteUserMessages(uid)
 
-  // 4. Delete pledge
+  // 4. Delete properties
+  const propertiesDeleted = await deleteUserProperties(uid)
+
+  // 5. Delete pledge
   await deleteUserPledge(uid)
 
-  // 5. Delete user profile from Firestore
+  // 6. Delete user profile from Firestore
   await deleteDoc(doc(db, USERS_COLLECTION, uid))
 
-  // 6. Delete Firebase Auth user (must be done by the user themselves)
+  // 7. Delete Firebase Auth user (must be done by the user themselves)
   if (auth.currentUser && auth.currentUser.uid === uid) {
     await deleteUser(auth.currentUser)
   }
 
-  return { votesCleared, blocksDeleted, messagesDeleted }
+  return { votesCleared: votesCleared + propertyVotesCleared, blocksDeleted, messagesDeleted, propertiesDeleted }
 }
 
 // Admin delete user (cascade but no auth deletion - user will be locked out)
@@ -234,11 +240,13 @@ export async function adminDeleteUser(uid: string): Promise<{
   votesCleared: number
   blocksDeleted: number
   messagesDeleted: number
+  propertiesDeleted: number
 }> {
   const db = getDb()
 
-  // 1. Clear votes
+  // 1. Clear votes (canvas blocks + properties)
   const votesCleared = await clearUserVotes(uid)
+  const propertyVotesCleared = await clearUserPropertyVotes(uid)
 
   // 2. Delete blocks
   const blocksDeleted = await deleteUserBlocks(uid)
@@ -246,14 +254,17 @@ export async function adminDeleteUser(uid: string): Promise<{
   // 3. Delete messages
   const messagesDeleted = await deleteUserMessages(uid)
 
-  // 4. Delete pledge
+  // 4. Delete properties
+  const propertiesDeleted = await deleteUserProperties(uid)
+
+  // 5. Delete pledge
   await deleteUserPledge(uid)
 
-  // 5. Delete user profile from Firestore
+  // 6. Delete user profile from Firestore
   await deleteDoc(doc(db, USERS_COLLECTION, uid))
 
   // Note: Firebase Auth user remains but profile is gone
   // They can't do anything without a profile, and if banned they can't re-sign up
 
-  return { votesCleared, blocksDeleted, messagesDeleted }
+  return { votesCleared: votesCleared + propertyVotesCleared, blocksDeleted, messagesDeleted, propertiesDeleted }
 }

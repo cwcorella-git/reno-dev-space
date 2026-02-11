@@ -8,6 +8,7 @@ import { getRandomColor } from '@/types/canvas'
 import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
+import { PropertyGallery } from '@/components/property/PropertyGallery'
 import { incrementPageViews } from '@/lib/storage/campaignStorage'
 import { wouldOverlap, wouldOverlapDOM } from '@/lib/overlapDetection'
 import { filterEditableBlocks } from '@/lib/permissions'
@@ -702,6 +703,9 @@ export function Canvas() {
 
       {/* Unified panel with editor + chat tabs */}
       <UnifiedPanel />
+
+      {/* Rental property gallery */}
+      <PropertyGallery />
 
       {/* Intro hint for non-logged-in users */}
       {!user && <IntroHint />}
