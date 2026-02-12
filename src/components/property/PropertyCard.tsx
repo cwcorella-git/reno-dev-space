@@ -3,18 +3,39 @@
 import { useState } from 'react'
 import { RentalProperty, ARCHIVE_THRESHOLD } from '@/types/property'
 import { PropertyVoteControls } from './PropertyVoteControls'
-import { MagnifyingGlassIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, XMarkIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { useAuth } from '@/contexts/AuthContext'
+import { deleteProperty } from '@/lib/storage/propertyStorage'
 
 interface PropertyCardProps {
   property: RentalProperty
 }
 
 export function PropertyCard({ property }: PropertyCardProps) {
+  const { user, isAdmin } = useAuth()
   const [showImageModal, setShowImageModal] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const isArchived = property.brightness <= ARCHIVE_THRESHOLD
 
   // Map brightness to opacity (0-100 → 0.4-1.0)
   const opacity = isArchived ? 0.5 : 0.4 + (property.brightness / 100) * 0.6
+
+  // Check if user can delete (creator or admin)
+  const canDelete = user && (property.createdBy === user.uid || isAdmin)
+
+  const handleDelete = async () => {
+    setIsDeleting(true)
+    try {
+      await deleteProperty(property.id)
+      setShowDeleteConfirm(false)
+    } catch (error) {
+      console.error('[PropertyCard] Failed to delete property:', error)
+      alert('Failed to delete property. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <>
@@ -35,6 +56,18 @@ export function PropertyCard({ property }: PropertyCardProps) {
 
         {/* Vote controls (right side, hover-to-reveal) */}
         <PropertyVoteControls property={property} />
+
+        {/* Delete button (left side, hover-to-reveal, creator or admin only) */}
+        {canDelete && (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="absolute left-3 top-3 z-10 w-9 h-9 rounded-lg flex items-center justify-center transition-all opacity-0 group-hover:opacity-100 bg-red-600/90 hover:bg-red-700 text-white shadow-lg"
+            aria-label="Delete property"
+            title="Delete property"
+          >
+            <TrashIcon className="w-5 h-5" />
+          </button>
+        )}
 
         <div className="flex flex-col gap-3 p-3">
           {/* Image with expand button */}
@@ -116,6 +149,46 @@ export function PropertyCard({ property }: PropertyCardProps) {
               <p className="text-indigo-300 text-sm">
                 {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : 'Contact for Pricing'}
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div
+          className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+          onClick={() => !isDeleting && setShowDeleteConfirm(false)}
+        >
+          <div
+            className="relative bg-gray-900 border border-red-600/50 rounded-xl shadow-2xl max-w-md w-full p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-white font-bold text-lg mb-3">Delete Property?</h3>
+            <p className="text-gray-300 text-sm mb-2">
+              Are you sure you want to delete this property?
+            </p>
+            <p className="text-gray-400 text-xs mb-6">
+              <strong className="text-white">{property.address}</strong>
+              <br />
+              This will permanently delete the property and its image. This action cannot be undone.
+            </p>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50 font-medium"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete Property'}
+              </button>
             </div>
           </div>
         </div>
