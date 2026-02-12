@@ -114,14 +114,14 @@ test.describe('Property Voting', () => {
     await expect(downvoteButton).toHaveClass(/bg-red-600/)
   })
 
-  test('should neutralize by voting opposite direction', async ({ page }) => {
+  test('should neutralize upvote by voting down (opposite direction)', async ({ page }) => {
     await page.click('text=Potential Spaces')
     await page.waitForSelector('[aria-label="Vote up"]', { timeout: 5000 })
 
     const brightnessText = await page.locator('.font-mono.text-white.font-semibold').first().textContent()
     const initialBrightness = parseInt(brightnessText || '50')
 
-    // Upvote first
+    // Upvote first (+5)
     await page.click('[aria-label="Vote up"]')
     await page.waitForTimeout(1000)
 
@@ -129,43 +129,47 @@ test.describe('Property Voting', () => {
     let currentBrightness = parseInt(currentBrightnessText || '50')
     expect(currentBrightness).toBe(initialBrightness + 5)
 
-    // Downvote to switch (neutralize upvote and apply downvote)
+    // Vote down to neutralize (back to original, not downvote)
     await page.click('[aria-label="Vote down"]')
     await page.waitForTimeout(1000)
 
-    // Should be initial - 5 (removed upvote and applied downvote: net -10 from upvoted state)
+    // Should return to initial brightness (neutralized)
     currentBrightnessText = await page.locator('.font-mono.text-white.font-semibold').first().textContent()
     currentBrightness = parseInt(currentBrightnessText || '50')
-    expect(currentBrightness).toBe(initialBrightness - 5)
+    expect(currentBrightness).toBe(initialBrightness)
 
-    // Downvote button should be active
-    const downvoteButton = page.locator('[aria-label="Remove downvote"]').first()
-    await expect(downvoteButton).toHaveClass(/bg-red-600/)
+    // Both buttons should be inactive (neutral state)
+    const upvoteButton = page.locator('[aria-label="Vote up"]').first()
+    await expect(upvoteButton).toHaveClass(/bg-white\/10/)
   })
 
-  test('should switch from upvote to downvote (net -10 swing)', async ({ page }) => {
+  test('should neutralize downvote by voting up (opposite direction)', async ({ page }) => {
     await page.click('text=Potential Spaces')
-    await page.waitForSelector('[aria-label="Vote up"]', { timeout: 5000 })
+    await page.waitForSelector('[aria-label="Vote down"]', { timeout: 5000 })
 
     const brightnessText = await page.locator('.font-mono.text-white.font-semibold').first().textContent()
     const initialBrightness = parseInt(brightnessText || '50')
 
-    // Upvote first
-    await page.click('[aria-label="Vote up"]')
+    // Downvote first (-5)
+    await page.click('[aria-label="Vote down"]')
     await page.waitForTimeout(1000)
 
     let currentBrightnessText = await page.locator('.font-mono.text-white.font-semibold').first().textContent()
     let currentBrightness = parseInt(currentBrightnessText || '50')
-    expect(currentBrightness).toBe(initialBrightness + 5)
+    expect(currentBrightness).toBe(initialBrightness - 5)
 
-    // Switch to downvote
-    await page.click('[aria-label="Vote down"]')
+    // Vote up to neutralize (back to original, not upvote)
+    await page.click('[aria-label="Vote up"]')
     await page.waitForTimeout(1000)
 
-    // Should be initial - 5 (removed +5, added -5)
+    // Should return to initial brightness (neutralized)
     currentBrightnessText = await page.locator('.font-mono.text-white.font-semibold').first().textContent()
     currentBrightness = parseInt(currentBrightnessText || '50')
-    expect(currentBrightness).toBe(initialBrightness - 5)
+    expect(currentBrightness).toBe(initialBrightness)
+
+    // Both buttons should be inactive (neutral state)
+    const downvoteButton = page.locator('[aria-label="Vote down"]').first()
+    await expect(downvoteButton).toHaveClass(/bg-white\/10/)
   })
 
   test('should prevent voting more than once in same direction (no-op)', async ({ page }) => {

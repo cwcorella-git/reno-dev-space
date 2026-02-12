@@ -155,18 +155,16 @@ export async function voteProperty(
     return false
   }
 
-  // Voted the other direction — switch votes (net 2x change)
+  // Voted the other direction — NEUTRALIZE (remove vote, back to zero)
   if ((direction === 'up' && votedDown) || (direction === 'down' && votedUp)) {
-    // Remove old vote and add new one (net swing of 2x VOTE_BRIGHTNESS_CHANGE)
-    const netChange = direction === 'up' ? VOTE_BRIGHTNESS_CHANGE * 2 : -VOTE_BRIGHTNESS_CHANGE * 2
-    const newBrightness = Math.max(0, Math.min(100, (property.brightness ?? DEFAULT_BRIGHTNESS) + netChange))
+    // Remove existing vote (reverse its effect to return to neutral)
+    const reverseChange = votedDown ? VOTE_BRIGHTNESS_CHANGE : -VOTE_BRIGHTNESS_CHANGE
+    const newBrightness = Math.max(0, Math.min(100, (property.brightness ?? DEFAULT_BRIGHTNESS) + reverseChange))
 
     await updateDoc(docRef, {
       brightness: newBrightness,
-      // Remove from old voters array, add to new one
+      voters: arrayRemove(userId),
       ...(votedUp ? { votersUp: arrayRemove(userId) } : { votersDown: arrayRemove(userId) }),
-      ...(direction === 'up' ? { votersUp: arrayUnion(userId) } : { votersDown: arrayUnion(userId) }),
-      // Note: voters array stays unchanged (user is still a voter, just changed direction)
       updatedAt: Date.now(),
     })
     return newBrightness <= ARCHIVE_THRESHOLD
