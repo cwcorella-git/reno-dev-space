@@ -18,7 +18,6 @@ export interface TextStyle {
   fontFamily: string      // font family name
   color: string           // hex color
   textAlign: 'left' | 'center' | 'right'
-  marquee?: boolean       // scrolling text effect
   backgroundColor?: string
 }
 
@@ -110,7 +109,6 @@ export const DEFAULT_TEXT_STYLE: TextStyle = {
   fontFamily: 'var(--font-inter)',
   color: '#ffffff', // Will be overridden with random color on creation
   textAlign: 'left',
-  marquee: false,
 }
 
 export const DEFAULT_BLOCK_SIZE = {

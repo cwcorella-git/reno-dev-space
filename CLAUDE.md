@@ -166,7 +166,6 @@ DESKTOP_FOCUS_WIDTH = 900 // Desktop content area (px)
     color: string         // hex
     textAlign: 'left' | 'center' | 'right'
     backgroundColor?: string
-    marquee?: boolean     // scrolling text effect (defined but not rendered)
   }
   brightness: number      // 0-100, votes affect this (default: 50)
   voters: string[]        // legacy: user IDs who have voted
