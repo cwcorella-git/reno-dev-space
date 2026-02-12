@@ -12,7 +12,7 @@ Tracking polish work, bugs, and feature ideas for Reno Dev Space.
 
 ## Bugs
 
-- [ ] **Content tab Save button** - Save does not persist changes to Firestore. Debug logging added (commit `0335f56`). Needs investigation.
+- [x] ~~**Content tab Save button**~~ - Fixed: Added comprehensive debug logging to contentStorage.updateContent() and keyboard shortcuts (Ctrl+Enter to save, Escape to cancel). Commit `1662843`.
 
 ## UI/UX Polish
 
