@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { EditableText } from '@/components/EditableText'
+import { EditorTab } from './EditorTab'
 
 type EmailTemplate = 'verify-email' | 'campaign-success' | 'campaign-ended' | 'campaign-update'
 
@@ -68,6 +69,26 @@ export function EmailsPanel() {
   const [showPreview, setShowPreview] = useState(false)
   const [previewHtml, setPreviewHtml] = useState('')
   const [loading, setLoading] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const iframeRef = useRef<HTMLIFrameElement>(null)
+
+  // Enable/disable contentEditable on iframe when edit mode changes
+  useEffect(() => {
+    const iframe = iframeRef.current
+    if (!iframe) return
+
+    const iframeDoc = iframe.contentDocument
+    if (!iframeDoc || !iframeDoc.body) return
+
+    if (isEditing) {
+      iframeDoc.body.contentEditable = 'true'
+      iframeDoc.body.style.outline = 'none'
+      iframeDoc.body.style.cursor = 'text'
+    } else {
+      iframeDoc.body.contentEditable = 'false'
+      iframeDoc.body.style.cursor = 'default'
+    }
+  }, [isEditing, previewHtml])
 
   if (!user || !isAdmin) {
     return (
@@ -174,8 +195,14 @@ export function EmailsPanel() {
 
       {/* Preview Modal */}
       {showPreview && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4" onClick={() => setShowPreview(false)}>
-          <div className="relative w-full max-w-3xl max-h-[90vh] bg-gray-900 rounded-xl shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
+          onClick={() => {
+            setShowPreview(false)
+            setIsEditing(false)
+          }}
+        >
+          <div className="relative w-full max-w-3xl max-h-[95vh] bg-gray-900 rounded-xl shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
               <div>
@@ -183,7 +210,10 @@ export function EmailsPanel() {
                 <p className="text-xs text-gray-400">{currentTemplate.description}</p>
               </div>
               <button
-                onClick={() => setShowPreview(false)}
+                onClick={() => {
+                  setShowPreview(false)
+                  setIsEditing(false)
+                }}
                 className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,12 +222,45 @@ export function EmailsPanel() {
               </button>
             </div>
 
+            {/* Editor Toolbar (shown when editing) */}
+            {isEditing && (
+              <div className="border-b border-white/10 bg-gray-800/50">
+                <div className="px-4 py-2">
+                  <p className="text-xs text-amber-400 mb-2">
+                    Click elements in the preview below to edit them. Changes are live preview only.
+                  </p>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded"
+                  >
+                    Exit Edit Mode
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Preview - flexible height that fills remaining space */}
-            <div className="p-4 flex-1 overflow-hidden">
+            <div className="p-4 flex-1 overflow-auto">
               <iframe
+                ref={iframeRef}
                 srcDoc={previewHtml}
-                className="w-full h-full bg-white rounded border border-white/10"
+                className={`w-full h-full min-h-[600px] bg-white rounded border ${
+                  isEditing ? 'border-amber-400/40' : 'border-white/10'
+                } ${isEditing ? 'cursor-text' : 'cursor-pointer'}`}
                 title="Email Preview"
+                onClick={() => {
+                  if (!isEditing) {
+                    setIsEditing(true)
+                    // Make iframe content editable
+                    setTimeout(() => {
+                      const iframeDoc = iframeRef.current?.contentDocument
+                      if (iframeDoc && iframeDoc.body) {
+                        iframeDoc.body.contentEditable = 'true'
+                        iframeDoc.body.style.outline = 'none'
+                      }
+                    }, 100)
+                  }
+                }}
               />
             </div>
           </div>
