@@ -14,7 +14,7 @@ import { PropertyGallery } from '@/components/property/PropertyGallery'
 import { GalleryPositionSlider } from '@/components/property/GalleryPositionSlider'
 import { AddPropertyModal } from '@/components/property/AddPropertyModal'
 import { incrementPageViews } from '@/lib/storage/campaignStorage'
-import { subscribeToGalleryPosition, updateGalleryPosition, DEFAULT_POSITION as DEFAULT_GALLERY_POSITION } from '@/lib/storage/propertyGalleryStorage'
+import { subscribeToGalleryPosition, updateGalleryPosition, migrateGalleryPositionIfNeeded, DEFAULT_POSITION as DEFAULT_GALLERY_POSITION } from '@/lib/storage/propertyGalleryStorage'
 import { wouldOverlap, wouldOverlapDOM } from '@/lib/overlapDetection'
 import { filterEditableBlocks } from '@/lib/permissions'
 import { EditableText } from '@/components/EditableText'
@@ -509,6 +509,15 @@ export function Canvas() {
     )
     return () => unsubscribe()
   }, [])
+
+  // Migrate old gallery position to new coordinate system (admin-only, one-time)
+  useEffect(() => {
+    if (isAdmin && user) {
+      migrateGalleryPositionIfNeeded(user.uid).catch((error) =>
+        console.error('[Canvas] Gallery migration error:', error)
+      )
+    }
+  }, [isAdmin, user])
 
   // Pick a random color when entering add-text mode
   useEffect(() => {

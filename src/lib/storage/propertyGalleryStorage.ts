@@ -1,4 +1,4 @@
-import { doc, setDoc, onSnapshot } from 'firebase/firestore'
+import { doc, getDoc, setDoc, onSnapshot } from 'firebase/firestore'
 import { getDb } from '../firebase'
 
 const COLLECTION_NAME = 'settings'
@@ -12,7 +12,7 @@ export interface PropertyGalleryPosition {
 }
 
 export const DEFAULT_POSITION: PropertyGalleryPosition = {
-  x: 21.9,  // (1440-375)/2 / 1440 * 100 = centered in 375px mobile zone
+  x: 38.2,  // 340px gallery centered in 375px mobile zone: (720-170)/1440*100
   y: 66.7,  // Two-thirds down canvas
   updatedAt: Date.now(),
   updatedBy: ''
@@ -43,6 +43,32 @@ export function subscribeToGalleryPosition(
     },
     onError
   )
+}
+
+/**
+ * Migrate old gallery positions to new coordinate system (admin-only, one-time)
+ * Old system used x=21.9% (incorrect calculation)
+ * New system uses x=38.2% (properly centered in 375px mobile zone)
+ */
+export async function migrateGalleryPositionIfNeeded(userId: string): Promise<void> {
+  const db = getDb()
+  const docRef = doc(db, COLLECTION_NAME, DOCUMENT_ID)
+
+  const snapshot = await getDoc(docRef)
+  if (snapshot.exists()) {
+    const position = snapshot.data() as PropertyGalleryPosition
+
+    // Only migrate if position is using old coordinate system
+    if (position.x < 35) {
+      console.log('[PropertyGallery] Migrating old position from', position.x, 'to', DEFAULT_POSITION.x)
+      await setDoc(docRef, {
+        ...position,
+        x: DEFAULT_POSITION.x,
+        updatedAt: Date.now(),
+        updatedBy: userId,
+      })
+    }
+  }
 }
 
 /**

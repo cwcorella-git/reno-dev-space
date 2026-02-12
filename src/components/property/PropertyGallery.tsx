@@ -82,6 +82,7 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
     (e: React.MouseEvent) => {
       if (!isAdmin) return
       e.preventDefault()
+      e.stopPropagation() // Prevent marquee selection from triggering
 
       const canvas = document.querySelector('[data-canvas-container]') as HTMLElement
       if (!canvas) return
@@ -98,15 +99,16 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
         const deltaY = ((moveEvent.clientY - startY) / rect.height) * canvasHeightPercent
 
         // Gallery dimensions in percentage
-        const GALLERY_WIDTH = 26.0 // 375px / 1440px * 100
+        const GALLERY_WIDTH = 23.6 // 340px / 1440px * 100
         const GALLERY_HEIGHT = 20   // Estimated height
-        const MOBILE_ZONE_START = 21.9
-        const MOBILE_ZONE_END = 47.9
+        // Mobile zone: 375px centered in 1440px = 532.5px to 907.5px
+        const MOBILE_ZONE_LEFT = 37.0  // 532.5 / 1440 * 100
+        const MOBILE_ZONE_RIGHT = 63.0 // 907.5 / 1440 * 100
 
-        // Constrain X to mobile safe zone
+        // Constrain X to mobile safe zone (gallery must fit within zone)
         const newX = Math.max(
-          MOBILE_ZONE_START,
-          Math.min(MOBILE_ZONE_END - GALLERY_WIDTH, startPos.x + deltaX)
+          MOBILE_ZONE_LEFT,
+          Math.min(MOBILE_ZONE_RIGHT - GALLERY_WIDTH, startPos.x + deltaX)
         )
 
         // Constrain Y to canvas bounds
@@ -125,7 +127,7 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
         }
 
         // Check for overlapping blocks and displace them
-        const GALLERY_WIDTH = 26.0
+        const GALLERY_WIDTH = 23.6  // 340px / 1440px * 100
         const GALLERY_HEIGHT = 20
         const galleryRect = {
           x: dragPos.x,
@@ -166,6 +168,7 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
       if (!isAdmin) return
+      e.stopPropagation() // Prevent canvas touch handlers from interfering
 
       const touch = e.touches[0]
       const canvas = document.querySelector('[data-canvas-container]') as HTMLElement
@@ -195,14 +198,14 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
         const deltaX = ((moveTouch.clientX - startX) / rect.width) * 100
         const deltaY = ((moveTouch.clientY - startY) / rect.height) * canvasHeightPercent
 
-        const GALLERY_WIDTH = 26.0
+        const GALLERY_WIDTH = 23.6 // 340px / 1440px * 100
         const GALLERY_HEIGHT = 20
-        const MOBILE_ZONE_START = 21.9
-        const MOBILE_ZONE_END = 47.9
+        const MOBILE_ZONE_LEFT = 37.0  // 532.5 / 1440 * 100
+        const MOBILE_ZONE_RIGHT = 63.0 // 907.5 / 1440 * 100
 
         const newX = Math.max(
-          MOBILE_ZONE_START,
-          Math.min(MOBILE_ZONE_END - GALLERY_WIDTH, startPos.x + deltaX)
+          MOBILE_ZONE_LEFT,
+          Math.min(MOBILE_ZONE_RIGHT - GALLERY_WIDTH, startPos.x + deltaX)
         )
         const newY = Math.max(0, Math.min(canvasHeightPercent - GALLERY_HEIGHT, startPos.y + deltaY))
 
@@ -227,7 +230,7 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
         }
 
         // Displace overlapping blocks
-        const GALLERY_WIDTH = 26.0
+        const GALLERY_WIDTH = 23.6  // 340px / 1440px * 100
         const GALLERY_HEIGHT = 20
         const galleryRect = {
           x: dragPos.x,
