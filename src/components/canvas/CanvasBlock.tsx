@@ -533,11 +533,14 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     left: `${displayX}%`,
     top: `${displayTopPx}px`,
     width: displayWidth > 0 ? `${displayWidth}%` : 'auto',
+    maxWidth: 'min(100%, 90vw)', // Prevent blocks from exceeding viewport on mobile
     minWidth: '80px',
     zIndex: block.zIndex,
     transition: isInteracting ? 'none' : 'left 0.15s ease-out, top 0.15s ease-out, width 0.15s ease-out',
     opacity: isInteracting ? 0.9 : 1,
     padding: '8px 12px',
+    overflowWrap: 'break-word', // Allow long words to break
+    wordBreak: 'break-word', // Ensure text wraps even with long unbroken strings
   }
 
   return (

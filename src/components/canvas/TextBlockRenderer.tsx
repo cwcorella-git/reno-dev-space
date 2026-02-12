@@ -133,7 +133,7 @@ export function TextBlockRenderer({
   if (isEmpty) {
     return (
       <div
-        className="whitespace-nowrap opacity-40 italic"
+        className="whitespace-pre-wrap break-words opacity-40 italic"
         style={style}
       >
         {getText('canvas.placeholder.text', 'Click to edit')}

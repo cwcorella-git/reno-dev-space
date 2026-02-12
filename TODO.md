@@ -16,7 +16,7 @@ Tracking polish work, bugs, and feature ideas for Reno Dev Space.
 
 ## UI/UX Polish
 
-- [ ] **Text wrapping in mobile view** - Text blocks should wrap properly when inside the mobile safe zone (375px area).
+- [x] ~~**Text wrapping in mobile view**~~ - Fixed: Added max-width constraint (90vw) and word-break styles to blocks. Empty placeholder now wraps. Commit `6a24821`.
 - [ ] **Vote effect tuning** - Tier thresholds and animation speeds may need adjustment after real-world testing.
 
 ## Features
