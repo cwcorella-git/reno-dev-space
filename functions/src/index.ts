@@ -5,6 +5,15 @@ import { defineSecret } from 'firebase-functions/params'
 import Stripe from 'stripe'
 import cors from 'cors'
 
+// Import email functions
+import {
+  sendVerificationEmail,
+  sendCampaignSuccessEmails,
+  sendCampaignEndedEmails,
+  sendCampaignUpdate,
+  sendTestEmail
+} from './emailFunctions'
+
 // Define secrets that will be bound to functions
 const stripeSecretKey = defineSecret('STRIPE_SECRET_KEY')
 const stripeWebhookSecret = defineSecret('STRIPE_WEBHOOK_SECRET')
@@ -143,3 +152,16 @@ export const stripeWebhook = functions
 
   res.json({ received: true })
 })
+
+// ============================================================================
+// EMAIL FUNCTIONS
+// ============================================================================
+
+// Export email functions
+export {
+  sendVerificationEmail,
+  sendCampaignSuccessEmails,
+  sendCampaignEndedEmails,
+  sendCampaignUpdate,
+  sendTestEmail
+}
