@@ -145,6 +145,41 @@ const DEFAULT_CONTENT: Array<{ id: string; category: string; description: string
   { id: 'canvas.label.desktopView', category: 'canvas', description: 'Desktop view overlay label', defaultValue: 'desktop view' },
   { id: 'canvas.label.mobileView', category: 'canvas', description: 'Mobile view overlay label', defaultValue: 'mobile view' },
   { id: 'canvas.placeholder.text', category: 'canvas', description: 'Empty text block placeholder', defaultValue: 'Click to edit' },
+  // Property Gallery
+  { id: 'property.gallery.loading', category: 'property', description: 'Loading properties text', defaultValue: 'Loading properties...' },
+  { id: 'property.gallery.empty', category: 'property', description: 'No properties message', defaultValue: 'No rental properties yet. Be the first to suggest one!' },
+  { id: 'property.gallery.title', category: 'property', description: 'Gallery heading', defaultValue: 'Potential Spaces' },
+  { id: 'property.gallery.addButton', category: 'property', description: 'Add property button', defaultValue: 'Add Property' },
+  // Property Carousel
+  { id: 'property.carousel.counter', category: 'property', description: 'Property counter (use {current} and {total})', defaultValue: 'Property {current} of {total}' },
+  // Property Card
+  { id: 'property.card.archived', category: 'property', description: 'Archived overlay text', defaultValue: 'ARCHIVED' },
+  { id: 'property.card.rentSuffix', category: 'property', description: 'Monthly rent suffix', defaultValue: '/mo' },
+  { id: 'property.card.rentUnknown', category: 'property', description: 'Unknown rent placeholder', defaultValue: '???' },
+  // Property Modal
+  { id: 'property.modal.title', category: 'property', description: 'Add property modal title', defaultValue: 'Add Rental Property' },
+  { id: 'property.modal.closeHint', category: 'property', description: 'Press ESC to close hint', defaultValue: 'Press ESC to close or click outside' },
+  { id: 'property.label.image', category: 'property', description: 'Image field label', defaultValue: 'Image' },
+  { id: 'property.upload.clickOrDrag', category: 'property', description: 'Upload zone instructions', defaultValue: 'Click to upload or drag and drop' },
+  { id: 'property.upload.fileTypes', category: 'property', description: 'Accepted file types', defaultValue: 'JPEG, PNG, WebP (max 5MB)' },
+  { id: 'property.label.address', category: 'property', description: 'Address field label', defaultValue: 'Address' },
+  { id: 'property.placeholder.address', category: 'property', description: 'Address field placeholder', defaultValue: '123 Main St, Reno, NV 89501' },
+  { id: 'property.label.rent', category: 'property', description: 'Rent field label', defaultValue: 'Monthly Rent (optional)' },
+  { id: 'property.placeholder.rent', category: 'property', description: 'Rent field placeholder', defaultValue: '2,500' },
+  { id: 'property.hint.blankRent', category: 'property', description: 'Blank rent hint', defaultValue: 'Leave blank to show "???"' },
+  { id: 'property.label.description', category: 'property', description: 'Description field label', defaultValue: 'Why is this a good space?' },
+  { id: 'property.placeholder.description', category: 'property', description: 'Description placeholder', defaultValue: 'Great location near downtown, 1500 sq ft, flexible lease terms...' },
+  { id: 'property.hint.minChars', category: 'property', description: 'Character count hint (use {count})', defaultValue: '{count} / 20 characters minimum' },
+  { id: 'property.button.cancel', category: 'property', description: 'Cancel button', defaultValue: 'Cancel' },
+  { id: 'property.button.add', category: 'property', description: 'Add property button', defaultValue: 'Add Property' },
+  { id: 'property.button.uploading', category: 'property', description: 'Uploading state button', defaultValue: 'Uploading...' },
+  // Property Errors
+  { id: 'property.error.fileType', category: 'property', description: 'Invalid file type error', defaultValue: 'Please upload a JPEG, PNG, or WebP image' },
+  { id: 'property.error.fileSize', category: 'property', description: 'File too large error', defaultValue: 'Image must be under 5MB' },
+  { id: 'property.error.imageRequired', category: 'property', description: 'Image required error', defaultValue: 'Image is required' },
+  { id: 'property.error.addressTooShort', category: 'property', description: 'Address too short error', defaultValue: 'Please enter a valid address (minimum 10 characters)' },
+  { id: 'property.error.descriptionTooShort', category: 'property', description: 'Description too short error', defaultValue: 'Please explain why this is a good space (minimum 20 characters)' },
+  { id: 'property.error.uploadFailed', category: 'property', description: 'Upload failed error', defaultValue: 'Failed to upload property. Please try again.' },
 ]
 
 export function ContentTab() {
