@@ -58,13 +58,26 @@ export async function updateContent(
   updatedBy: string,
   description?: string
 ): Promise<void> {
-  const db = getDb()
+  console.log('[contentStorage] updateContent called:', { id, value, category, updatedBy })
 
-  await setDoc(doc(db, COLLECTION_NAME, id), {
-    value,
-    category,
-    description: description || null,
-    updatedAt: Date.now(),
-    updatedBy,
-  })
+  try {
+    const db = getDb()
+    console.log('[contentStorage] Got db instance, writing to collection:', COLLECTION_NAME)
+
+    const docRef = doc(db, COLLECTION_NAME, id)
+    const data = {
+      value,
+      category,
+      description: description || null,
+      updatedAt: Date.now(),
+      updatedBy,
+    }
+
+    console.log('[contentStorage] Writing document:', { docRef: docRef.path, data })
+    await setDoc(docRef, data)
+    console.log('[contentStorage] ✓ Write successful')
+  } catch (error) {
+    console.error('[contentStorage] ✗ Write failed:', error)
+    throw error
+  }
 }

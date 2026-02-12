@@ -1,0 +1,86 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e7]: Non-profit
+    - generic [ref=e9]: Self-directed
+    - generic [ref=e11]: HORIZONTAL
+    - generic [ref=e13]: THIRD PLACE
+    - generic [ref=e15]: Find your party.
+    - generic [ref=e17]: Flat ≠ structureless
+    - generic [ref=e19]: Game developers
+    - generic [ref=e21]: Neutral ground — a third place for devs
+    - generic [ref=e23]: An open space for developers to collaborate
+    - generic [ref=e25]: A SHARED SPACE FOR PEOPLE WHO WANT TO MAKE GAMES
+    - generic [ref=e27]: Belonging without conditions
+    - generic [ref=e29]: Work together on the things you love.
+    - generic [ref=e31]: Governance should feel like collaboration, not bureaucracy
+    - generic [ref=e33]: Hobbyists
+    - generic [ref=e35]: A community of practice — learn by doing alongside peers
+    - generic [ref=e37]: The antidote to isolation is a shared purpose
+    - generic [ref=e39]: "Sociocracy: every voice shapes the decision"
+    - generic [ref=e41]: interest-driven
+    - generic [ref=e43]: RENO DEV SPACE
+    - generic [ref=e45]: No leads, producers, or ceos
+    - generic [ref=e47]: Consent-based decision making
+    - generic [ref=e49]: Democratic
+    - generic [ref=e51]: REJECT CORPORATE FUNDING TO MAINTAIN INDEPENDENCE
+    - generic [ref=e53]: Indie devs
+    - generic [ref=e55]:
+      - text: Inspired by
+      - link "Motion Twin" [ref=e56] [cursor=pointer]:
+        - /url: https://motiontwin.com/
+      - text: ", Hacker spaces, and Glitch City"
+    - generic [ref=e58]: Animators, Sound Designers, Programmers, 3D Artists, 2D Artists,
+    - generic [ref=e60]: Pure consensus creates gridlock; majority voting creates factions. The recommended middle path is sociocracy's consent-based decision making, where proposals pass if there are "no reasoned objections"—not full agreement. Objections must relate to organizational goals, not personal preferences, and the question becomes "is this safe enough to try?" rather than "does everyone love this?"
+    - generic [ref=e62]: Sociocracy
+    - generic [ref=e64]: (Consent-based governance)
+    - generic [ref=e66]:
+      - text: No meetings
+      - text: No schedules
+      - text: No mandatory hours
+    - generic [ref=e68]: FREEFORM COOPERATION
+    - generic [ref=e70]:
+      - text: No hiring process.
+      - text: No work experience needed.
+      - text: Show up and build things.
+    - generic [ref=e72]:
+      - text: Show up when you want to.
+      - text: And only when you want to.
+    - generic [ref=e74]: Creation for the sake of creation.
+    - generic [ref=e76]: Consent-based decision making.
+    - generic [ref=e78]: Proposals pass if there are "no reasonable objections"—not full agreement.
+    - paragraph [ref=e81]: No rental properties yet. Be the first to suggest one!
+  - button "Sign In" [ref=e82] [cursor=pointer]:
+    - img [ref=e83]
+    - generic [ref=e85]: Sign In
+  - generic [ref=e87]:
+    - generic [ref=e88]:
+      - generic [ref=e89]:
+        - heading "Reno Dev Space" [level=2] [ref=e90]
+        - paragraph [ref=e91]: A non-profit game developer space
+      - button "Dismiss" [ref=e92] [cursor=pointer]:
+        - img [ref=e93]
+    - paragraph [ref=e95]: A community space for indie game developers in Reno to collaborate, share ideas, and build games together. No managers, no gatekeepers—just creators.
+    - generic [ref=e96]:
+      - generic [ref=e97]:
+        - img [ref=e98]
+        - paragraph [ref=e100]: Community Chat
+      - generic [ref=e101]:
+        - img [ref=e102]
+        - paragraph [ref=e104]: Vote on Content
+      - generic [ref=e105]:
+        - img [ref=e106]
+        - paragraph [ref=e108]: Project Driven
+    - generic [ref=e109]:
+      - button "Join the Community" [ref=e110] [cursor=pointer]
+      - button "Browse First" [ref=e111] [cursor=pointer]
+  - generic [ref=e114]:
+    - img [ref=e115]
+    - generic [ref=e118]: A campaign is brewing...
+    - generic [ref=e119]: 1/5
+    - generic [ref=e120]: members
+  - generic [ref=e121]: 15ea8fa
+  - alert [ref=e122]
+```

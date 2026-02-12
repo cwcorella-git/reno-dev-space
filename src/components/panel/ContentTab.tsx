@@ -302,25 +302,33 @@ export function ContentTab() {
                     <textarea
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                          e.preventDefault()
+                          handleSave(entry.id, entry.category, entry.description)
+                        } else if (e.key === 'Escape') {
+                          e.preventDefault()
+                          handleCancel()
+                        }
+                      }}
                       className="w-full bg-white/10 border border-indigo-500 rounded px-2 py-1 text-sm focus:outline-none min-h-[60px]"
                       autoFocus
                     />
-                    <div className="flex gap-2 justify-end">
+                    <div className="flex gap-2">
                       <button
                         onClick={handleCancel}
                         className="text-xs px-2 py-1 text-gray-400 hover:text-white"
                       >
-                        Cancel
+                        Cancel (Esc)
                       </button>
                       <button
-                        onMouseDown={() => console.log('[ContentTab] Save button mousedown')}
                         onClick={() => {
                           console.log('[ContentTab] Save button clicked')
                           handleSave(entry.id, entry.category, entry.description)
                         }}
                         className="text-xs px-2 py-1 bg-indigo-600 text-white rounded hover:bg-indigo-500"
                       >
-                        Save
+                        Save (Ctrl+Enter)
                       </button>
                     </div>
                   </div>
