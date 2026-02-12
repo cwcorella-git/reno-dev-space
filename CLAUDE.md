@@ -595,43 +595,41 @@ Same cascade as self-deletion, except:
 
 Using Veritable Games Stripe account (`acct_1SVgXvFEu0YOwlhj`) for Reno Dev Space donations.
 
-### Go-Live Checklist
+### Security Verification
 
-When ready to accept real payments:
+The codebase is production-ready:
+- ✓ No hardcoded API keys (uses Firebase secrets via `defineSecret`)
+- ✓ `.env.local` properly gitignored
+- ✓ All keys loaded from environment variables
+- ✓ Webhook signature verification enabled
 
-1. **Stripe Dashboard Setup**
-   - [ ] Toggle OFF "Test mode" in Stripe Dashboard (top-right)
-   - [ ] Complete account verification (business details, bank account, identity)
-   - [ ] Update public business name to "Reno Dev Space" (Settings → Public details)
-   - [ ] Configure branding colors to match site theme
+Run the verification script before going live:
+```bash
+./scripts/verify-production-ready.sh
+```
 
-2. **Get Live API Keys**
-   - Go to Stripe Dashboard → Developers → API keys (with Test mode OFF)
-   - Copy the live secret key (`sk_live_...`)
+### Go-Live Process
 
-3. **Update Firebase Secrets**
-   ```bash
-   # Set live secret key (no trailing newlines!)
-   printf "sk_live_YOUR_KEY" | firebase functions:secrets:set STRIPE_SECRET_KEY
+**See the comprehensive guide**: [`STRIPE_GO_LIVE.md`](./STRIPE_GO_LIVE.md)
 
-   # Redeploy functions
-   firebase deploy --only functions
-   ```
+The guide includes:
+1. Pre-flight verification checklist
+2. Step-by-step migration instructions (8 detailed steps)
+3. Backup/restore procedures
+4. Test procedures with real money
+5. 24-hour monitoring plan
+6. Complete rollback procedure
+7. Common issues & solutions
+8. Security reminders
 
-4. **Set Up Live Webhook**
-   - Stripe Dashboard → Developers → Webhooks → Add endpoint
-   - URL: `https://us-central1-reno-dev-space.cloudfunctions.net/stripeWebhook`
-   - Events: `checkout.session.completed`
-   - Copy signing secret, then:
-   ```bash
-   printf "whsec_YOUR_WEBHOOK_SECRET" | firebase functions:secrets:set STRIPE_WEBHOOK_SECRET
-   firebase deploy --only functions
-   ```
-
-5. **Test with Real Card**
-   - Make a small donation ($1) to verify the full flow
-   - Check Stripe Dashboard for the payment
-   - Verify webhook fires and donation appears in Firestore
+**Quick Overview**:
+1. Backup current test configuration
+2. Switch Stripe Dashboard to Live mode
+3. Update Firebase secrets with live keys (`sk_live_...`)
+4. Configure live webhook endpoint
+5. Update frontend `.env.local` (`pk_live_...`)
+6. Test with $1 real donation
+7. Monitor for 24 hours
 
 ### Stripe CLI Commands
 
