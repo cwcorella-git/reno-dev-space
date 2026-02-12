@@ -122,35 +122,37 @@ export function PropertyCard({ property }: PropertyCardProps) {
       {/* Image expand modal */}
       {showImageModal && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/95 backdrop-blur-sm p-2 md:p-6"
           onClick={() => setShowImageModal(false)}
         >
           {/* Close button - z-[210] to stay above image */}
           <button
             onClick={() => setShowImageModal(false)}
-            className="absolute top-4 right-4 z-[210] w-10 h-10 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
+            className="absolute top-4 right-4 z-[210] w-12 h-12 bg-white/10 hover:bg-white/20 rounded-full flex items-center justify-center text-white transition-colors"
             aria-label="Close"
           >
-            <XMarkIcon className="w-6 h-6" />
+            <XMarkIcon className="w-7 h-7" />
           </button>
 
-          {/* Expanded image */}
+          {/* Expanded image - uses most of screen on desktop */}
           <div
-            className="relative max-w-6xl max-h-[90vh] w-full"
+            className="relative w-full h-full max-w-[95vw] max-h-[95vh] flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <img
-              src={property.imageUrl}
-              alt={property.address}
-              className="w-full h-full object-contain rounded-lg"
-            />
+            <div className="relative">
+              <img
+                src={property.imageUrl}
+                alt={property.address}
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              />
 
-            {/* Image caption */}
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 rounded-b-lg">
-              <h3 className="text-white font-semibold text-lg">{property.address}</h3>
-              <p className="text-indigo-300 text-sm">
-                {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : 'Contact for Pricing'}
-              </p>
+              {/* Image caption */}
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-4 rounded-b-lg">
+                <h3 className="text-white font-semibold text-lg">{property.address}</h3>
+                <p className="text-indigo-300 text-sm">
+                  {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : 'Contact for Pricing'}
+                </p>
+              </div>
             </div>
           </div>
         </div>

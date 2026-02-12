@@ -150,18 +150,9 @@ export async function voteProperty(
     return false
   }
 
-  // Already voted this direction — UNVOTE (toggle off)
+  // Already voted this direction — NO-OP (can only neutralize by voting opposite)
   if ((direction === 'up' && votedUp) || (direction === 'down' && votedDown)) {
-    const reverseChange = votedUp ? -VOTE_BRIGHTNESS_CHANGE : VOTE_BRIGHTNESS_CHANGE
-    const newBrightness = Math.max(0, Math.min(100, (property.brightness ?? DEFAULT_BRIGHTNESS) + reverseChange))
-
-    await updateDoc(docRef, {
-      brightness: newBrightness,
-      voters: arrayRemove(userId),
-      ...(votedUp ? { votersUp: arrayRemove(userId) } : { votersDown: arrayRemove(userId) }),
-      updatedAt: Date.now(),
-    })
-    return newBrightness <= ARCHIVE_THRESHOLD
+    return false
   }
 
   // Voted the other direction — switch votes (net 2x change)
