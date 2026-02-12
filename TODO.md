@@ -7,7 +7,7 @@ Tracking polish work, bugs, and feature ideas for Reno Dev Space.
 - [x] ~~**CommunityTab.tsx unused**~~ - Removed. Chat and Members are now separate panel tabs.
 - [x] ~~**Italic/underline UI missing**~~ - Fixed: Ctrl+B/I/U shortcuts + B/I/U/S buttons in EditorTab.
 - [ ] **Marquee animation unused** - Defined in `tailwind.config.ts` and `TextStyle` type but never rendered in `TextBlockRenderer.tsx`. Either implement or remove.
-- [ ] **Background color UI missing** - `TextStyle.backgroundColor` exists but no control in `EditorTab.tsx` to set it.
+- [x] ~~**Background color UI missing**~~ - Added background color picker to EditorTab. Shows 9 options: transparent (checkerboard pattern) + 8 colors. Commit `3781fca`.
 - [x] ~~**VoteOutlines.tsx disabled**~~ - Removed. SVG outlines replaced by CSS text effects (ring-burst). Commit `cd3e73c`.
 
 ## Bugs

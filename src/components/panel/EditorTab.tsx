@@ -48,7 +48,9 @@ export function EditorTab() {
     recordHistory,
   } = useCanvas()
   const [showColorPicker, setShowColorPicker] = useState(false)
+  const [showBgColorPicker, setShowBgColorPicker] = useState(false)
   const colorPickerRef = useRef<HTMLDivElement>(null)
+  const bgColorPickerRef = useRef<HTMLDivElement>(null)
 
   // Get selected block info first (needed for callbacks)
   const selectedBlock = selectedBlockId ? blocks.find((b) => b.id === selectedBlockId) : null
@@ -196,7 +198,7 @@ export function EditorTab() {
     }
   }, [getText, updateContent])
 
-  // Close color picker on click outside
+  // Close color pickers on click outside
   useEffect(() => {
     if (!showColorPicker) return
     const handler = (e: MouseEvent) => {
@@ -207,6 +209,17 @@ export function EditorTab() {
     document.addEventListener('mousedown', handler)
     return () => document.removeEventListener('mousedown', handler)
   }, [showColorPicker])
+
+  useEffect(() => {
+    if (!showBgColorPicker) return
+    const handler = (e: MouseEvent) => {
+      if (bgColorPickerRef.current && !bgColorPickerRef.current.contains(e.target as Node)) {
+        setShowBgColorPicker(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showBgColorPicker])
 
   // Handle delete
   const handleDelete = useCallback(() => {
@@ -412,7 +425,7 @@ export function EditorTab() {
           ))}
         </div>
 
-        {/* Color swatch picker */}
+        {/* Text color swatch picker */}
         <div className="relative" ref={colorPickerRef}>
           <button
             onMouseDown={(e) => {
@@ -440,6 +453,70 @@ export function EditorTab() {
                     }}
                     className={`w-6 h-6 rounded-full border-2 shrink-0 transition-transform ${
                       textBlock.style.color === color ? 'border-white scale-110' : 'border-transparent hover:scale-110'
+                    }`}
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Background color picker */}
+        <div className="relative" ref={bgColorPickerRef}>
+          <button
+            onMouseDown={(e) => {
+              e.preventDefault()
+              setShowBgColorPicker(!showBgColorPicker)
+            }}
+            className="w-7 h-7 rounded flex items-center justify-center bg-white/10 hover:bg-white/20 border border-white/20 relative"
+            title="Background color"
+          >
+            {textBlock.style.backgroundColor ? (
+              <div
+                className="w-4 h-4 rounded border border-white/30"
+                style={{ backgroundColor: textBlock.style.backgroundColor }}
+              />
+            ) : (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" transform="rotate(45 12 12)" />
+              </svg>
+            )}
+          </button>
+          {showBgColorPicker && (
+            <div className="absolute bottom-full mb-1 right-0 bg-gray-900 border border-white/20 rounded-lg p-1.5 shadow-xl z-50">
+              <div className="flex gap-1">
+                {/* Transparent option */}
+                <button
+                  onMouseDown={(e) => {
+                    e.preventDefault()
+                    applyStyle({ backgroundColor: undefined })
+                    setShowBgColorPicker(false)
+                  }}
+                  className={`w-6 h-6 rounded border-2 shrink-0 transition-transform flex items-center justify-center ${
+                    !textBlock.style.backgroundColor ? 'border-white scale-110' : 'border-transparent hover:scale-110'
+                  }`}
+                  style={{
+                    background: 'linear-gradient(45deg, #374151 25%, transparent 25%, transparent 75%, #374151 75%, #374151), linear-gradient(45deg, #374151 25%, transparent 25%, transparent 75%, #374151 75%, #374151)',
+                    backgroundSize: '8px 8px',
+                    backgroundPosition: '0 0, 4px 4px'
+                  }}
+                  title="Transparent"
+                >
+                  <svg className="w-3 h-3 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+                {TEXT_COLORS.map((color) => (
+                  <button
+                    key={color}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      applyStyle({ backgroundColor: color })
+                      setShowBgColorPicker(false)
+                    }}
+                    className={`w-6 h-6 rounded border-2 shrink-0 transition-transform ${
+                      textBlock.style.backgroundColor === color ? 'border-white scale-110' : 'border-transparent hover:scale-110'
                     }`}
                     style={{ backgroundColor: color }}
                   />
