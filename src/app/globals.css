@@ -62,20 +62,6 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* Dancing vote outlines — animated dashed borders around voted blocks */
-@keyframes dash-flow-1 {
-  to { stroke-dashoffset: -40; }
-}
-@keyframes dash-flow-2 {
-  to { stroke-dashoffset: 60; }
-}
-@keyframes dash-flow-3 {
-  to { stroke-dashoffset: -80; }
-}
-
-.dash-dance-1 { animation: dash-flow-1 2s linear infinite; }
-.dash-dance-2 { animation: dash-flow-2 3s linear infinite; }
-.dash-dance-3 { animation: dash-flow-3 4.5s linear infinite; }
 
 /* ════════════════════════════════════════════════════════════════════
    One-shot celebration effects (8 total)
@@ -119,13 +105,13 @@ input[type="number"] {
     opacity: 1;
   }
   100% {
-    box-shadow: 0 0 0 40px transparent;
+    box-shadow: 0 0 0 50px transparent;
     opacity: 0;
   }
 }
 .celebrate-ring-burst {
   border-radius: 4px;
-  animation: celebrate-ring-burst 0.6s ease-out forwards;
+  animation: celebrate-ring-burst 0.5s ease-out forwards;
 }
 
 /* --- 2. Confetti Pop: colored dots burst outward --- */
@@ -142,25 +128,25 @@ input[type="number"] {
   }
   100% {
     box-shadow:
-      -25px -25px 0 var(--celebrate-color, #f87171),
-      25px -20px 0 #fbbf24,
-      -30px 15px 0 #34d399,
-      30px 20px 0 #22d3ee,
-      -15px 30px 0 #818cf8,
-      20px -30px 0 #e879f9;
+      -30px -30px 0 var(--celebrate-color, #f87171),
+      30px -25px 0 #fbbf24,
+      -35px 20px 0 #34d399,
+      35px 25px 0 #22d3ee,
+      -20px 35px 0 #818cf8,
+      25px -35px 0 #e879f9;
     opacity: 0;
   }
 }
 .celebrate-confetti-pop {
-  width: 4px;
-  height: 4px;
+  width: 5px;
+  height: 5px;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background: transparent;
   border-radius: 50%;
-  animation: celebrate-confetti-pop 0.7s ease-out forwards;
+  animation: celebrate-confetti-pop 0.6s ease-out forwards;
 }
 
 /* --- 3. Glow Flash: bright flash then fade --- */
@@ -169,9 +155,9 @@ input[type="number"] {
     box-shadow: 0 0 0 0 transparent, inset 0 0 0 0 transparent;
     background: transparent;
   }
-  15% {
-    box-shadow: 0 0 30px 10px var(--celebrate-color, #818cf8), inset 0 0 20px var(--celebrate-color, #818cf8);
-    background: rgba(255, 255, 255, 0.3);
+  20% {
+    box-shadow: 0 0 40px 15px var(--celebrate-color, #818cf8), inset 0 0 30px var(--celebrate-color, #818cf8);
+    background: rgba(255, 255, 255, 0.4);
   }
   100% {
     box-shadow: 0 0 0 0 transparent, inset 0 0 0 0 transparent;
@@ -180,19 +166,19 @@ input[type="number"] {
 }
 .celebrate-glow-flash {
   border-radius: 4px;
-  animation: celebrate-glow-flash 0.5s ease-out forwards;
+  animation: celebrate-glow-flash 0.45s ease-out forwards;
 }
 
 /* --- 4. Bounce Pop: scale up then spring back --- */
 @keyframes celebrate-bounce-pop {
   0% { transform: scale(1); }
-  30% { transform: scale(1.15); }
-  50% { transform: scale(0.95); }
-  70% { transform: scale(1.05); }
+  30% { transform: scale(1.2); }
+  50% { transform: scale(0.92); }
+  70% { transform: scale(1.06); }
   100% { transform: scale(1); }
 }
 .celebrate-bounce-pop {
-  animation: celebrate-bounce-pop 0.5s ease-out forwards;
+  animation: celebrate-bounce-pop 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
 }
 
 /* --- 5. Shimmer Sweep: diagonal light sweep --- */
@@ -200,9 +186,9 @@ input[type="number"] {
   0% {
     background: linear-gradient(
       105deg,
-      transparent 40%,
-      rgba(255, 255, 255, 0.8) 50%,
-      transparent 60%
+      transparent 35%,
+      rgba(255, 255, 255, 0.9) 50%,
+      transparent 65%
     );
     background-size: 200% 100%;
     background-position: 200% center;
@@ -210,9 +196,9 @@ input[type="number"] {
   100% {
     background: linear-gradient(
       105deg,
-      transparent 40%,
-      rgba(255, 255, 255, 0.8) 50%,
-      transparent 60%
+      transparent 35%,
+      rgba(255, 255, 255, 0.9) 50%,
+      transparent 65%
     );
     background-size: 200% 100%;
     background-position: -200% center;
@@ -220,37 +206,37 @@ input[type="number"] {
 }
 .celebrate-shimmer-sweep {
   border-radius: 4px;
-  animation: celebrate-shimmer-sweep 0.6s ease-out forwards;
+  animation: celebrate-shimmer-sweep 0.5s linear forwards;
 }
 
 /* --- 6. Sparkle Burst: dots at corners appear and fade --- */
 @keyframes celebrate-sparkle-dot {
   0% { transform: scale(0); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 1; }
+  50% { transform: scale(2); opacity: 1; }
   100% { transform: scale(0); opacity: 0; }
 }
 .celebrate-sparkle-burst::before,
 .celebrate-sparkle-burst::after {
   content: '';
   position: absolute;
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   background: var(--celebrate-color, #fbbf24);
   border-radius: 50%;
-  animation: celebrate-sparkle-dot 0.6s ease-out forwards;
+  animation: celebrate-sparkle-dot 0.5s ease-out forwards;
 }
 .celebrate-sparkle-burst::before {
-  top: -8px;
-  left: -8px;
+  top: -10px;
+  left: -10px;
   animation-delay: 0s;
 }
 .celebrate-sparkle-burst::after {
-  bottom: -8px;
-  right: -8px;
-  animation-delay: 0.1s;
+  bottom: -10px;
+  right: -10px;
+  animation-delay: 0.08s;
 }
 .celebrate-sparkle-burst {
-  animation: celebrate-sparkle-main 0.7s ease-out forwards;
+  animation: celebrate-sparkle-main 0.58s ease-out forwards;
 }
 @keyframes celebrate-sparkle-main {
   0%, 100% { opacity: 1; }
@@ -258,12 +244,12 @@ input[type="number"] {
 
 /* --- 7. Ripple: concentric rings expand --- */
 @keyframes celebrate-ripple-1 {
-  0% { box-shadow: 0 0 0 0 var(--celebrate-color, #22d3ee); opacity: 0.6; }
-  100% { box-shadow: 0 0 0 25px transparent; opacity: 0; }
+  0% { box-shadow: 0 0 0 0 var(--celebrate-color, #22d3ee); opacity: 0.7; }
+  100% { box-shadow: 0 0 0 30px transparent; opacity: 0; }
 }
 @keyframes celebrate-ripple-2 {
-  0% { box-shadow: 0 0 0 0 var(--celebrate-color, #22d3ee); opacity: 0.4; }
-  100% { box-shadow: 0 0 0 40px transparent; opacity: 0; }
+  0% { box-shadow: 0 0 0 0 var(--celebrate-color, #22d3ee); opacity: 0.5; }
+  100% { box-shadow: 0 0 0 50px transparent; opacity: 0; }
 }
 .celebrate-ripple::before,
 .celebrate-ripple::after {
@@ -273,13 +259,13 @@ input[type="number"] {
   border-radius: 4px;
 }
 .celebrate-ripple::before {
-  animation: celebrate-ripple-1 0.6s ease-out forwards;
+  animation: celebrate-ripple-1 0.5s ease-out forwards;
 }
 .celebrate-ripple::after {
-  animation: celebrate-ripple-2 0.8s ease-out 0.1s forwards;
+  animation: celebrate-ripple-2 0.7s ease-out 0.08s forwards;
 }
 .celebrate-ripple {
-  animation: celebrate-ripple-main 0.9s ease-out forwards;
+  animation: celebrate-ripple-main 0.78s ease-out forwards;
 }
 @keyframes celebrate-ripple-main {
   0%, 100% { opacity: 1; }
@@ -288,15 +274,15 @@ input[type="number"] {
 /* --- 8. Star Shower: stars rise upward --- */
 @keyframes celebrate-star-rise {
   0% { transform: translateY(0) scale(1); opacity: 1; }
-  100% { transform: translateY(-30px) scale(0.5); opacity: 0; }
+  100% { transform: translateY(-40px) scale(0.3); opacity: 0; }
 }
 .celebrate-star-shower::before,
 .celebrate-star-shower::after {
   content: '★';
   position: absolute;
-  font-size: 12px;
+  font-size: 14px;
   color: var(--celebrate-color, #fbbf24);
-  animation: celebrate-star-rise 0.7s ease-out forwards;
+  animation: celebrate-star-rise 0.6s ease-out forwards;
 }
 .celebrate-star-shower::before {
   top: 0;
@@ -306,10 +292,10 @@ input[type="number"] {
 .celebrate-star-shower::after {
   top: 0;
   right: 20%;
-  animation-delay: 0.15s;
+  animation-delay: 0.12s;
 }
 .celebrate-star-shower {
-  animation: celebrate-star-main 0.85s ease-out forwards;
+  animation: celebrate-star-main 0.72s ease-out forwards;
 }
 @keyframes celebrate-star-main {
   0%, 100% { opacity: 1; }

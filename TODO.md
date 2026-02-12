@@ -17,7 +17,7 @@ Tracking polish work, bugs, and feature ideas for Reno Dev Space.
 ## UI/UX Polish
 
 - [x] ~~**Text wrapping in mobile view**~~ - Fixed: Added max-width constraint (90vw) and word-break styles to blocks. Empty placeholder now wraps. Commit `6a24821`.
-- [ ] **Vote effect tuning** - Tier thresholds and animation speeds may need adjustment after real-world testing.
+- [x] ~~**Vote effect tuning**~~ - Optimized: Sped up all 8 celebration animations 15-20% (0.45-0.7s range), enhanced visual impact (wider spreads, bigger scales), removed unused dash-dance outline animations. Updated CLAUDE.md to reflect actual implementation.
 
 ## Features
 

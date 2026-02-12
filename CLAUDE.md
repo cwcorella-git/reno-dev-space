@@ -403,7 +403,7 @@ npx playwright test                # Run tests
 - **Canvas Editor**: Admin/pledged users can add text blocks, drag to reposition, resize via 8 handles
 - **Add Text Mode**: Cursor-following preview shows placement validity (green = valid, red = overlapping). Preview color matches placed block color. Shows "Click to place" on desktop, "Tap to place" on mobile.
 - **Voting**: Brightness-based voting with directional tracking (up/down); each vote changes brightness by ±5, block deleted at 0. Toggle behavior: same-direction tap is no-op, opposite removes vote.
-- **Vote Text Effects**: CSS effects escalate with upvotes — static glow (1) → pulsing glow (2) → hue-cycling (3-4) → rainbow gradient (5+). See `voteEffects.ts`.
+- **Vote Celebrations**: One-shot animations play on upvotes (8 effects: ring-burst, confetti-pop, glow-flash, bounce-pop, shimmer-sweep, sparkle-burst, ripple, star-shower). Each block deterministically assigned one effect via hash. Animations are snappy (0.45-0.7s). Visual feedback also includes opacity mapping to brightness (0-100 → 0.2-1.0).
 - **Reporting**: Users can report blocks (⚠ button). Admins see yellow border on reported blocks, can dismiss reports or delete. Dismissed reporters can't re-report that block.
 - **History**: Deletion audit log with restore capability. Tracks reason (self/admin/vote/cascade/report). Edit history shows previous content versions. Admin can delete history entries.
 - **Chat**: Persistent community chat using Firestore (last 100 messages)
@@ -483,19 +483,22 @@ The bottom panel has 4 tabs on left + icon buttons on right:
 - Block deleted when brightness reaches 0
 - Directional tracking: `votersUp[]` and `votersDown[]` arrays (legacy `voters[]` still supported)
 - Toggle behavior: tapping the same direction is a no-op; opposite direction removes existing vote
-- Only upvotes earn visual text effects (CSS glow/shimmer/rainbow)
+- Only upvotes trigger celebration animations
 - Vote clearing (admin) reverses brightness changes atomically via Firestore `increment()`
 
-### Vote Text Effects (4 tiers)
-| Upvotes | Effect | CSS |
-|---------|--------|-----|
-| 0 | None | Just brightness/opacity |
-| 1 | Static glow | `text-shadow` in block's color |
-| 2 | Pulsing glow | `vote-effect-glow` animation (drop-shadow breathes) |
-| 3-4 | Hue-cycling glow | `vote-effect-hue-cycle` (color slowly rotates via `hue-rotate` filter) |
-| 5+ | Rainbow gradient | `vote-effect-rainbow` (rainbow gradient flows through letterforms) |
+### Vote Celebration Effects (8 one-shot animations)
+| Effect | Description | Duration |
+|--------|-------------|----------|
+| ring-burst | Expanding colored ring | 0.5s |
+| confetti-pop | Six colored dots burst outward | 0.6s |
+| glow-flash | Bright flash then fade | 0.45s |
+| bounce-pop | Scale up with spring physics | 0.45s |
+| shimmer-sweep | Diagonal light sweep | 0.5s |
+| sparkle-burst | Corner sparkles with stagger | 0.5-0.58s |
+| ripple | Concentric expanding rings | 0.5-0.78s |
+| star-shower | Stars rise upward | 0.6-0.72s |
 
-Effects defined in `globals.css`, tier mapping in `src/lib/voteEffects.ts`.
+Each block is deterministically assigned one effect via hash of its Firestore ID (see `voteEffects.ts`). Effects defined in `globals.css`. Visual feedback also includes opacity mapping: brightness 0-100 → opacity 0.2-1.0.
 
 ## Mobile Interactions
 
