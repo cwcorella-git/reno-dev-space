@@ -31,13 +31,8 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
   const handleVote = async (direction: 'up' | 'down') => {
     if (isVoting) return
 
-    // Check for no-op conditions
-    const isNoOp =
-      (direction === 'up' && votedUp) ||
-      (direction === 'down' && votedDown) ||
-      isLegacyVoter
-
-    if (isNoOp) return
+    // Legacy voters can't vote (unknown direction, can't toggle)
+    if (isLegacyVoter) return
 
     setIsVoting(true)
     try {
@@ -48,10 +43,13 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
         return
       }
 
+      // Check if this is an unvote (clicking same direction to toggle off)
+      const isUnvote = (direction === 'up' && votedUp) || (direction === 'down' && votedDown)
+
       const wasArchived = await voteProperty(property.id, user.uid, direction)
 
       // Trigger celebration on upvote (not unvote, not archive)
-      if (direction === 'up' && !wasArchived) {
+      if (direction === 'up' && !isUnvote && !wasArchived) {
         const effect = getCelebrationEffect(property.id, effectsSettings)
         setCelebrating(effect)
       }
@@ -68,13 +66,14 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
         {/* Up arrow */}
         <button
           onClick={() => handleVote('up')}
-          disabled={votedUp || isVoting}
+          disabled={isVoting || isLegacyVoter}
           className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
             votedUp
-              ? 'bg-green-600 text-white'
+              ? 'bg-green-600 text-white hover:bg-green-700'
               : 'bg-white/10 hover:bg-green-600/50 text-white/70 hover:text-white'
           }`}
-          aria-label="Vote up"
+          aria-label={votedUp ? 'Remove upvote' : 'Vote up'}
+          title={votedUp ? 'Click to unvote' : 'Vote up (+5)'}
         >
           <ChevronUpIcon className="w-5 h-5" />
         </button>
@@ -87,13 +86,14 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
         {/* Down arrow */}
         <button
           onClick={() => handleVote('down')}
-          disabled={votedDown || isVoting}
+          disabled={isVoting || isLegacyVoter}
           className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
             votedDown
-              ? 'bg-red-600 text-white'
+              ? 'bg-red-600 text-white hover:bg-red-700'
               : 'bg-white/10 hover:bg-red-600/50 text-white/70 hover:text-white'
           }`}
-          aria-label="Vote down"
+          aria-label={votedDown ? 'Remove downvote' : 'Vote down'}
+          title={votedDown ? 'Click to unvote' : 'Vote down (-5)'}
         >
           <ChevronDownIcon className="w-5 h-5" />
         </button>

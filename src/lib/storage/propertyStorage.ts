@@ -124,7 +124,7 @@ export async function addProperty(
 }
 
 /**
- * Vote on a property (brightness-based)
+ * Vote on a property (brightness-based with toggle support)
  * Returns true if property was archived (brightness ≤ 20)
  */
 export async function voteProperty(
@@ -145,18 +145,13 @@ export async function voteProperty(
   const votedDown = property.votersDown?.includes(userId) ?? false
   const inLegacyVoters = property.voters?.includes(userId) ?? false
 
-  // Already voted this direction — no-op (keeps brightness where it is)
-  if ((direction === 'up' && votedUp) || (direction === 'down' && votedDown)) {
-    return false
-  }
-
-  // Legacy voter (in voters but not in votersUp/votersDown) — no-op
+  // Legacy voter (in voters but not in votersUp/votersDown) — no-op (can't toggle unknown direction)
   if (inLegacyVoters && !votedUp && !votedDown) {
     return false
   }
 
-  // Voted the other direction — remove that vote (1-for-1 reversal)
-  if ((direction === 'up' && votedDown) || (direction === 'down' && votedUp)) {
+  // Already voted this direction — UNVOTE (toggle off)
+  if ((direction === 'up' && votedUp) || (direction === 'down' && votedDown)) {
     const reverseChange = votedUp ? -VOTE_BRIGHTNESS_CHANGE : VOTE_BRIGHTNESS_CHANGE
     const newBrightness = Math.max(0, Math.min(100, (property.brightness ?? DEFAULT_BRIGHTNESS) + reverseChange))
 
@@ -169,11 +164,28 @@ export async function voteProperty(
     return newBrightness <= ARCHIVE_THRESHOLD
   }
 
-  // New vote
+  // Voted the other direction — switch votes (net 2x change)
+  if ((direction === 'up' && votedDown) || (direction === 'down' && votedUp)) {
+    // Remove old vote and add new one (net swing of 2x VOTE_BRIGHTNESS_CHANGE)
+    const netChange = direction === 'up' ? VOTE_BRIGHTNESS_CHANGE * 2 : -VOTE_BRIGHTNESS_CHANGE * 2
+    const newBrightness = Math.max(0, Math.min(100, (property.brightness ?? DEFAULT_BRIGHTNESS) + netChange))
+
+    await updateDoc(docRef, {
+      brightness: newBrightness,
+      // Remove from old voters array, add to new one
+      ...(votedUp ? { votersUp: arrayRemove(userId) } : { votersDown: arrayRemove(userId) }),
+      ...(direction === 'up' ? { votersUp: arrayUnion(userId) } : { votersDown: arrayUnion(userId) }),
+      // Note: voters array stays unchanged (user is still a voter, just changed direction)
+      updatedAt: Date.now(),
+    })
+    return newBrightness <= ARCHIVE_THRESHOLD
+  }
+
+  // New vote (first time voting on this property)
   const change = direction === 'up' ? VOTE_BRIGHTNESS_CHANGE : -VOTE_BRIGHTNESS_CHANGE
   const newBrightness = Math.max(0, Math.min(100, (property.brightness ?? DEFAULT_BRIGHTNESS) + change))
 
-  // Update brightness and add voter (archive but don't delete at ≤20)
+  // Update brightness and add voter
   await updateDoc(docRef, {
     brightness: newBrightness,
     voters: arrayUnion(userId),
