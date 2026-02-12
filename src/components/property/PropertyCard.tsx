@@ -47,7 +47,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
           <h4 className="font-semibold text-white text-base mb-1">{property.address}</h4>
 
           <p className="text-indigo-300 font-medium text-sm mb-1">
-            {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : '???'}
+            {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : 'Contact for Pricing'}
           </p>
 
           {/* Company & Phone */}

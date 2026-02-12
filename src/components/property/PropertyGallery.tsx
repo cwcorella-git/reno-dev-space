@@ -99,8 +99,8 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
         const deltaY = ((moveEvent.clientY - startY) / rect.height) * canvasHeightPercent
 
         // Gallery dimensions in percentage
-        const GALLERY_WIDTH = 23.6 // 340px / 1440px * 100
-        const GALLERY_HEIGHT = 20   // Estimated height
+        const GALLERY_WIDTH = 25.0 // 360px / 1440px * 100
+        const GALLERY_HEIGHT = 22   // Estimated height (increased with bigger cards)
         // Mobile zone: 375px centered in 1440px = 532.5px to 907.5px
         const MOBILE_ZONE_LEFT = 37.0  // 532.5 / 1440 * 100
         const MOBILE_ZONE_RIGHT = 63.0 // 907.5 / 1440 * 100
@@ -127,8 +127,8 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
         }
 
         // Check for overlapping blocks and displace them
-        const GALLERY_WIDTH = 23.6  // 340px / 1440px * 100
-        const GALLERY_HEIGHT = 20
+        const GALLERY_WIDTH = 25.0  // 360px / 1440px * 100
+        const GALLERY_HEIGHT = 22
         const galleryRect = {
           x: dragPos.x,
           y: dragPos.y,
@@ -198,8 +198,8 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
         const deltaX = ((moveTouch.clientX - startX) / rect.width) * 100
         const deltaY = ((moveTouch.clientY - startY) / rect.height) * canvasHeightPercent
 
-        const GALLERY_WIDTH = 23.6 // 340px / 1440px * 100
-        const GALLERY_HEIGHT = 20
+        const GALLERY_WIDTH = 25.0 // 360px / 1440px * 100
+        const GALLERY_HEIGHT = 22
         const MOBILE_ZONE_LEFT = 37.0  // 532.5 / 1440 * 100
         const MOBILE_ZONE_RIGHT = 63.0 // 907.5 / 1440 * 100
 
@@ -230,8 +230,8 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
         }
 
         // Displace overlapping blocks
-        const GALLERY_WIDTH = 23.6  // 340px / 1440px * 100
-        const GALLERY_HEIGHT = 20
+        const GALLERY_WIDTH = 25.0  // 360px / 1440px * 100
+        const GALLERY_HEIGHT = 22
         const galleryRect = {
           x: dragPos.x,
           y: dragPos.y,
@@ -267,19 +267,19 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
   if (loading) {
     return (
       <div
-        className={`absolute border border-white/10 rounded-lg ${
+        className={`absolute border border-white/10 rounded-lg bg-gray-900/80 backdrop-blur-sm ${
           isAdmin ? 'cursor-move hover:border-indigo-400/40' : ''
         }`}
         style={{
           left: `${displayPos.x}%`,
           top: `${(displayPos.y / canvasHeightPercent) * 100}%`,
-          width: '340px',
+          width: '360px',
           boxShadow: isDragging ? '0 8px 32px rgba(99, 102, 241, 0.5)' : undefined,
         }}
         onMouseDown={isAdmin ? handleMouseDown : undefined}
         onTouchStart={isAdmin ? handleTouchStart : undefined}
       >
-        <div className="px-4 py-4 text-center text-gray-400">
+        <div className="px-5 py-5 text-center text-gray-400">
           <p className="text-sm">Loading properties...</p>
         </div>
       </div>
@@ -290,26 +290,34 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
     return (
       <>
         <div
-          className={`absolute border border-white/10 rounded-lg ${
+          className={`absolute border border-white/10 rounded-lg bg-gray-900/80 backdrop-blur-sm ${
             isAdmin ? 'cursor-move hover:border-indigo-400/40' : ''
           }`}
           style={{
             left: `${displayPos.x}%`,
             top: `${(displayPos.y / canvasHeightPercent) * 100}%`,
-            width: '340px',
+            width: '360px',
             boxShadow: isDragging ? '0 8px 32px rgba(99, 102, 241, 0.5)' : undefined,
           }}
           onMouseDown={isAdmin ? handleMouseDown : undefined}
           onTouchStart={isAdmin ? handleTouchStart : undefined}
         >
-          <div className="px-4 py-4 text-center">
-            <p className="text-sm text-gray-400 mb-2">No rental properties yet. Be the first to suggest one!</p>
+          <div className="px-5 py-5">
+            {/* Header */}
+            <h3 className="text-lg font-bold text-white mb-3 text-center">Potential Spaces</h3>
+
+            <p className="text-sm text-gray-400 mb-4 text-center">
+              {user
+                ? "No rental properties yet. Be the first to suggest one!"
+                : "No rental properties yet. Sign in to suggest one!"}
+            </p>
+
             {user && (
               <button
                 onClick={onAddPropertyClick}
-                className="px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+                className="w-full px-4 py-2.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
               >
-                Add Property
+                + Add Property
               </button>
             )}
           </div>
@@ -321,36 +329,38 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
   return (
     <>
       <div
-        className={`absolute border border-white/10 rounded-lg ${
+        className={`absolute border border-white/10 rounded-lg bg-gray-900/80 backdrop-blur-sm ${
           isAdmin ? 'cursor-move hover:border-indigo-400/40' : ''
         }`}
         style={{
           left: `${displayPos.x}%`,
           top: `${(displayPos.y / canvasHeightPercent) * 100}%`,
-          width: '340px',
+          width: '360px',
           boxShadow: isDragging ? '0 8px 32px rgba(99, 102, 241, 0.5)' : undefined,
         }}
         onMouseDown={isAdmin ? handleMouseDown : undefined}
         onTouchStart={isAdmin ? handleTouchStart : undefined}
       >
-        <div className="px-4 py-4">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-white">Potential Spaces</h3>
-            {user && (
-              <button
-                onClick={onAddPropertyClick}
-                className="text-xs text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
-              >
-                + Add Property
-              </button>
-            )}
-          </div>
+        <div className="px-5 py-5">
+          {/* Header */}
+          <h3 className="text-lg font-bold text-white mb-4 text-center">Potential Spaces</h3>
 
+          {/* Carousel */}
           <PropertyCarousel
             properties={properties}
             currentIndex={currentIndex}
             onIndexChange={setCurrentIndex}
           />
+
+          {/* Add Property button (below carousel) */}
+          {user && (
+            <button
+              onClick={onAddPropertyClick}
+              className="w-full mt-3 px-4 py-2 bg-white/5 hover:bg-white/10 text-indigo-400 hover:text-indigo-300 text-sm font-medium rounded-lg transition-colors border border-white/10"
+            >
+              + Add Property
+            </button>
+          )}
         </div>
       </div>
     </>

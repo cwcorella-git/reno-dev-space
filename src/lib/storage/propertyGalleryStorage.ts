@@ -12,7 +12,7 @@ export interface PropertyGalleryPosition {
 }
 
 export const DEFAULT_POSITION: PropertyGalleryPosition = {
-  x: 38.2,  // 340px gallery centered in 375px mobile zone: (720-170)/1440*100
+  x: 37.5,  // 360px gallery centered in 375px mobile zone: (720-180)/1440*100
   y: 66.7,  // Two-thirds down canvas
   updatedAt: Date.now(),
   updatedBy: ''
@@ -47,8 +47,8 @@ export function subscribeToGalleryPosition(
 
 /**
  * Migrate old gallery positions to new coordinate system (admin-only, one-time)
- * Old system used x=21.9% (incorrect calculation)
- * New system uses x=38.2% (properly centered in 375px mobile zone)
+ * Old system used x=21.9% or x=38.2% (incorrect calculations)
+ * New system uses x=37.5% (360px gallery centered in 375px mobile zone)
  */
 export async function migrateGalleryPositionIfNeeded(userId: string): Promise<void> {
   const db = getDb()
@@ -58,8 +58,8 @@ export async function migrateGalleryPositionIfNeeded(userId: string): Promise<vo
   if (snapshot.exists()) {
     const position = snapshot.data() as PropertyGalleryPosition
 
-    // Only migrate if position is using old coordinate system
-    if (position.x < 35) {
+    // Only migrate if position is using old coordinate system (either x < 35 or x > 40)
+    if (position.x < 35 || position.x > 40) {
       console.log('[PropertyGallery] Migrating old position from', position.x, 'to', DEFAULT_POSITION.x)
       await setDoc(docRef, {
         ...position,
