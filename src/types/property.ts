@@ -12,6 +12,8 @@ export interface RentalProperty {
   address: string               // Required, e.g., "123 Main St, Reno, NV"
   cost: number | null           // Monthly rent in dollars, null displays as "???"
   description: string           // User's reasoning for suggestion
+  phone?: string | null         // Contact phone number (optional)
+  companyName?: string | null   // Property management company (optional)
 
   // Voting system (mirrors text blocks)
   brightness: number            // 0-100, default 50
@@ -38,6 +40,8 @@ export const DEFAULT_PROPERTY: Omit<RentalProperty, 'id'> = {
   address: '',
   cost: null,
   description: '',
+  phone: null,
+  companyName: null,
   brightness: DEFAULT_BRIGHTNESS,
   voters: [],
   createdBy: '',

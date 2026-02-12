@@ -15,6 +15,8 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [address, setAddress] = useState('')
   const [cost, setCost] = useState<string>('')
+  const [phone, setPhone] = useState('')
+  const [companyName, setCompanyName] = useState('')
   const [description, setDescription] = useState('')
   const [uploading, setUploading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -79,12 +81,16 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
     setUploading(true)
     try {
       const costNum = cost.trim() ? parseFloat(cost.replace(/,/g, '')) : null
+      const phoneValue = phone.trim() || null
+      const companyValue = companyName.trim() || null
       const propertyId = await addProperty(
         imageFile,
         address.trim(),
         costNum,
         description.trim(),
-        user!.uid
+        user!.uid,
+        phoneValue,
+        companyValue
       )
       onSuccess?.(propertyId)
     } catch (err) {
@@ -199,29 +205,56 @@ export function AddPropertyModal({ onClose, onSuccess }: AddPropertyModalProps) 
           />
         </div>
 
-        {/* Cost */}
-        <div className="mb-3">
-          <label className="block text-sm font-medium text-gray-300 mb-1.5">
-            Monthly Rent (optional)
-          </label>
-          <div className="relative">
-            <span className="absolute left-3 top-2.5 text-gray-400">$</span>
+        {/* Cost & Phone (side by side) */}
+        <div className="mb-3 grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              Monthly Rent
+            </label>
+            <div className="relative">
+              <span className="absolute left-3 top-2.5 text-gray-400">$</span>
+              <input
+                type="text"
+                value={cost}
+                onChange={(e) => {
+                  // Allow only digits and commas
+                  const value = e.target.value.replace(/[^0-9,]/g, '')
+                  setCost(value)
+                }}
+                placeholder="2,500"
+                className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                disabled={uploading}
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-1.5">
+              Phone
+            </label>
             <input
-              type="text"
-              value={cost}
-              onChange={(e) => {
-                // Allow only digits and commas
-                const value = e.target.value.replace(/[^0-9,]/g, '')
-                setCost(value)
-              }}
-              placeholder="2,500"
-              className="w-full bg-white/5 border border-white/10 rounded-lg pl-8 pr-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              type="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="(775) 555-0123"
+              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               disabled={uploading}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Leave blank to show &quot;???&quot;
-          </p>
+        </div>
+
+        {/* Company Name */}
+        <div className="mb-3">
+          <label className="block text-sm font-medium text-gray-300 mb-1.5">
+            Company Name
+          </label>
+          <input
+            type="text"
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            placeholder="ABC Property Management"
+            className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            disabled={uploading}
+          />
         </div>
 
         {/* Description */}

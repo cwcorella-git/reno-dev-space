@@ -32,7 +32,9 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
     try {
       await updatePresence(user.uid, profile.displayName, x, y)
     } catch (error) {
-      console.error('[PresenceContext] Failed to update presence:', error)
+      // Silently skip presence updates if permissions are not set up
+      // This is a non-critical feature - app functions fine without it
+      return
     }
   }
 
@@ -89,8 +91,8 @@ export function PresenceProvider({ children }: { children: ReactNode }) {
 
       // Remove presence from Firestore
       if (user) {
-        removePresence(user.uid).catch((error) => {
-          console.error('[PresenceContext] Failed to remove presence on unmount:', error)
+        removePresence(user.uid).catch(() => {
+          // Silently skip - non-critical cleanup
         })
       }
     }

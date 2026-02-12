@@ -87,7 +87,9 @@ export async function addProperty(
   address: string,
   cost: number | null,
   description: string,
-  createdBy: string
+  createdBy: string,
+  phone?: string | null,
+  companyName?: string | null
 ): Promise<string> {
   const db = getDb()
   const now = Date.now()
@@ -106,6 +108,8 @@ export async function addProperty(
     address,
     cost,
     description,
+    phone: phone || null,
+    companyName: companyName || null,
     brightness: DEFAULT_BRIGHTNESS,
     voters: [],
     votersUp: [],
