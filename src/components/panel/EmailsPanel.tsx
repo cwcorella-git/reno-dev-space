@@ -4,6 +4,10 @@ import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { EditableText } from '@/components/EditableText'
 import { EditorTab } from './EditorTab'
+import { PencilSquareIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { getEmailTemplate, saveEmailTemplate, deleteEmailTemplate } from '@/lib/storage/emailTemplateStorage'
+import { EmailVariableEditor } from './EmailVariableEditor'
+import { EmailHtmlEditor } from './EmailHtmlEditor'
 
 type EmailTemplate = 'verify-email' | 'campaign-success' | 'campaign-ended' | 'campaign-update'
 
@@ -70,6 +74,13 @@ export function EmailsPanel() {
   const [previewHtml, setPreviewHtml] = useState('')
   const [loading, setLoading] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
+  const [editMode, setEditMode] = useState<'preview' | 'variables' | 'html'>('preview')
+  const [editedHtml, setEditedHtml] = useState('')
+  const [editedSampleData, setEditedSampleData] = useState<Record<string, string>>({})
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
+  const [isCustomTemplate, setIsCustomTemplate] = useState(false)
+  const [templateVariables, setTemplateVariables] = useState<string[]>([])
+  const [isSaving, setIsSaving] = useState(false)
   const iframeRef = useRef<HTMLIFrameElement>(null)
 
   // Enable/disable contentEditable on iframe when edit mode changes
@@ -101,6 +112,28 @@ export function EmailsPanel() {
     return () => clearTimeout(timer)
   }, [isEditing, previewHtml, showPreview])
 
+  // ESC key to exit edit mode
+  useEffect(() => {
+    if (!isEditing) return
+
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        if (hasUnsavedChanges) {
+          const confirmed = confirm('Discard unsaved changes?')
+          if (!confirmed) return
+        }
+        setIsEditing(false)
+        setEditMode('preview')
+        setHasUnsavedChanges(false)
+      }
+    }
+
+    // Use capture phase to intercept before iframe gets event
+    window.addEventListener('keydown', handleEscKey, true)
+    return () => window.removeEventListener('keydown', handleEscKey, true)
+  }, [isEditing, hasUnsavedChanges])
+
   if (!user || !isAdmin) {
     return (
       <div className="p-4 text-center text-gray-400">
@@ -114,35 +147,87 @@ export function EmailsPanel() {
   const handlePreview = async () => {
     setLoading(true)
     try {
-      // Use correct base path for GitHub Pages deployment
-      const basePath = process.env.NODE_ENV === 'production' ? '/reno-dev-space' : ''
-      const templatePath = `${basePath}/email-templates/${selectedTemplate}.html`
-      const response = await fetch(templatePath)
+      let html: string
 
-      if (!response.ok) {
-        throw new Error(`Failed to load template: ${response.status} ${response.statusText}`)
+      // Try Firestore first (edited templates)
+      const customTemplate = await getEmailTemplate(selectedTemplate)
+
+      if (customTemplate) {
+        html = customTemplate.html
+        setTemplateVariables(customTemplate.variables)
+        setIsCustomTemplate(true)
+      } else {
+        // Fallback to static file
+        const basePath = process.env.NODE_ENV === 'production' ? '/reno-dev-space' : ''
+        const response = await fetch(`${basePath}/email-templates/${selectedTemplate}.html`)
+        if (!response.ok) throw new Error(`HTTP ${response.status}`)
+        html = await response.text()
+
+        // Extract variables from static file
+        const vars: string[] = []
+        const regex = /{{([A-Z_]+)}}/g
+        let match
+        while ((match = regex.exec(html)) !== null) {
+          if (!vars.includes(match[1])) vars.push(match[1])
+        }
+        setTemplateVariables(vars)
+        setIsCustomTemplate(false)
       }
 
-      let html = await response.text()
-
-      // Replace template variables with sample data
+      // Replace variables with sample data
+      let processedHtml = html
       Object.entries(currentTemplate.sampleData).forEach(([key, value]) => {
-        html = html.replace(new RegExp(`{{${key}}}`, 'g'), value)
+        processedHtml = processedHtml.replace(new RegExp(`{{${key}}}`, 'g'), value)
       })
 
-      setPreviewHtml(html)
+      setPreviewHtml(processedHtml)
+      setEditedHtml(html) // Store original (with {{VARS}}) for editing
+      setEditedSampleData(currentTemplate.sampleData)
       setShowPreview(true)
     } catch (error) {
       console.error('Failed to load template:', error)
-      alert('Failed to load email template. Please check the console for details.')
+      alert('Failed to load email template')
     } finally {
       setLoading(false)
     }
   }
 
+  const handleSaveTemplate = async () => {
+    if (!user) return
+    setIsSaving(true)
+    try {
+      await saveEmailTemplate(selectedTemplate, editedHtml, user.uid)
+      setIsCustomTemplate(true)
+      setHasUnsavedChanges(false)
+      alert('Template saved successfully!')
+    } catch (error) {
+      console.error('Failed to save template:', error)
+      alert('Failed to save template. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleResetToDefault = async () => {
+    const confirmed = confirm(
+      'Reset to default template? This will delete your custom version.'
+    )
+    if (!confirmed) return
+
+    try {
+      await deleteEmailTemplate(selectedTemplate)
+      setIsCustomTemplate(false)
+      // Reload template
+      await handlePreview()
+      alert('Template reset to default')
+    } catch (error) {
+      console.error('Failed to reset template:', error)
+      alert('Failed to reset template')
+    }
+  }
+
   return (
-    <div className="max-h-[400px] overflow-y-auto">
-      <div className="p-4 space-y-4">
+    <div className="p-4 space-y-4">
         {/* Template Selector */}
         <div>
           <label className="block text-xs text-gray-400 mb-2">
@@ -191,92 +276,161 @@ export function EmailsPanel() {
             </div>
           </div>
         )}
-
-        {/* Note about editing */}
-        <div className="bg-amber-900/20 border border-amber-600/30 rounded-lg p-3">
-          <p className="text-xs text-amber-200">
-            <EditableText
-              id="emails.note.editing"
-              defaultValue="Note: Template editing coming soon. Currently showing preview with sample data."
-              category="emails"
-            />
-          </p>
-        </div>
       </div>
 
       {/* Preview Modal */}
       {showPreview && (
         <div
           className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 p-4"
-          onClick={() => {
-            setShowPreview(false)
-            setIsEditing(false)
+          style={{
+            paddingTop: '64px',     // Banner height (56px) + margin
+            paddingBottom: '210px'  // Panel height (~200px) + margin
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              if (hasUnsavedChanges) {
+                const confirmed = confirm('Discard unsaved changes?')
+                if (!confirmed) return
+              }
+              setShowPreview(false)
+              setIsEditing(false)
+              setEditMode('preview')
+            }
           }}
         >
-          <div className="relative w-full max-w-4xl h-[90vh] bg-gray-900 rounded-xl shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="relative w-full max-w-4xl h-full bg-gray-900 rounded-xl shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
               <div>
-                <h3 className="text-white font-semibold">{currentTemplate.name}</h3>
+                <h3 className="text-white font-semibold flex items-center gap-2">
+                  {currentTemplate.name}
+                  {isCustomTemplate && (
+                    <span className="text-xs bg-indigo-600 text-white px-2 py-0.5 rounded">Custom</span>
+                  )}
+                </h3>
                 <p className="text-xs text-gray-400">{currentTemplate.description}</p>
               </div>
               <div className="flex items-center gap-2">
-                {!isEditing && (
+                {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded font-medium"
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded font-medium"
                   >
+                    <PencilSquareIcon className="w-4 h-4" />
                     Edit Template
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSaveTemplate}
+                    disabled={!hasUnsavedChanges || isSaving}
+                    className="px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 text-white text-xs rounded font-medium"
+                  >
+                    {isSaving ? 'Saving...' : 'Save Changes'}
                   </button>
                 )}
                 <button
                   onClick={() => {
                     setShowPreview(false)
                     setIsEditing(false)
+                    setEditMode('preview')
                   }}
                   className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white"
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <XMarkIcon className="w-5 h-5" />
                 </button>
               </div>
             </div>
 
-            {/* Editor Toolbar (shown when editing) */}
-            {isEditing && (
-              <div className="border-b border-white/10 bg-gray-800/50 flex-shrink-0">
-                <div className="px-4 py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-xs text-amber-400 mb-1">
-                      ✏️ Live Edit Mode – Click any text to change it
-                    </p>
-                    <p className="text-xs text-gray-400">
-                      Changes are preview only (not saved to template file)
-                    </p>
+            {/* Body: Preview + Editor */}
+            <div className="flex-1 flex overflow-hidden">
+              {/* Left: Preview (always visible) */}
+              <div className={`${isEditing ? 'w-3/5' : 'w-full'} flex flex-col p-4`}>
+                <iframe
+                  ref={iframeRef}
+                  srcDoc={previewHtml}
+                  className="w-full h-full border border-white/10 rounded bg-white"
+                  title="Email Preview"
+                />
+              </div>
+
+              {/* Right: Editor (only when editing) */}
+              {isEditing && (
+                <div className="w-2/5 flex flex-col">
+                  {/* Editor Tabs */}
+                  <div className="flex border-b border-white/10 bg-gray-800/30">
+                    <button
+                      onClick={() => setEditMode('variables')}
+                      className={`flex-1 px-4 py-2 text-xs font-medium transition-colors ${
+                        editMode === 'variables'
+                          ? 'text-white bg-gray-800/50 border-b-2 border-indigo-400'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      Variables
+                    </button>
+                    <button
+                      onClick={() => setEditMode('html')}
+                      className={`flex-1 px-4 py-2 text-xs font-medium transition-colors ${
+                        editMode === 'html'
+                          ? 'text-white bg-gray-800/50 border-b-2 border-indigo-400'
+                          : 'text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      HTML
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setIsEditing(false)}
-                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded font-medium"
-                  >
-                    Exit Edit Mode
-                  </button>
+
+                  {/* Editor Content */}
+                  {editMode === 'variables' && (
+                    <EmailVariableEditor
+                      variables={templateVariables}
+                      sampleData={editedSampleData}
+                      onSampleDataChange={(data) => {
+                        setEditedSampleData(data)
+                        setHasUnsavedChanges(true)
+                        // Update preview immediately
+                        let updatedHtml = editedHtml
+                        Object.entries(data).forEach(([key, value]) => {
+                          updatedHtml = updatedHtml.replace(new RegExp(`{{${key}}}`, 'g'), value)
+                        })
+                        setPreviewHtml(updatedHtml)
+                      }}
+                      onSave={() => {
+                        // Just update preview, don't save to Firestore
+                        setHasUnsavedChanges(false)
+                      }}
+                      onCancel={() => setIsEditing(false)}
+                    />
+                  )}
+
+                  {editMode === 'html' && (
+                    <EmailHtmlEditor
+                      html={editedHtml}
+                      onHtmlChange={(html) => {
+                        setEditedHtml(html)
+                        setHasUnsavedChanges(true)
+                      }}
+                      onSave={handleSaveTemplate}
+                      onCancel={() => setIsEditing(false)}
+                      isSaving={isSaving}
+                    />
+                  )}
                 </div>
+              )}
+            </div>
+
+            {/* Footer: Reset to Default */}
+            {isCustomTemplate && (
+              <div className="px-4 py-2 border-t border-white/10 flex items-center justify-between">
+                <span className="text-xs text-gray-400">Template has been customized</span>
+                <button
+                  onClick={handleResetToDefault}
+                  className="text-xs text-red-400 hover:text-red-300 hover:underline"
+                >
+                  Reset to Default
+                </button>
               </div>
             )}
-
-            {/* Preview - flexible height that fills remaining space */}
-            <div className="flex-1 overflow-auto p-4">
-              <iframe
-                ref={iframeRef}
-                srcDoc={previewHtml}
-                className={`w-full h-full bg-white rounded border ${
-                  isEditing ? 'border-amber-400/40' : 'border-white/10'
-                } ${isEditing ? 'cursor-text' : 'cursor-default'}`}
-                style={{ minHeight: '700px' }}
-                title="Email Preview"
-              />
-            </div>
           </div>
         </div>
       )}
