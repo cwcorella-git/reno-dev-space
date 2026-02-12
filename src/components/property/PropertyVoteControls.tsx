@@ -36,13 +36,6 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
 
     setIsVoting(true)
     try {
-      // Test mode: just trigger random celebration
-      if (effectsSettings.testMode && direction === 'up') {
-        const effect = getRandomEffect(effectsSettings)
-        setCelebrating(effect)
-        return
-      }
-
       // Check if this is an unvote (clicking same direction to toggle off)
       const isUnvote = (direction === 'up' && votedUp) || (direction === 'down' && votedDown)
 
@@ -50,7 +43,10 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
 
       // Trigger celebration on upvote (not unvote, not archive)
       if (direction === 'up' && !isUnvote && !wasArchived) {
-        const effect = getCelebrationEffect(property.id, effectsSettings)
+        // Test mode: trigger random effect, otherwise use property-based effect
+        const effect = effectsSettings.testMode
+          ? getRandomEffect(effectsSettings)
+          : getCelebrationEffect(property.id, effectsSettings)
         setCelebrating(effect)
       }
     } catch (error) {
@@ -62,12 +58,12 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
 
   return (
     <>
-      <div className="flex flex-col items-center gap-1 flex-shrink-0">
+      <div className="flex flex-col items-center gap-0.5 bg-black/60 backdrop-blur-sm rounded-lg p-1.5">
         {/* Up arrow */}
         <button
           onClick={() => handleVote('up')}
           disabled={isVoting || isLegacyVoter}
-          className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+          className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
             votedUp
               ? 'bg-green-600 text-white hover:bg-green-700'
               : 'bg-white/10 hover:bg-green-600/50 text-white/70 hover:text-white'
@@ -75,11 +71,11 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
           aria-label={votedUp ? 'Remove upvote' : 'Vote up'}
           title={votedUp ? 'Click to unvote' : 'Vote up (+5)'}
         >
-          <ChevronUpIcon className="w-5 h-5" />
+          <ChevronUpIcon className="w-4 h-4" />
         </button>
 
         {/* Brightness number */}
-        <span className="text-xs font-mono text-white font-semibold">
+        <span className="text-[10px] font-mono text-white font-semibold px-1">
           {property.brightness}
         </span>
 
@@ -87,7 +83,7 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
         <button
           onClick={() => handleVote('down')}
           disabled={isVoting || isLegacyVoter}
-          className={`w-9 h-9 rounded-lg flex items-center justify-center transition-colors ${
+          className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
             votedDown
               ? 'bg-red-600 text-white hover:bg-red-700'
               : 'bg-white/10 hover:bg-red-600/50 text-white/70 hover:text-white'
@@ -95,7 +91,7 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
           aria-label={votedDown ? 'Remove downvote' : 'Vote down'}
           title={votedDown ? 'Click to unvote' : 'Vote down (-5)'}
         >
-          <ChevronDownIcon className="w-5 h-5" />
+          <ChevronDownIcon className="w-4 h-4" />
         </button>
       </div>
 

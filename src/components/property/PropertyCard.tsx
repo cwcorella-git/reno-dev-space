@@ -67,7 +67,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         )}
 
         <div className="flex flex-col p-3">
-          {/* Image with expand button */}
+          {/* Image with expand button and vote controls */}
           <div className="w-full relative group/image mb-3">
             <img
               src={property.imageUrl}
@@ -79,43 +79,42 @@ export function PropertyCard({ property }: PropertyCardProps) {
             {/* Expand button overlay */}
             <button
               onClick={() => setShowImageModal(true)}
-              className="absolute bottom-2 right-2 w-8 h-8 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-lg flex items-center justify-center text-white transition-all opacity-0 group-hover/image:opacity-100"
+              className="absolute bottom-2 left-2 w-8 h-8 bg-black/60 hover:bg-black/80 backdrop-blur-sm rounded-lg flex items-center justify-center text-white transition-all opacity-0 group-hover/image:opacity-100"
               aria-label="Expand image"
             >
               <ArrowsPointingOutIcon className="w-5 h-5" />
             </button>
+
+            {/* Vote controls (bottom-right of image, always visible) */}
+            <div className="absolute bottom-2 right-2">
+              <PropertyVoteControls property={property} />
+            </div>
           </div>
 
-          {/* Details + Vote Controls Row */}
-          <div className="flex gap-3">
-            {/* Details (left side) */}
-            <div className="flex-1 min-w-0">
-              <h4 className="font-semibold text-white text-base mb-1 break-words">{property.address}</h4>
+          {/* Details (full width) */}
+          <div>
+            <h4 className="font-semibold text-white text-base mb-1 break-words">{property.address}</h4>
 
-              <p className="text-indigo-300 font-medium text-sm mb-1">
-                {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : 'Contact for Pricing'}
-              </p>
+            <p className="text-indigo-300 font-medium text-sm mb-1">
+              {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : 'Contact for Pricing'}
+            </p>
 
-              {/* Company & Phone */}
-              {(property.companyName || property.phone) && (
-                <div className="text-xs text-gray-400 mb-2 space-y-0.5">
-                  {property.companyName && <p className="break-words">{property.companyName}</p>}
-                  {property.phone && <p className="break-all">{property.phone}</p>}
-                </div>
-              )}
-
-              <p className="text-xs text-gray-300 leading-relaxed mb-2 break-words">
-                {property.description}
-              </p>
-
-              {/* Metadata */}
-              <div className="text-xs text-gray-500">
-                <p>Added {new Date(property.createdAt).toLocaleDateString()}</p>
+            {/* Company & Phone */}
+            {(property.companyName || property.phone) && (
+              <div className="text-xs text-gray-400 mb-2 space-y-0.5">
+                {property.companyName && <p className="break-words">{property.companyName}</p>}
+                {property.phone && <p className="break-all">{property.phone}</p>}
               </div>
-            </div>
+            )}
 
-            {/* Vote controls (right side, always visible) */}
-            <PropertyVoteControls property={property} />
+            <p className="text-xs text-gray-300 leading-relaxed mb-2 break-words">
+              {property.description}
+            </p>
+
+            {/* Metadata */}
+            <div className="text-xs text-gray-500">
+              <p>Added {new Date(property.createdAt).toLocaleDateString()}</p>
+            </div>
           </div>
         </div>
       </div>
