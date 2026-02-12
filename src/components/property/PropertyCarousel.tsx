@@ -47,38 +47,41 @@ export function PropertyCarousel({ properties, currentIndex, onIndexChange }: Pr
 
   return (
     <div className="relative">
-      {/* Left arrow */}
-      {properties.length > 1 && (
-        <button
-          onClick={handlePrev}
-          className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors"
-          aria-label="Previous property"
-        >
-          <ChevronLeftIcon className="w-6 h-6" />
-        </button>
-      )}
-
       {/* Property card */}
-      <div className="px-12">
-        <PropertyCard property={currentProperty} />
-      </div>
+      <PropertyCard property={currentProperty} />
 
-      {/* Right arrow */}
+      {/* Navigation arrows - positioned outside the card */}
       {properties.length > 1 && (
-        <button
-          onClick={handleNext}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors"
-          aria-label="Next property"
-        >
-          <ChevronRightIcon className="w-6 h-6" />
-        </button>
-      )}
+        <>
+          {/* Left arrow */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handlePrev()
+            }}
+            className="absolute -left-2 top-1/3 z-20 w-9 h-9 bg-gray-800/90 hover:bg-gray-700 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors shadow-lg border border-white/10"
+            aria-label="Previous property"
+          >
+            <ChevronLeftIcon className="w-5 h-5" />
+          </button>
 
-      {/* Indicator */}
-      {properties.length > 1 && (
-        <div className="text-center text-xs text-gray-400 mt-2">
-          Property {currentIndex + 1} of {properties.length}
-        </div>
+          {/* Right arrow */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleNext()
+            }}
+            className="absolute -right-2 top-1/3 z-20 w-9 h-9 bg-gray-800/90 hover:bg-gray-700 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors shadow-lg border border-white/10"
+            aria-label="Next property"
+          >
+            <ChevronRightIcon className="w-5 h-5" />
+          </button>
+
+          {/* Indicator */}
+          <div className="text-center text-xs text-gray-400 mt-2">
+            {currentIndex + 1} / {properties.length}
+          </div>
+        </>
       )}
     </div>
   )
