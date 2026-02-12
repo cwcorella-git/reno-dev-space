@@ -74,21 +74,32 @@ export function EmailsPanel() {
 
   // Enable/disable contentEditable on iframe when edit mode changes
   useEffect(() => {
+    if (!showPreview) return
+
     const iframe = iframeRef.current
     if (!iframe) return
 
-    const iframeDoc = iframe.contentDocument
-    if (!iframeDoc || !iframeDoc.body) return
+    // Wait for iframe to load content
+    const enableEditing = () => {
+      const iframeDoc = iframe.contentDocument
+      if (!iframeDoc || !iframeDoc.body) return
 
-    if (isEditing) {
-      iframeDoc.body.contentEditable = 'true'
-      iframeDoc.body.style.outline = 'none'
-      iframeDoc.body.style.cursor = 'text'
-    } else {
-      iframeDoc.body.contentEditable = 'false'
-      iframeDoc.body.style.cursor = 'default'
+      if (isEditing) {
+        iframeDoc.body.contentEditable = 'true'
+        iframeDoc.body.style.outline = 'none'
+        iframeDoc.body.style.cursor = 'text'
+      } else {
+        iframeDoc.body.contentEditable = 'false'
+        iframeDoc.body.style.cursor = 'default'
+      }
     }
-  }, [isEditing, previewHtml])
+
+    // Try immediately and after a short delay (for iframe load)
+    enableEditing()
+    const timer = setTimeout(enableEditing, 100)
+
+    return () => clearTimeout(timer)
+  }, [isEditing, previewHtml, showPreview])
 
   if (!user || !isAdmin) {
     return (
@@ -196,42 +207,57 @@ export function EmailsPanel() {
       {/* Preview Modal */}
       {showPreview && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 p-4"
           onClick={() => {
             setShowPreview(false)
             setIsEditing(false)
           }}
         >
-          <div className="relative w-full max-w-3xl max-h-[95vh] bg-gray-900 rounded-xl shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div className="relative w-full max-w-4xl h-[90vh] bg-gray-900 rounded-xl shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
               <div>
                 <h3 className="text-white font-semibold">{currentTemplate.name}</h3>
                 <p className="text-xs text-gray-400">{currentTemplate.description}</p>
               </div>
-              <button
-                onClick={() => {
-                  setShowPreview(false)
-                  setIsEditing(false)
-                }}
-                className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <div className="flex items-center gap-2">
+                {!isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs rounded font-medium"
+                  >
+                    Edit Template
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setShowPreview(false)
+                    setIsEditing(false)
+                  }}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 text-gray-400 hover:text-white"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Editor Toolbar (shown when editing) */}
             {isEditing && (
-              <div className="border-b border-white/10 bg-gray-800/50">
-                <div className="px-4 py-2">
-                  <p className="text-xs text-amber-400 mb-2">
-                    Click elements in the preview below to edit them. Changes are live preview only.
-                  </p>
+              <div className="border-b border-white/10 bg-gray-800/50 flex-shrink-0">
+                <div className="px-4 py-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-amber-400 mb-1">
+                      ✏️ Live Edit Mode – Click any text to change it
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      Changes are preview only (not saved to template file)
+                    </p>
+                  </div>
                   <button
                     onClick={() => setIsEditing(false)}
-                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded"
+                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded font-medium"
                   >
                     Exit Edit Mode
                   </button>
@@ -240,27 +266,15 @@ export function EmailsPanel() {
             )}
 
             {/* Preview - flexible height that fills remaining space */}
-            <div className="p-4 flex-1 overflow-auto">
+            <div className="flex-1 overflow-auto p-4">
               <iframe
                 ref={iframeRef}
                 srcDoc={previewHtml}
-                className={`w-full h-full min-h-[600px] bg-white rounded border ${
+                className={`w-full h-full bg-white rounded border ${
                   isEditing ? 'border-amber-400/40' : 'border-white/10'
-                } ${isEditing ? 'cursor-text' : 'cursor-pointer'}`}
+                } ${isEditing ? 'cursor-text' : 'cursor-default'}`}
+                style={{ minHeight: '700px' }}
                 title="Email Preview"
-                onClick={() => {
-                  if (!isEditing) {
-                    setIsEditing(true)
-                    // Make iframe content editable
-                    setTimeout(() => {
-                      const iframeDoc = iframeRef.current?.contentDocument
-                      if (iframeDoc && iframeDoc.body) {
-                        iframeDoc.body.contentEditable = 'true'
-                        iframeDoc.body.style.outline = 'none'
-                      }
-                    }, 100)
-                  }
-                }}
               />
             </div>
           </div>
