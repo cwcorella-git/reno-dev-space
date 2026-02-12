@@ -82,10 +82,15 @@ export function EmailsPanel() {
   const handlePreview = async () => {
     setLoading(true)
     try {
-      // TODO: Call Cloud Function to get rendered template HTML
-      // For now, show a placeholder
-      const templatePath = `/email-templates/${selectedTemplate}.html`
+      // Use correct base path for GitHub Pages deployment
+      const basePath = process.env.NODE_ENV === 'production' ? '/reno-dev-space' : ''
+      const templatePath = `${basePath}/email-templates/${selectedTemplate}.html`
       const response = await fetch(templatePath)
+
+      if (!response.ok) {
+        throw new Error(`Failed to load template: ${response.status} ${response.statusText}`)
+      }
+
       let html = await response.text()
 
       // Replace template variables with sample data
@@ -97,6 +102,7 @@ export function EmailsPanel() {
       setShowPreview(true)
     } catch (error) {
       console.error('Failed to load template:', error)
+      alert('Failed to load email template. Please check the console for details.')
     } finally {
       setLoading(false)
     }
@@ -169,9 +175,9 @@ export function EmailsPanel() {
       {/* Preview Modal */}
       {showPreview && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80 p-4" onClick={() => setShowPreview(false)}>
-          <div className="relative w-full max-w-3xl bg-gray-900 rounded-xl shadow-2xl" onClick={(e) => e.stopPropagation()}>
+          <div className="relative w-full max-w-3xl max-h-[90vh] bg-gray-900 rounded-xl shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
               <div>
                 <h3 className="text-white font-semibold">{currentTemplate.name}</h3>
                 <p className="text-xs text-gray-400">{currentTemplate.description}</p>
@@ -186,11 +192,11 @@ export function EmailsPanel() {
               </button>
             </div>
 
-            {/* Preview */}
-            <div className="p-4 max-h-[70vh] overflow-y-auto">
+            {/* Preview - flexible height that fills remaining space */}
+            <div className="p-4 flex-1 overflow-hidden">
               <iframe
                 srcDoc={previewHtml}
-                className="w-full h-[600px] bg-white rounded border border-white/10"
+                className="w-full h-full bg-white rounded border border-white/10"
                 title="Email Preview"
               />
             </div>
