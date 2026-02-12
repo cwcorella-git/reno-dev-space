@@ -68,8 +68,7 @@ src/
 │   ├── canvas/
 │   │   ├── Canvas.tsx              # Main canvas + right-click menu + marquee select + add text mode
 │   │   ├── CanvasBlock.tsx         # Draggable/resizable block + vote arrows + report/dismiss buttons
-│   │   ├── TextBlockRenderer.tsx   # Text display + inline editing + Ctrl+B/I/U + vote CSS effects
-│   │   └── VoteOutlines.tsx        # SVG vote outlines (disabled — replaced by CSS text effects)
+│   │   └── TextBlockRenderer.tsx   # Text display + inline editing + Ctrl+B/I/U + vote CSS effects
 │   ├── panel/
 │   │   ├── UnifiedPanel.tsx        # Main panel with 4 tabs + admin icons
 │   │   ├── EditorTab.tsx           # Block styling (font, size, color, align, B/I/U/S, link)

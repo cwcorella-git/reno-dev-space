@@ -8,7 +8,7 @@ Tracking polish work, bugs, and feature ideas for Reno Dev Space.
 - [x] ~~**Italic/underline UI missing**~~ - Fixed: Ctrl+B/I/U shortcuts + B/I/U/S buttons in EditorTab.
 - [ ] **Marquee animation unused** - Defined in `tailwind.config.ts` and `TextStyle` type but never rendered in `TextBlockRenderer.tsx`. Either implement or remove.
 - [ ] **Background color UI missing** - `TextStyle.backgroundColor` exists but no control in `EditorTab.tsx` to set it.
-- [ ] **VoteOutlines.tsx disabled** - SVG outlines replaced by CSS text effects. File still exists but is commented out in `CanvasBlock.tsx`. Remove if text effects are kept.
+- [x] ~~**VoteOutlines.tsx disabled**~~ - Removed. SVG outlines replaced by CSS text effects (ring-burst). Commit `cd3e73c`.
 
 ## Bugs
 
