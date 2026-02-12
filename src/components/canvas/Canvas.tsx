@@ -11,8 +11,10 @@ import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
 import { PropertyGallery } from '@/components/property/PropertyGallery'
+import { GalleryPositionSlider } from '@/components/property/GalleryPositionSlider'
 import { AddPropertyModal } from '@/components/property/AddPropertyModal'
 import { incrementPageViews } from '@/lib/storage/campaignStorage'
+import { subscribeToGalleryPosition, updateGalleryPosition, DEFAULT_POSITION as DEFAULT_GALLERY_POSITION } from '@/lib/storage/propertyGalleryStorage'
 import { wouldOverlap, wouldOverlapDOM } from '@/lib/overlapDetection'
 import { filterEditableBlocks } from '@/lib/permissions'
 import { EditableText } from '@/components/EditableText'
@@ -67,6 +69,9 @@ export function Canvas() {
 
   // Property modal state (lifted to control panel visibility and scrolling)
   const [showPropertyModal, setShowPropertyModal] = useState(false)
+
+  // Gallery position tracking (for slider)
+  const [galleryY, setGalleryY] = useState(DEFAULT_GALLERY_POSITION.y)
 
   // Fast initial estimate based on block Y positions (before DOM is available)
   const estimatedHeightPx = useMemo(() => {
@@ -496,6 +501,15 @@ export function Canvas() {
     }
   }, [])
 
+  // Subscribe to gallery position (for slider display)
+  useEffect(() => {
+    const unsubscribe = subscribeToGalleryPosition(
+      (position) => setGalleryY(position.y),
+      (error) => console.error('[Canvas] Gallery position error:', error)
+    )
+    return () => unsubscribe()
+  }, [])
+
   // Pick a random color when entering add-text mode
   useEffect(() => {
     if (isAddTextMode) setPreviewColor(getRandomColor())
@@ -715,7 +729,25 @@ export function Canvas() {
           )}
 
             {/* Rental property gallery */}
-            <PropertyGallery onAddPropertyClick={() => setShowPropertyModal(true)} />
+            <PropertyGallery
+              onAddPropertyClick={() => setShowPropertyModal(true)}
+              canvasHeightPercent={canvasHeightPercent}
+            />
+
+            {/* Gallery position slider (desktop, admin only) */}
+            {isAdmin && !isMobileView && (
+              <GalleryPositionSlider
+                currentY={galleryY}
+                canvasHeightPercent={canvasHeightPercent}
+                onChange={(newY) => {
+                  if (user) {
+                    // Keep X at default centered position, only update Y
+                    updateGalleryPosition(DEFAULT_GALLERY_POSITION.x, newY, user.uid)
+                  }
+                }}
+                visible={true}
+              />
+            )}
           </div>
         </div>
       </div>

@@ -213,3 +213,70 @@ export function findOpenPosition(
   const maxY = blocks.reduce((max, b) => Math.max(max, b.y), 0)
   return { x: 10, y: maxY + 5 }
 }
+
+/**
+ * Check if two rectangles overlap (AABB collision detection)
+ */
+function rectanglesOverlap(
+  r1: { x: number; y: number; width: number; height: number },
+  r2: { x: number; y: number; width: number; height: number }
+): boolean {
+  return !(
+    r1.x + r1.width <= r2.x ||
+    r2.x + r2.width <= r1.x ||
+    r1.y + r1.height <= r2.y ||
+    r2.y + r2.height <= r1.y
+  )
+}
+
+/**
+ * Find all text blocks overlapping the gallery rectangle and calculate new positions.
+ * Uses findOpenPosition() to relocate each overlapping block sequentially,
+ * updating the processed list after each displacement so subsequent blocks
+ * see the new positions and avoid re-colliding.
+ *
+ * @param galleryRect - The gallery's bounding box in canvas percentages
+ * @param blocks - All canvas blocks to check
+ * @returns Array of { id, newX, newY } for blocks that need to move
+ */
+export function displacOverlappingBlocks(
+  galleryRect: { x: number; y: number; width: number; height: number },
+  blocks: CanvasBlock[]
+): Array<{ id: string; newX: number; newY: number }> {
+  const displaced: Array<{ id: string; newX: number; newY: number }> = []
+  const processedBlocks = [...blocks]
+
+  for (let i = 0; i < blocks.length; i++) {
+    const block = blocks[i]
+    const blockWidth = block.width || 5
+    const blockHeight = 1 // minimal height estimate
+
+    const blockRect = {
+      x: block.x,
+      y: block.y,
+      width: blockWidth,
+      height: blockHeight,
+    }
+
+    if (rectanglesOverlap(galleryRect, blockRect)) {
+      // Find open space, excluding already-displaced blocks from collision check
+      const excludeDisplaced = processedBlocks.filter(
+        (b) => !displaced.some((d) => d.id === b.id) && b.id !== block.id
+      )
+
+      const { x: newX, y: newY } = findOpenPosition(
+        block.x,
+        block.y,
+        blockWidth,
+        excludeDisplaced
+      )
+
+      displaced.push({ id: block.id, newX, newY })
+
+      // Update processedBlocks so next block sees this new position
+      processedBlocks[i] = { ...block, x: newX, y: newY }
+    }
+  }
+
+  return displaced
+}
