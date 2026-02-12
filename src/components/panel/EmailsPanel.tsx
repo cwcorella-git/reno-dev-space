@@ -227,7 +227,8 @@ export function EmailsPanel() {
   }
 
   return (
-    <div className="p-4 space-y-4">
+    <>
+      <div className="p-4 space-y-4">
         {/* Template Selector */}
         <div>
           <label className="block text-xs text-gray-400 mb-2">
@@ -434,6 +435,6 @@ export function EmailsPanel() {
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
