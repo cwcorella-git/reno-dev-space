@@ -3,7 +3,9 @@
 import { useCallback, useState, useEffect, useRef, useMemo } from 'react'
 import { useCanvas, DESIGN_WIDTH, DESIGN_HEIGHT } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
+import { usePresence } from '@/contexts/PresenceContext'
 import { CanvasBlock, OVERFLOW_LEFT, OVERFLOW_RIGHT } from './CanvasBlock'
+import { CursorPresence } from './CursorPresence'
 import { getRandomColor } from '@/types/canvas'
 import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
@@ -46,6 +48,7 @@ interface MarqueeState {
 export function Canvas() {
   const { user, isAdmin, loading: authLoading } = useAuth()
   const { blocks, canvasRef, canAddText, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText, isAddTextMode, setIsAddTextMode, removeBlocks, undo, redo, copyBlocks, pasteBlocks } = useCanvas()
+  const { updateCursorPosition } = usePresence()
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [marquee, setMarquee] = useState<MarqueeState | null>(null)
   const isMarqueeActive = useRef(false)
@@ -462,7 +465,7 @@ export function Canvas() {
     }
   }, [contextMenu])
 
-  // Track cursor position for paste operations
+  // Track cursor position for paste operations and presence
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       const canvas = canvasRef.current
@@ -475,12 +478,14 @@ export function Canvas() {
       // Only update if cursor is within canvas bounds
       if (x >= 0 && x <= 100 && y >= 0) {
         cursorPosRef.current = { x, y }
+        // Update presence for other users to see
+        updateCursorPosition(x, y)
       }
     }
 
     document.addEventListener('mousemove', handleMouseMove)
     return () => document.removeEventListener('mousemove', handleMouseMove)
-  }, [canvasRef, canvasHeightPercent])
+  }, [canvasRef, canvasHeightPercent, updateCursorPosition])
 
   // Track page views (once per browser session)
   useEffect(() => {
@@ -651,6 +656,9 @@ export function Canvas() {
           {blocks.map((block) => (
             <CanvasBlock key={block.id} block={block} canvasHeightPercent={canvasHeightPercent} />
           ))}
+
+          {/* Other users' cursors */}
+          <CursorPresence />
 
           {/* Marquee selection rectangle */}
           {marquee && (

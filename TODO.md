@@ -22,7 +22,7 @@ Tracking polish work, bugs, and feature ideas for Reno Dev Space.
 ## Features
 
 - [ ] **Stripe go-live** - Switch from test mode to live payments (see CLAUDE.md Go-Live Checklist).
-- [ ] **Live cursor presence** - Show other users' cursors in real-time with name labels and editing previews. Architecture designed (Firestore `presence` collection, 200ms throttled writes, 30s TTL).
+- [x] ~~**Live cursor presence**~~ - Implemented: Real-time cursor tracking with name labels (8-color user palette, 200ms throttled Firestore writes, 30s TTL client-side filtering). New files: `presenceStorage.ts`, `PresenceContext.tsx`, `CursorPresence.tsx`. Integrated into `Canvas.tsx` with mouse move tracking. Provider added to root layout.
 
 ## Performance
 

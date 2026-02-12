@@ -30,6 +30,7 @@ Everything is Firestore-based with real-time updates via `onSnapshot`:
 - Banned emails stored in `bannedEmails` collection (email as doc ID)
 - Deletion history stored in `deletedBlocks` collection (audit log)
 - Edit history stored in `blockEdits` collection (content snapshots)
+- Cursor presence stored in `presence` collection (live cursors, 30s TTL)
 - No external servers needed (except Stripe webhooks via Cloud Functions)
 
 ## Admin System
@@ -66,9 +67,11 @@ src/
 │   └── globals.css             # Tailwind + custom styles + font CSS vars + vote effects
 ├── components/
 │   ├── canvas/
-│   │   ├── Canvas.tsx              # Main canvas + right-click menu + marquee select + add text mode
+│   │   ├── Canvas.tsx              # Main canvas + right-click menu + marquee select + add text mode + cursor presence
 │   │   ├── CanvasBlock.tsx         # Draggable/resizable block + vote arrows + report/dismiss buttons
-│   │   └── TextBlockRenderer.tsx   # Text display + inline editing + Ctrl+B/I/U + vote CSS effects
+│   │   ├── TextBlockRenderer.tsx   # Text display + inline editing + Ctrl+B/I/U + vote CSS effects
+│   │   ├── CursorPresence.tsx      # Render other users' cursors with name labels (8-color palette)
+│   │   └── CelebrationOverlay.tsx  # One-shot celebration effects on upvote
 │   ├── panel/
 │   │   ├── UnifiedPanel.tsx        # Main panel with 4 tabs + admin icons
 │   │   ├── EditorTab.tsx           # Block styling (font, size, color, align, B/I/U/S, link)
@@ -93,7 +96,8 @@ src/
 ├── contexts/
 │   ├── AuthContext.tsx             # Firebase auth + real-time profile listener + auto-signout
 │   ├── CanvasContext.tsx           # Canvas blocks + selection + undo/redo (all action types) + history
-│   └── ContentContext.tsx          # Site content CMS state + getText() + updateText()
+│   ├── ContentContext.tsx          # Site content CMS state + getText() + updateText()
+│   └── PresenceContext.tsx         # Live cursor tracking (200ms throttled writes, 30s TTL)
 ├── hooks/
 │   ├── useDragResize.ts            # Drag/resize logic for blocks (8-direction handles)
 │   └── useFirestoreChat.ts         # Chat hook with Firestore
@@ -115,6 +119,7 @@ src/
 │       ├── deletionStorage.ts          # Deletion history + audit log
 │       ├── editHistoryStorage.ts       # Content edit snapshots
 │       ├── pledgeStorage.ts            # Pledges
+│       ├── presenceStorage.ts          # Live cursor presence (200ms throttle, 30s TTL)
 │       └── userStorage.ts              # User profiles + cascade delete
 └── types/
     └── canvas.ts                   # TextBlock, CanvasBlock, TextStyle types + 12 font vars
@@ -293,6 +298,18 @@ DESKTOP_FOCUS_WIDTH = 900 // Desktop content area (px)
 }
 ```
 
+### `presence`
+```typescript
+{
+  // Document ID = userId
+  userId: string
+  displayName: string
+  cursorX: number             // percentage 0-100
+  cursorY: number             // percentage 0-100
+  lastSeen: Timestamp         // server timestamp, 30s TTL
+}
+```
+
 ## Font System
 
 12 Google Fonts loaded via Next.js and mapped to CSS variables:
@@ -408,6 +425,7 @@ npx playwright test                # Run tests
 - **History**: Deletion audit log with restore capability. Tracks reason (self/admin/vote/cascade/report). Edit history shows previous content versions. Admin can delete history entries.
 - **Chat**: Persistent community chat using Firestore (last 100 messages)
 - **Real-time**: All changes sync instantly across clients via Firestore listeners
+- **Live Cursor Presence**: See other users' cursors in real-time with name labels (200ms throttled updates, 30s TTL, 8 color palette)
 - **Content CMS**: Admin can ctrl+click any EditableText to edit inline; 80+ keys registered in ContentTab
 - **Campaign System**: Three states — inert teaser, active (timer + progress + donate), expired (locked)
 - **Multi-select**: Ctrl+click or marquee drag to select multiple blocks for batch editing
