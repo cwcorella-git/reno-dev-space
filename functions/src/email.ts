@@ -9,7 +9,10 @@ import * as nodemailer from 'nodemailer'
 import * as fs from 'fs'
 import * as path from 'path'
 
-const db = admin.firestore()
+// Lazy getter for Firestore instance (avoids initialization errors)
+function getDb() {
+  return admin.firestore()
+}
 
 /**
  * Create email transporter
@@ -91,6 +94,7 @@ export async function sendEmail(
  * Check if a user is an admin
  */
 export async function isAdmin(uid: string): Promise<boolean> {
+  const db = getDb()
   const userDoc = await db.collection('users').doc(uid).get()
   const user = userDoc.data()
 
@@ -118,6 +122,7 @@ export async function getPledgesWithUsers(): Promise<Array<{
   displayName: string
   amount: number
 }>> {
+  const db = getDb()
   const pledgesSnap = await db.collection('pledges').get()
   const pledges = await Promise.all(
     pledgesSnap.docs.map(async (pledgeDoc) => {
@@ -142,6 +147,7 @@ export async function getPledgesWithUsers(): Promise<Array<{
  * Get campaign statistics
  */
 export async function getCampaignStats() {
+  const db = getDb()
   const campaignDoc = await db.collection('settings').doc('campaign').get()
   const campaign = campaignDoc.data()
 

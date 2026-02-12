@@ -12,12 +12,15 @@ import {
   CampaignSettings,
 } from '@/lib/storage/campaignStorage'
 import { resetAllBrightness } from '@/lib/storage/canvasStorage'
+import { setEffectsEnabled } from '@/lib/storage/effectsStorage'
+import { useEffects } from '@/contexts/EffectsContext'
 import { useContent } from '@/contexts/ContentContext'
 import { EditableText } from '@/components/EditableText'
 
 export function CampaignPanel() {
   const { user, isAdmin } = useAuth()
   const { getText } = useContent()
+  const { settings: effectsSettings } = useEffects()
 
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
@@ -83,6 +86,12 @@ export function CampaignPanel() {
     setActionLoading(false)
   }
 
+  const handleToggleEffects = async () => {
+    setActionLoading(true)
+    await setEffectsEnabled(!effectsSettings?.enabled)
+    setActionLoading(false)
+  }
+
   return (
     <div className="max-h-[400px] overflow-y-auto">
       {statusMessage && (
@@ -141,7 +150,7 @@ export function CampaignPanel() {
             </div>
           </div>
 
-          {/* Goal */}
+          {/* Goal + Effects */}
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400"><EditableText id="campaign.label.goal" defaultValue="Goal" category="campaign" /></span>
             <div className="flex items-center gap-1.5">
@@ -151,6 +160,24 @@ export function CampaignPanel() {
                 <EditableText id="campaign.button.set" defaultValue="Set" category="campaign" />
               </button>
             </div>
+          </div>
+
+          {/* Ring-Burst Effects */}
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-400"><EditableText id="campaign.label.ringBurst" defaultValue="Ring-Burst Effects" category="campaign" /></span>
+            <button
+              onClick={handleToggleEffects}
+              disabled={actionLoading}
+              className={`px-3 py-1 rounded text-xs font-medium disabled:opacity-50 ${
+                effectsSettings?.enabled
+                  ? 'bg-green-600 hover:bg-green-700 text-white'
+                  : 'bg-white/10 hover:bg-white/20 text-gray-300'
+              }`}
+            >
+              {effectsSettings?.enabled
+                ? <EditableText id="campaign.button.enabled" defaultValue="Enabled" category="campaign" />
+                : <EditableText id="campaign.button.disabled" defaultValue="Disabled" category="campaign" />}
+            </button>
           </div>
         </div>
       )}

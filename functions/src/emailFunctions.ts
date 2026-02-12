@@ -7,7 +7,10 @@ import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
 import { loadTemplate, sendEmail, isAdmin, getCampaignStats } from './email'
 
-const db = admin.firestore()
+// Lazy getter for Firestore instance
+function getDb() {
+  return admin.firestore()
+}
 
 // ============================================================================
 // VERIFICATION EMAIL
@@ -249,6 +252,7 @@ export const sendTestEmail = functions.https.onCall(async (data, context) => {
 
   try {
     // Get user email
+    const db = getDb()
     const userDoc = await db.collection('users').doc(context.auth.uid).get()
     const user = userDoc.data()
     const recipientEmail = targetEmail || user?.email
