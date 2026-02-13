@@ -282,7 +282,7 @@ export function EmailsPanel() {
       {/* Preview Modal */}
       {showPreview && (
         <div
-          className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 p-4"
+          className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-sm"
           style={{
             paddingTop: '64px',     // Banner height (56px) + margin
             paddingBottom: '210px'  // Panel height (~200px) + margin
@@ -299,7 +299,11 @@ export function EmailsPanel() {
             }
           }}
         >
-          <div className="relative w-full max-w-4xl h-full bg-gray-900 rounded-xl shadow-2xl flex flex-col" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="relative w-full max-w-4xl bg-gray-900 rounded-xl shadow-2xl flex flex-col"
+            style={{ maxHeight: 'calc(100vh - 64px - 210px)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 flex-shrink-0">
               <div>
