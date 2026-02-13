@@ -141,17 +141,17 @@ export function PropertyCard({ property }: PropertyCardProps) {
             style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
           >
             {/* Wrapper to center image initially */}
-            <div className="min-w-full min-h-full flex items-center justify-center p-4 md:p-0">
-              <div className="relative">
+            <div className="min-w-full min-h-full flex items-center justify-center">
+              <div className="relative w-full h-full flex items-center justify-center">
                 <img
                   src={property.imageUrl}
                   alt={property.address}
-                  className="w-auto h-auto max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] md:max-w-screen md:max-h-screen object-contain"
+                  className="max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] md:max-w-[98vw] md:max-h-[98vh] object-contain"
                   style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
                 />
 
-                {/* Image caption */}
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 md:p-6">
+                {/* Image caption - overlays bottom of image */}
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 md:p-6 rounded-t-lg">
                   <h3 className="text-white font-semibold text-base md:text-xl">{property.address}</h3>
                   <p className="text-indigo-300 text-sm md:text-base">
                     {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : 'Contact for Pricing'}
