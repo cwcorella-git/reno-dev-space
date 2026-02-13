@@ -282,11 +282,7 @@ export function EmailsPanel() {
       {/* Preview Modal */}
       {showPreview && (
         <div
-          className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-sm"
-          style={{
-            paddingTop: '64px',     // Banner height (56px) + margin
-            paddingBottom: '210px'  // Panel height (~200px) + margin
-          }}
+          className="fixed inset-0 z-[250] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               if (hasUnsavedChanges) {
@@ -300,8 +296,7 @@ export function EmailsPanel() {
           }}
         >
           <div
-            className="relative w-full max-w-4xl bg-gray-900 rounded-xl shadow-2xl flex flex-col"
-            style={{ maxHeight: 'calc(100vh - 64px - 210px)' }}
+            className="relative w-full h-full max-w-7xl bg-gray-900 rounded-xl shadow-2xl flex flex-col overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
