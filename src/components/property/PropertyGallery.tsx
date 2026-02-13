@@ -6,6 +6,7 @@ import { subscribeToProperties } from '@/lib/storage/propertyStorage'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCanvas } from '@/contexts/CanvasContext'
 import { PropertyCarousel } from './PropertyCarousel'
+import { EditableText } from '@/components/EditableText'
 import {
   subscribeToGalleryPosition,
   updateGalleryPosition,
@@ -304,7 +305,9 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
         >
           <div className="px-5 py-5">
             {/* Header */}
-            <h3 className="text-lg font-bold text-white mb-3 text-center">Potential Spaces</h3>
+            <h3 className="text-lg font-bold text-white mb-3 text-center">
+              <EditableText id="property.gallery.title" defaultValue="Potential Spaces" category="property" />
+            </h3>
 
             <p className="text-sm text-gray-400 mb-4 text-center">
               {user
@@ -343,7 +346,9 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
       >
         <div className="px-5 py-5">
           {/* Header */}
-          <h3 className="text-lg font-bold text-white mb-4 text-center">Potential Spaces</h3>
+          <h3 className="text-lg font-bold text-white mb-4 text-center">
+            <EditableText id="property.gallery.title" defaultValue="Potential Spaces" category="property" />
+          </h3>
 
           {/* Carousel */}
           <PropertyCarousel
