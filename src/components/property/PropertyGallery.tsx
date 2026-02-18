@@ -137,7 +137,7 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
           height: GALLERY_HEIGHT,
         }
 
-        const displacements = displacOverlappingBlocks(galleryRect, blocks)
+        const displacements = displacOverlappingBlocks(galleryRect, blocks, canvasHeightPercent)
 
         if (displacements.length > 0) {
           // Record history for displaced blocks (undo-able)
@@ -240,7 +240,7 @@ export function PropertyGallery({ onAddPropertyClick, canvasHeightPercent }: Pro
           height: GALLERY_HEIGHT,
         }
 
-        const displacements = displacOverlappingBlocks(galleryRect, blocks)
+        const displacements = displacOverlappingBlocks(galleryRect, blocks, canvasHeightPercent)
 
         if (displacements.length > 0) {
           recordHistory('move', displacements.map((d) => d.id))

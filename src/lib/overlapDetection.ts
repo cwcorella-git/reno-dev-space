@@ -8,22 +8,54 @@ const NEW_BLOCK_HEIGHT = 6  // ~6% of canvasHeightPercent
 // Padding between blocks (percentage) - zero to only flag true overlaps
 const OVERLAP_PADDING = 0
 
+// Fallback height estimate when DOM is not available (percentage)
+// This is used for server-side rendering or when block hasn't mounted yet
+const FALLBACK_HEIGHT_ESTIMATE = 6 // Conservative estimate (matches NEW_BLOCK_HEIGHT)
+
+/**
+ * Get the actual height of a block in percentage units.
+ * Tries DOM measurement first, falls back to conservative estimate.
+ *
+ * @param blockId - The block's ID to look up in the DOM
+ * @param canvasHeightPercent - The current canvas height as percentage (for conversion)
+ * @returns Height as percentage of canvasHeightPercent
+ */
+function getBlockHeightPercent(blockId: string, canvasHeightPercent: number = 100): number {
+  // Try to get actual DOM measurement
+  const blockElement = document.querySelector(`[data-block-id="${blockId}"]`)
+  const canvasElement = document.querySelector('[data-canvas-container]') as HTMLElement
+
+  if (blockElement && canvasElement) {
+    const blockRect = blockElement.getBoundingClientRect()
+    const canvasRect = canvasElement.getBoundingClientRect()
+
+    // Convert pixel height to percentage of canvas
+    const heightPercent = (blockRect.height / canvasRect.height) * canvasHeightPercent
+    return heightPercent
+  }
+
+  // Fallback to conservative estimate if DOM not available
+  return FALLBACK_HEIGHT_ESTIMATE
+}
+
 /**
  * Check if placing a new block at (newX, newY) would overlap existing blocks.
  * Coordinates are in percentage format (0-100 for x, 0-canvasHeightPercent for y).
+ * Uses actual DOM measurements when available for accurate collision detection.
  */
 export function wouldOverlap(
   newX: number,
   newY: number,
   blocks: CanvasBlock[],
-  padding: number = OVERLAP_PADDING
+  padding: number = OVERLAP_PADDING,
+  canvasHeightPercent: number = 100
 ): boolean {
   const newRight = newX + NEW_BLOCK_WIDTH
   const newBottom = newY + NEW_BLOCK_HEIGHT
 
   for (const block of blocks) {
     const blockWidth = block.width || 5
-    const blockHeight = 1 // minimal height - only flag true overlaps
+    const blockHeight = getBlockHeightPercent(block.id, canvasHeightPercent)
 
     const blockRight = block.x + blockWidth
     const blockBottom = block.y + blockHeight
@@ -44,6 +76,7 @@ export function wouldOverlap(
 /**
  * Check if moving an existing block to (newX, newY) would overlap other blocks.
  * Excludes the block itself from the check.
+ * Uses actual DOM measurements when available for accurate collision detection.
  */
 export function wouldBlockOverlap(
   blockId: string,
@@ -51,17 +84,20 @@ export function wouldBlockOverlap(
   newY: number,
   blockWidth: number,
   blocks: CanvasBlock[],
-  padding: number = OVERLAP_PADDING
+  padding: number = OVERLAP_PADDING,
+  canvasHeightPercent: number = 100
 ): boolean {
+  // Get moving block's actual height
+  const movingBlockHeight = getBlockHeightPercent(blockId, canvasHeightPercent)
   const newRight = newX + blockWidth
-  const newBottom = newY + NEW_BLOCK_HEIGHT // approximate height
+  const newBottom = newY + movingBlockHeight
 
   for (const other of blocks) {
     // Skip self
     if (other.id === blockId) continue
 
     const otherWidth = other.width || 5
-    const otherHeight = 1 // minimal height - only flag true overlaps
+    const otherHeight = getBlockHeightPercent(other.id, canvasHeightPercent)
 
     const otherRight = other.x + otherWidth
     const otherBottom = other.y + otherHeight
@@ -189,14 +225,16 @@ export function estimateRectAfterFontSizeChange(
 /**
  * Find an open position on the canvas for a restored block.
  * Tries the original position first, then scans a grid for open space.
+ * Uses actual DOM measurements when available for accurate collision detection.
  */
 export function findOpenPosition(
   preferredX: number,
   preferredY: number,
   blockWidth: number,
-  blocks: CanvasBlock[]
+  blocks: CanvasBlock[],
+  canvasHeightPercent: number = 100
 ): { x: number; y: number } {
-  if (!wouldOverlap(preferredX, preferredY, blocks)) {
+  if (!wouldOverlap(preferredX, preferredY, blocks, OVERLAP_PADDING, canvasHeightPercent)) {
     return { x: preferredX, y: preferredY }
   }
 
@@ -204,7 +242,7 @@ export function findOpenPosition(
   const stepY = 3
   for (let y = 5; y < 200; y += stepY) {
     for (let x = 5; x < 95; x += stepX) {
-      if (!wouldOverlap(x, y, blocks)) {
+      if (!wouldOverlap(x, y, blocks, OVERLAP_PADDING, canvasHeightPercent)) {
         return { x, y }
       }
     }
@@ -234,14 +272,17 @@ function rectanglesOverlap(
  * Uses findOpenPosition() to relocate each overlapping block sequentially,
  * updating the processed list after each displacement so subsequent blocks
  * see the new positions and avoid re-colliding.
+ * Uses actual DOM measurements when available for accurate collision detection.
  *
  * @param galleryRect - The gallery's bounding box in canvas percentages
  * @param blocks - All canvas blocks to check
+ * @param canvasHeightPercent - The current canvas height as percentage (for conversion)
  * @returns Array of { id, newX, newY } for blocks that need to move
  */
 export function displacOverlappingBlocks(
   galleryRect: { x: number; y: number; width: number; height: number },
-  blocks: CanvasBlock[]
+  blocks: CanvasBlock[],
+  canvasHeightPercent: number = 100
 ): Array<{ id: string; newX: number; newY: number }> {
   const displaced: Array<{ id: string; newX: number; newY: number }> = []
   const processedBlocks = [...blocks]
@@ -249,7 +290,7 @@ export function displacOverlappingBlocks(
   for (let i = 0; i < blocks.length; i++) {
     const block = blocks[i]
     const blockWidth = block.width || 5
-    const blockHeight = 1 // minimal height estimate
+    const blockHeight = getBlockHeightPercent(block.id, canvasHeightPercent)
 
     const blockRect = {
       x: block.x,
@@ -268,7 +309,8 @@ export function displacOverlappingBlocks(
         block.x,
         block.y,
         blockWidth,
-        excludeDisplaced
+        excludeDisplaced,
+        canvasHeightPercent
       )
 
       displaced.push({ id: block.id, newX, newY })

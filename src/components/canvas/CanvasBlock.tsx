@@ -227,7 +227,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         const newY = Math.max(0, Math.min(canvasHeightPercent - 5, startBlockY + deltaY))
 
         // Check if this position would overlap other blocks
-        const overlaps = wouldBlockOverlap(block.id, newX, newY, block.width || 12, blocks)
+        const overlaps = wouldBlockOverlap(block.id, newX, newY, block.width || 12, blocks, 0, canvasHeightPercent)
         setIsOverlapping(overlaps)
 
         setDragPos({ x: newX, y: newY })
@@ -245,7 +245,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         setDragPos((currentPos) => {
           if (currentPos && (currentPos.x !== block.x || currentPos.y !== block.y)) {
             // Check for overlap before saving
-            const overlaps = wouldBlockOverlap(block.id, currentPos.x, currentPos.y, block.width || 12, blocks)
+            const overlaps = wouldBlockOverlap(block.id, currentPos.x, currentPos.y, block.width || 12, blocks, 0, canvasHeightPercent)
 
             if (overlaps) {
               // Don't save - position will revert when dragPos is cleared
