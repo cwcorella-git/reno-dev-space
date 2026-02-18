@@ -25,8 +25,21 @@ export function PropertyCarousel({ properties, currentIndex, onIndexChange }: Pr
   // Keyboard navigation
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      // Only handle arrow keys if not typing in an input
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
+      // Skip if user is typing in an input, textarea, or contentEditable element
+      const target = e.target as HTMLElement
+      if (
+        target instanceof HTMLInputElement ||
+        target instanceof HTMLTextAreaElement ||
+        target.contentEditable === 'true' ||
+        target.isContentEditable
+      ) {
+        return
+      }
+
+      // Skip if a modal is open (email preview, property full-view, etc.)
+      // Check for high z-index overlays that would block interaction
+      const hasModal = document.querySelector('[class*="z-[2"]')
+      if (hasModal) {
         return
       }
 
