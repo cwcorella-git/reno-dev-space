@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { usePresence } from '@/contexts/PresenceContext'
 import { CanvasBlock, OVERFLOW_LEFT, OVERFLOW_RIGHT } from './CanvasBlock'
 import { CursorPresence } from './CursorPresence'
+import { BoundingBoxDebugger } from './BoundingBoxDebugger'
 import { getRandomColor } from '@/types/canvas'
 import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
@@ -796,6 +797,9 @@ export function Canvas() {
 
       {/* Campaign banner at top */}
       <CampaignBanner />
+
+      {/* Bounding box debugger (Shift+D to toggle) */}
+      <BoundingBoxDebugger />
     </>
   )
 }
