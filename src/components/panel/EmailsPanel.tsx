@@ -100,6 +100,24 @@ export function EmailsPanel() {
         iframeDoc.body.contentEditable = 'true'
         iframeDoc.body.style.outline = 'none'
         iframeDoc.body.style.cursor = 'text'
+
+        // Add input handler to sync changes back
+        const handleInput = () => {
+          const newHtml = iframeDoc.documentElement.outerHTML
+          // Reverse variable substitution: replace values back to {{VAR}}
+          let templateHtml = newHtml
+          Object.entries(editedSampleData).forEach(([key, value]) => {
+            if (value) {
+              templateHtml = templateHtml.replace(new RegExp(escapeRegex(value), 'g'), `{{${key}}}`)
+            }
+          })
+          setEditedHtml(templateHtml)
+          setPreviewHtml(newHtml)
+          setHasUnsavedChanges(true)
+        }
+
+        iframeDoc.body.addEventListener('input', handleInput)
+        return () => iframeDoc.body.removeEventListener('input', handleInput)
       } else {
         iframeDoc.body.contentEditable = 'false'
         iframeDoc.body.style.cursor = 'default'
@@ -111,7 +129,12 @@ export function EmailsPanel() {
     const timer = setTimeout(enableEditing, 100)
 
     return () => clearTimeout(timer)
-  }, [isEditing, previewHtml, showPreview])
+  }, [isEditing, previewHtml, showPreview, editedSampleData])
+
+  // Helper to escape regex special characters
+  function escapeRegex(str: string): string {
+    return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  }
 
   // ESC key to exit edit mode
   useEffect(() => {
@@ -349,9 +372,16 @@ export function EmailsPanel() {
                 <iframe
                   ref={iframeRef}
                   srcDoc={previewHtml}
-                  className="w-full flex-1 min-h-0 border border-white/10 rounded bg-white"
+                  className={`w-full flex-1 min-h-0 border rounded bg-white transition-colors ${
+                    isEditing ? 'border-indigo-500 ring-2 ring-indigo-500/20' : 'border-white/10'
+                  }`}
                   title="Email Preview"
                 />
+                {isEditing && (
+                  <p className="mt-2 text-xs text-indigo-400 text-center">
+                    Click directly on the preview to edit text
+                  </p>
+                )}
               </div>
 
               {/* Right: Editor (only when editing) */}
