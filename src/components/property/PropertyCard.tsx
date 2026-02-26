@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { RentalProperty, ARCHIVE_THRESHOLD } from '@/types/property'
 import { PropertyVoteControls } from './PropertyVoteControls'
 import { ArrowsPointingOutIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -16,7 +17,13 @@ export function PropertyCard({ property }: PropertyCardProps) {
   const [showImageModal, setShowImageModal] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
+  const [portalMounted, setPortalMounted] = useState(false)
   const isArchived = property.brightness <= ARCHIVE_THRESHOLD
+
+  // Track portal mount for SSR compatibility
+  useEffect(() => {
+    setPortalMounted(true)
+  }, [])
 
   // Map brightness to opacity (0-100 → 0.4-1.0)
   const opacity = isArchived ? 0.5 : 0.4 + (property.brightness / 100) * 0.6
@@ -119,8 +126,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </div>
       </div>
 
-      {/* Image expand modal - full-screen with pinch-to-zoom on mobile */}
-      {showImageModal && (
+      {/* Image expand modal - rendered via portal to escape transform containing block */}
+      {showImageModal && portalMounted && createPortal(
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center bg-black"
           onClick={() => setShowImageModal(false)}
@@ -160,11 +167,12 @@ export function PropertyCard({ property }: PropertyCardProps) {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
-      {/* Delete confirmation modal */}
-      {showDeleteConfirm && (
+      {/* Delete confirmation modal - rendered via portal to escape transform containing block */}
+      {showDeleteConfirm && portalMounted && createPortal(
         <div
           className="fixed inset-0 z-[250] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
           onClick={() => !isDeleting && setShowDeleteConfirm(false)}
@@ -200,7 +208,8 @@ export function PropertyCard({ property }: PropertyCardProps) {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
