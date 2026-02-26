@@ -209,11 +209,19 @@ export function Canvas() {
           const x = ((e.clientX - rect.left) / rect.width) * 100
           const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
 
-          if (wouldOverlapDOM(canvas, x, y, canvasHeightPercent)) {
+          // Use current preview size from ref for accurate overlap check
+          const currentSize = previewSizeRef.current
+          if (wouldOverlapDOM(canvas, x, y, canvasHeightPercent, currentSize.width, currentSize.height)) {
             return
           }
 
-          addText(x, y, previewColor, previewFont)
+          // Place block with TOP-LEFT at the centered position
+          // Preview is centered on cursor, so offset by half the size
+          // x offset: width/2 (both in 0-100% scale)
+          // y offset: height * canvasHeightPercent / 100 / 2 (convert CSS% to canvasHeightPercent scale)
+          const offsetX = currentSize.width / 2
+          const offsetY = (currentSize.height * canvasHeightPercent / 100) / 2
+          addText(x - offsetX, y - offsetY, previewColor, previewFont)
           setIsAddTextMode(false)
           return
         }
@@ -361,10 +369,14 @@ export function Canvas() {
 
   const handleAddText = useCallback(() => {
     if (contextMenu) {
-      addText(contextMenu.canvasX, contextMenu.canvasY, previewColor, previewFont)
+      // Place block with TOP-LEFT at the centered position (same logic as click handler)
+      const currentSize = previewSizeRef.current
+      const offsetX = currentSize.width / 2
+      const offsetY = (currentSize.height * canvasHeightPercent / 100) / 2
+      addText(contextMenu.canvasX - offsetX, contextMenu.canvasY - offsetY, previewColor, previewFont)
       setContextMenu(null)
     }
-  }, [contextMenu, addText, previewColor, previewFont])
+  }, [contextMenu, addText, previewColor, previewFont, canvasHeightPercent])
 
   // Keyboard shortcuts: Delete, Escape, Ctrl+A/Z/Y/C/V
   useEffect(() => {
@@ -565,11 +577,7 @@ export function Canvas() {
       // Check if placement would be valid (not overlapping)
       // Use ref for latest measured size to avoid stale closure issue
       const currentSize = previewSizeRef.current
-      const shouldDebug = Math.random() < 0.1 // ~10% of checks for debugging
-      if (shouldDebug) {
-        console.log('[Canvas] previewSize (ref):', currentSize, 'canvasHeightPercent:', canvasHeightPercent)
-      }
-      const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent, currentSize.width, currentSize.height, shouldDebug)
+      const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent, currentSize.width, currentSize.height)
 
       setAddTextPreview({ x, y, isValid })
     }
@@ -748,7 +756,7 @@ export function Canvas() {
                   : <EditableText id="canvas.addText.clickToPlace" defaultValue="Click to place text" category="canvas" />}
               </div>
 
-              {/* Cursor-following preview box */}
+              {/* Cursor-following preview box - CENTERED on cursor for symmetric approach */}
               {addTextPreview && (
                 <div
                   className="absolute border-2 border-dashed rounded transition-colors"
@@ -757,6 +765,7 @@ export function Canvas() {
                     top: `${(addTextPreview.y / canvasHeightPercent) * 100}%`,
                     width: `${previewSize.width}%`,
                     height: `${previewSize.height}%`,  // 0-100 scale (matches measureNewBlockSize output)
+                    transform: 'translate(-50%, -50%)',  // Center on cursor
                     borderColor: addTextPreview.isValid ? previewColor : '#ef4444',
                     backgroundColor: addTextPreview.isValid ? `${previewColor}1a` : '#ef44441a',
                   }}

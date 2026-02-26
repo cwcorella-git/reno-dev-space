@@ -196,13 +196,20 @@ export function wouldOverlapDOM(
 ): boolean {
   const canvasRect = canvasElement.getBoundingClientRect()
 
-  // Convert new block's top-left from canvas percentages to screen pixels
-  const newLeft = canvasRect.left + (cursorX / 100) * canvasRect.width
-  const newTop = canvasRect.top + (cursorY / canvasHeightPercent) * canvasRect.height
-  // Calculate new block size in screen pixels using provided dimensions
-  // Both width and height use /100 since measureNewBlockSize() returns 0-100 percentages
-  const newRight = newLeft + (newBlockWidth / 100) * canvasRect.width
-  const newBottom = newTop + (newBlockHeight / 100) * canvasRect.height
+  // Calculate preview size in pixels
+  const previewWidthPx = (newBlockWidth / 100) * canvasRect.width
+  const previewHeightPx = (newBlockHeight / 100) * canvasRect.height
+
+  // Convert cursor position to screen pixels
+  const cursorScreenX = canvasRect.left + (cursorX / 100) * canvasRect.width
+  const cursorScreenY = canvasRect.top + (cursorY / canvasHeightPercent) * canvasRect.height
+
+  // CENTER the preview on cursor (not top-left at cursor)
+  // This makes approach from all 4 directions symmetric
+  const newLeft = cursorScreenX - previewWidthPx / 2
+  const newTop = cursorScreenY - previewHeightPx / 2
+  const newRight = cursorScreenX + previewWidthPx / 2
+  const newBottom = cursorScreenY + previewHeightPx / 2
 
   if (debug) {
     console.log('[wouldOverlapDOM] Canvas:', {
@@ -210,6 +217,8 @@ export function wouldOverlapDOM(
       width: canvasRect.width, height: canvasRect.height
     })
     console.log('[wouldOverlapDOM] Cursor %:', { x: cursorX, y: cursorY, canvasHeightPercent })
+    console.log('[wouldOverlapDOM] Preview size params:', { width: newBlockWidth, height: newBlockHeight })
+    console.log('[wouldOverlapDOM] Preview size px:', { width: previewWidthPx, height: previewHeightPx })
     console.log('[wouldOverlapDOM] New block rect (screen px):', {
       left: newLeft, top: newTop, right: newRight, bottom: newBottom
     })
