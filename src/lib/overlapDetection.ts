@@ -5,8 +5,9 @@ import { CanvasBlock } from '@/types/canvas'
 const NEW_BLOCK_WIDTH = 12  // ~12% of canvas width
 const NEW_BLOCK_HEIGHT = 6  // ~6% of canvasHeightPercent
 
-// Padding between blocks (percentage) - zero to only flag true overlaps
-const OVERLAP_PADDING = 0
+// Tolerance for overlap detection (pixels) - allows padded boxes to touch
+// without flagging overlap. Set to padding value so only TEXT overlap triggers.
+const OVERLAP_TOLERANCE = 8  // px - matches block vertical padding
 
 // Fallback height estimate when DOM is not available (percentage)
 // This is used for server-side rendering or when block hasn't mounted yet
@@ -102,7 +103,7 @@ export function wouldOverlap(
   newX: number,
   newY: number,
   blocks: CanvasBlock[],
-  padding: number = OVERLAP_PADDING,
+  padding: number = 0,
   canvasHeightPercent: number = 100
 ): boolean {
   const newRight = newX + NEW_BLOCK_WIDTH
@@ -139,7 +140,7 @@ export function wouldBlockOverlap(
   newY: number,
   blockWidth: number,
   blocks: CanvasBlock[],
-  padding: number = OVERLAP_PADDING,
+  padding: number = 0,
   canvasHeightPercent: number = 100
 ): boolean {
   // Get moving block's actual height
@@ -228,11 +229,13 @@ export function wouldOverlapDOM(
       })
     }
 
+    // Apply tolerance: shrink existing block's hit zone by padding amount
+    // This allows padded boxes to touch without flagging text overlap
     const noOverlap =
-      newRight <= blockRect.left ||
-      newLeft >= blockRect.right ||
-      newBottom <= blockRect.top ||
-      newTop >= blockRect.bottom
+      newRight <= blockRect.left + OVERLAP_TOLERANCE ||
+      newLeft >= blockRect.right - OVERLAP_TOLERANCE ||
+      newBottom <= blockRect.top + OVERLAP_TOLERANCE ||
+      newTop >= blockRect.bottom - OVERLAP_TOLERANCE
 
     if (!noOverlap) {
       if (debug) {
@@ -279,11 +282,12 @@ export function checkDOMOverlap(
 
   for (const other of otherRects) {
     // Two rects DON'T overlap if one is completely left, right, above, or below
+    // Apply tolerance to allow padded boxes to touch without flagging text overlap
     const noOverlap =
-      targetRect.right <= other.left ||
-      targetRect.left >= other.right ||
-      targetRect.bottom <= other.top ||
-      targetRect.top >= other.bottom
+      targetRect.right <= other.left + OVERLAP_TOLERANCE ||
+      targetRect.left >= other.right - OVERLAP_TOLERANCE ||
+      targetRect.bottom <= other.top + OVERLAP_TOLERANCE ||
+      targetRect.top >= other.bottom - OVERLAP_TOLERANCE
 
     if (!noOverlap) return true
   }
@@ -331,7 +335,7 @@ export function findOpenPosition(
   blocks: CanvasBlock[],
   canvasHeightPercent: number = 100
 ): { x: number; y: number } {
-  if (!wouldOverlap(preferredX, preferredY, blocks, OVERLAP_PADDING, canvasHeightPercent)) {
+  if (!wouldOverlap(preferredX, preferredY, blocks, 0, canvasHeightPercent)) {
     return { x: preferredX, y: preferredY }
   }
 
@@ -339,7 +343,7 @@ export function findOpenPosition(
   const stepY = 3
   for (let y = 5; y < 200; y += stepY) {
     for (let x = 5; x < 95; x += stepX) {
-      if (!wouldOverlap(x, y, blocks, OVERLAP_PADDING, canvasHeightPercent)) {
+      if (!wouldOverlap(x, y, blocks, 0, canvasHeightPercent)) {
         return { x, y }
       }
     }
