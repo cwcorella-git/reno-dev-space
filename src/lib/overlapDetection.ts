@@ -23,7 +23,8 @@ const FALLBACK_HEIGHT_ESTIMATE = 6 // Conservative estimate (matches NEW_BLOCK_H
 function getBlockHeightPercent(blockId: string, canvasHeightPercent: number = 100): number {
   // Try to get actual DOM measurement
   const blockElement = document.querySelector(`[data-block-id="${blockId}"]`)
-  const canvasElement = document.querySelector('[data-canvas-container]') as HTMLElement
+  // Find the canvas by looking for the parent that contains all blocks
+  const canvasElement = blockElement?.closest('.bg-brand-dark') as HTMLElement
 
   if (blockElement && canvasElement) {
     const blockRect = blockElement.getBoundingClientRect()
@@ -123,7 +124,8 @@ export function wouldOverlapDOM(
   canvasElement: HTMLElement,
   cursorX: number,            // percentage (0–100)
   cursorY: number,            // percentage (0–canvasHeightPercent)
-  canvasHeightPercent: number
+  canvasHeightPercent: number,
+  debug: boolean = false
 ): boolean {
   const canvasRect = canvasElement.getBoundingClientRect()
 
@@ -134,15 +136,46 @@ export function wouldOverlapDOM(
   const newRight = newLeft + (NEW_BLOCK_WIDTH / 100) * canvasRect.width
   const newBottom = newTop + (NEW_BLOCK_HEIGHT / canvasHeightPercent) * canvasRect.height
 
+  if (debug) {
+    console.log('[wouldOverlapDOM] Canvas:', {
+      left: canvasRect.left, top: canvasRect.top,
+      width: canvasRect.width, height: canvasRect.height
+    })
+    console.log('[wouldOverlapDOM] Cursor %:', { x: cursorX, y: cursorY, canvasHeightPercent })
+    console.log('[wouldOverlapDOM] New block rect (screen px):', {
+      left: newLeft, top: newTop, right: newRight, bottom: newBottom
+    })
+  }
+
   const blockElements = canvasElement.querySelectorAll<HTMLElement>('[data-block-id]')
+
+  if (debug) {
+    console.log('[wouldOverlapDOM] Found', blockElements.length, 'blocks')
+  }
+
   for (let i = 0; i < blockElements.length; i++) {
     const blockRect = blockElements[i].getBoundingClientRect()
+    const blockId = blockElements[i].getAttribute('data-block-id')
+
+    if (debug) {
+      console.log(`[wouldOverlapDOM] Block ${blockId}:`, {
+        left: blockRect.left, top: blockRect.top,
+        right: blockRect.right, bottom: blockRect.bottom
+      })
+    }
+
     const noOverlap =
       newRight <= blockRect.left ||
       newLeft >= blockRect.right ||
       newBottom <= blockRect.top ||
       newTop >= blockRect.bottom
-    if (!noOverlap) return true
+
+    if (!noOverlap) {
+      if (debug) {
+        console.log(`[wouldOverlapDOM] OVERLAP with block ${blockId}!`)
+      }
+      return true
+    }
   }
   return false
 }

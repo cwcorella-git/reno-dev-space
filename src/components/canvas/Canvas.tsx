@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext'
 import { usePresence } from '@/contexts/PresenceContext'
 import { CanvasBlock, OVERFLOW_LEFT, OVERFLOW_RIGHT } from './CanvasBlock'
 import { CursorPresence } from './CursorPresence'
-import { BoundingBoxDebugger } from './BoundingBoxDebugger'
 import { getRandomColor } from '@/types/canvas'
 import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
@@ -541,7 +540,9 @@ export function Canvas() {
       const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
 
       // Check if placement would be valid (not overlapping)
-      const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent)
+      // Debug: Log every 60 frames (~1 per second) to avoid spam
+      const shouldDebug = Math.random() < 0.02 // ~2% of checks
+      const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent, shouldDebug)
 
       setAddTextPreview({ x, y, isValid })
     }
@@ -797,9 +798,6 @@ export function Canvas() {
 
       {/* Campaign banner at top */}
       <CampaignBanner />
-
-      {/* Bounding box debugger (Shift+D to toggle) */}
-      <BoundingBoxDebugger />
     </>
   )
 }
