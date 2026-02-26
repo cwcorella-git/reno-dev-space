@@ -90,6 +90,21 @@ export const sendCampaignSuccessEmails = functions.https.onCall(async (data, con
 
     console.log(`✓ Success emails sent to ${stats.pledges.length} backers`)
 
+    // Log to email history
+    const db = getDb()
+    await db.collection('emailHistory').add({
+      templateId: 'campaign-success',
+      sentAt: Date.now(),
+      sentBy: context.auth.uid,
+      recipientCount: stats.pledges.length,
+      recipients: stats.pledges.map(p => p.email),
+      variables: {
+        TOTAL_RAISED: stats.totalRaised.toLocaleString(),
+        BACKER_COUNT: stats.backerCount.toString()
+      },
+      status: 'success'
+    })
+
     return {
       success: true,
       emailsSent: stats.pledges.length,
@@ -141,6 +156,21 @@ export const sendCampaignEndedEmails = functions.https.onCall(async (data, conte
     await Promise.all(emailPromises)
 
     console.log(`✓ Campaign ended emails sent to ${stats.pledges.length} backers`)
+
+    // Log to email history
+    const db = getDb()
+    await db.collection('emailHistory').add({
+      templateId: 'campaign-ended',
+      sentAt: Date.now(),
+      sentBy: context.auth.uid,
+      recipientCount: stats.pledges.length,
+      recipients: stats.pledges.map(p => p.email),
+      variables: {
+        TOTAL_RAISED: stats.totalRaised.toLocaleString(),
+        PERCENT: stats.percent.toString()
+      },
+      status: 'success'
+    })
 
     return {
       success: true,
@@ -215,6 +245,26 @@ export const sendCampaignUpdate = functions.https.onCall(async (data, context) =
     await Promise.all(emailPromises)
 
     console.log(`✓ Campaign update sent to ${stats.pledges.length} backers`)
+
+    // Log to email history
+    const db = getDb()
+    await db.collection('emailHistory').add({
+      templateId: 'campaign-update',
+      sentAt: Date.now(),
+      sentBy: context.auth.uid,
+      recipientCount: stats.pledges.length,
+      recipients: stats.pledges.map(p => p.email),
+      variables: {
+        MILESTONE_TITLE: milestoneTitle,
+        MILESTONE_MESSAGE: milestoneMessage,
+        CURRENT_AMOUNT: stats.totalRaised.toLocaleString(),
+        GOAL_AMOUNT: stats.goalAmount.toLocaleString(),
+        PERCENT: stats.percent.toString(),
+        BACKER_COUNT: stats.backerCount.toString(),
+        DAYS_LEFT: stats.daysLeft.toString()
+      },
+      status: 'success'
+    })
 
     return {
       success: true,
@@ -301,6 +351,18 @@ export const sendTestEmail = functions.https.onCall(async (data, context) => {
     )
 
     console.log(`✓ Test email sent to ${recipientEmail} (template: ${template})`)
+
+    // Log to email history
+    const db = getDb()
+    await db.collection('emailHistory').add({
+      templateId: 'test',
+      sentAt: Date.now(),
+      sentBy: context.auth.uid,
+      recipientCount: 1,
+      recipients: [recipientEmail],
+      variables: templateData,
+      status: 'success'
+    })
 
     return {
       success: true,
