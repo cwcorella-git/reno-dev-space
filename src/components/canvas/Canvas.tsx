@@ -577,6 +577,7 @@ export function Canvas() {
       // Check if placement would be valid (not overlapping)
       // Use ref for latest measured size to avoid stale closure issue
       const currentSize = previewSizeRef.current
+      console.log('[Canvas mousemove] Checking overlap at', { x: x.toFixed(1), y: y.toFixed(1), previewSize: currentSize })
       const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent, currentSize.width, currentSize.height)
 
       setAddTextPreview({ x, y, isValid })

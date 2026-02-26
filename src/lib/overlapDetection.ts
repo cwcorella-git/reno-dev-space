@@ -251,22 +251,23 @@ export function wouldOverlapDOM(
       newTop >= blockRect.bottom - OVERLAP_TOLERANCE
 
     if (!noOverlap) {
-      if (debug) {
-        console.log(`[wouldOverlapDOM] OVERLAP with block ${blockId}!`, {
-          newBlock: { left: newLeft, top: newTop, right: newRight, bottom: newBottom },
-          existing: { left: blockRect.left, top: blockRect.top, right: blockRect.right, bottom: blockRect.bottom },
-          tolerance: OVERLAP_TOLERANCE,
-          checks: {
-            'newRight <= blockLeft+tol': `${newRight.toFixed(1)} <= ${(blockRect.left + OVERLAP_TOLERANCE).toFixed(1)}`,
-            'newLeft >= blockRight-tol': `${newLeft.toFixed(1)} >= ${(blockRect.right - OVERLAP_TOLERANCE).toFixed(1)}`,
-            'newBottom <= blockTop+tol': `${newBottom.toFixed(1)} <= ${(blockRect.top + OVERLAP_TOLERANCE).toFixed(1)}`,
-            'newTop >= blockBottom-tol': `${newTop.toFixed(1)} >= ${(blockRect.bottom - OVERLAP_TOLERANCE).toFixed(1)}`,
-          }
-        })
-      }
+      // ALWAYS log overlap detection to diagnose the issue
+      console.log(`[OVERLAP BLOCKED] Preview blocked by block ${blockId}`, {
+        preview: { left: newLeft.toFixed(0), top: newTop.toFixed(0), right: newRight.toFixed(0), bottom: newBottom.toFixed(0) },
+        block: { left: blockRect.left.toFixed(0), top: blockRect.top.toFixed(0), right: blockRect.right.toFixed(0), bottom: blockRect.bottom.toFixed(0) },
+        tolerance: OVERLAP_TOLERANCE,
+        failedChecks: {
+          rightVsLeft: newRight > blockRect.left + OVERLAP_TOLERANCE ? `preview.right(${newRight.toFixed(0)}) > block.left+tol(${(blockRect.left + OVERLAP_TOLERANCE).toFixed(0)})` : null,
+          leftVsRight: newLeft < blockRect.right - OVERLAP_TOLERANCE ? `preview.left(${newLeft.toFixed(0)}) < block.right-tol(${(blockRect.right - OVERLAP_TOLERANCE).toFixed(0)})` : null,
+          bottomVsTop: newBottom > blockRect.top + OVERLAP_TOLERANCE ? `preview.bottom(${newBottom.toFixed(0)}) > block.top+tol(${(blockRect.top + OVERLAP_TOLERANCE).toFixed(0)})` : null,
+          topVsBottom: newTop < blockRect.bottom - OVERLAP_TOLERANCE ? `preview.top(${newTop.toFixed(0)}) < block.bottom-tol(${(blockRect.bottom - OVERLAP_TOLERANCE).toFixed(0)})` : null,
+        }
+      })
       return true
     }
   }
+  // Log when placement is ALLOWED
+  console.log(`[OVERLAP OK] Placement allowed at (${cursorX.toFixed(1)}%, ${cursorY.toFixed(1)}%) - no collisions with ${blockElements.length} blocks`)
   return false
 }
 
