@@ -1,0 +1,79 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e5]:
+    - generic [ref=e7]: Non-profit
+    - generic [ref=e9]: Self-directed
+    - generic [ref=e11]: HORIZONTAL
+    - generic [ref=e13]: THIRD PLACE
+    - generic [ref=e15]: Find your party.
+    - generic [ref=e17]: Game developers
+    - generic [ref=e19]: An open space for developers to collaborate
+    - generic [ref=e21]: A SHARED SPACE FOR PEOPLE WHO WANT TO MAKE GAMES
+    - generic [ref=e23]: Belonging without conditions
+    - generic [ref=e25]: Work together on the things you love.
+    - generic [ref=e27]: Governance should feel like collaboration, not bureaucracy
+    - generic [ref=e29]: Hobbyists
+    - generic [ref=e31]: A community of practice — learn by doing alongside peers
+    - generic [ref=e33]: The antidote to isolation is a shared purpose
+    - generic [ref=e35]: "Sociocracy: every voice shapes the decision"
+    - generic [ref=e37]: interest-driven
+    - generic [ref=e39]: RENO DEV SPACE
+    - generic [ref=e41]: No leads, producers, or ceos
+    - generic [ref=e43]: Consent-based decision making
+    - generic [ref=e45]: Democratic
+    - generic [ref=e47]: REJECT CORPORATE FUNDING TO MAINTAIN INDEPENDENCE
+    - generic [ref=e49]: Indie devs
+    - generic [ref=e51]:
+      - text: Inspired by
+      - link "Motion Twin" [ref=e52] [cursor=pointer]:
+        - /url: https://motiontwin.com/
+      - text: ", Hacker spaces, and Glitch City"
+    - generic [ref=e54]: Animators, Sound Designers, Programmers, 3D Artists, 2D Artists,
+    - generic [ref=e56]: Pure consensus creates gridlock; majority voting creates factions. The recommended middle path is sociocracy's consent-based decision making, where proposals pass if there are "no reasoned objections"—not full agreement. Objections must relate to organizational goals, not personal preferences, and the question becomes "is this safe enough to try?" rather than "does everyone love this?"
+    - generic [ref=e58]: Sociocracy
+    - generic [ref=e60]: (Consent-based governance)
+    - generic [ref=e62]:
+      - text: No meetings
+      - text: No schedules
+      - text: No mandatory hours
+    - generic [ref=e64]: FREEFORM COOPERATION
+    - generic [ref=e66]:
+      - text: No hiring process.
+      - text: No work experience needed.
+      - text: Show up and build things.
+    - generic [ref=e68]:
+      - text: Show up when you want to.
+      - text: And only when you want to.
+    - generic [ref=e70]: Creation for the sake of creation.
+    - generic [ref=e72]: Consent-based decision making.
+    - generic [ref=e74]: Proposals pass if there are "no reasonable objections"—not full agreement.
+    - generic [ref=e76]: not profit-driven
+    - generic [ref=e78]: A horizontal, non-profit dev space for Reno game developers.
+    - generic [ref=e80]:
+      - heading "SPACES FOR RENT" [level=3] [ref=e81]
+      - generic [ref=e84]:
+        - generic [ref=e85]:
+          - img "245 Washington St" [ref=e86] [cursor=pointer]
+          - button "Expand image" [ref=e87] [cursor=pointer]:
+            - img [ref=e88]
+        - generic [ref=e90]:
+          - heading "245 Washington St" [level=4] [ref=e91]
+          - paragraph [ref=e92]: Contact for Pricing
+          - generic [ref=e93]:
+            - paragraph [ref=e94]: LOGIC
+            - paragraph [ref=e95]: (775) 800-4100
+          - paragraph [ref=e96]: Close to where I live. Plenty of apartments nearby.
+          - paragraph [ref=e98]: Added 2/12/2026
+  - button "Sign In" [ref=e99] [cursor=pointer]:
+    - img [ref=e100]
+    - generic [ref=e102]: Sign In
+  - generic [ref=e105]:
+    - img [ref=e106]
+    - generic [ref=e109]: A campaign is brewing...
+    - generic [ref=e110]: 1/5
+    - generic [ref=e111]: members
+  - generic [ref=e112]: 9d1e4bf
+  - alert [ref=e113]
+```

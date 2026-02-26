@@ -558,7 +558,10 @@ export function Canvas() {
 
       // Check if placement would be valid (not overlapping)
       // Use measured preview size for accurate detection
-      const shouldDebug = Math.random() < 0.02 // ~2% of checks
+      const shouldDebug = Math.random() < 0.1 // ~10% of checks for debugging
+      if (shouldDebug) {
+        console.log('[Canvas] previewSize:', previewSize, 'canvasHeightPercent:', canvasHeightPercent)
+      }
       const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent, previewSize.width, previewSize.height, shouldDebug)
 
       setAddTextPreview({ x, y, isValid })

@@ -228,7 +228,8 @@ export function wouldOverlapDOM(
     if (debug) {
       console.log(`[wouldOverlapDOM] Block ${blockId}:`, {
         left: blockRect.left, top: blockRect.top,
-        right: blockRect.right, bottom: blockRect.bottom
+        right: blockRect.right, bottom: blockRect.bottom,
+        width: blockRect.width, height: blockRect.height
       })
     }
 
@@ -242,7 +243,17 @@ export function wouldOverlapDOM(
 
     if (!noOverlap) {
       if (debug) {
-        console.log(`[wouldOverlapDOM] OVERLAP with block ${blockId}!`)
+        console.log(`[wouldOverlapDOM] OVERLAP with block ${blockId}!`, {
+          newBlock: { left: newLeft, top: newTop, right: newRight, bottom: newBottom },
+          existing: { left: blockRect.left, top: blockRect.top, right: blockRect.right, bottom: blockRect.bottom },
+          tolerance: OVERLAP_TOLERANCE,
+          checks: {
+            'newRight <= blockLeft+tol': `${newRight.toFixed(1)} <= ${(blockRect.left + OVERLAP_TOLERANCE).toFixed(1)}`,
+            'newLeft >= blockRight-tol': `${newLeft.toFixed(1)} >= ${(blockRect.right - OVERLAP_TOLERANCE).toFixed(1)}`,
+            'newBottom <= blockTop+tol': `${newBottom.toFixed(1)} <= ${(blockRect.top + OVERLAP_TOLERANCE).toFixed(1)}`,
+            'newTop >= blockBottom-tol': `${newTop.toFixed(1)} >= ${(blockRect.bottom - OVERLAP_TOLERANCE).toFixed(1)}`,
+          }
+        })
       }
       return true
     }
