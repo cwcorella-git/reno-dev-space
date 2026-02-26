@@ -5,11 +5,12 @@
 
 import * as functions from 'firebase-functions'
 import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
 import { loadTemplate, sendEmail, isAdmin, getCampaignStats } from './email'
 
-// Lazy getter for Firestore instance
+// Lazy getter for Firestore instance (uses 'main' database, not default)
 function getDb() {
-  return admin.firestore()
+  return getFirestore('main')
 }
 
 // ============================================================================

@@ -4,14 +4,14 @@
  */
 
 import * as functions from 'firebase-functions'
-import * as admin from 'firebase-admin'
+import { getFirestore } from 'firebase-admin/firestore'
 import * as nodemailer from 'nodemailer'
 import * as fs from 'fs'
 import * as path from 'path'
 
-// Lazy getter for Firestore instance (avoids initialization errors)
+// Lazy getter for Firestore instance (uses 'main' database, not default)
 function getDb() {
-  return admin.firestore()
+  return getFirestore('main')
 }
 
 /**
