@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import { createPortal } from 'react-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { EditableText } from '@/components/EditableText'
 import { EditorTab } from './EditorTab'
@@ -279,10 +280,10 @@ export function EmailsPanel() {
         )}
       </div>
 
-      {/* Preview Modal */}
-      {showPreview && (
+      {/* Preview Modal - rendered via Portal to escape transform stacking context */}
+      {showPreview && typeof document !== 'undefined' && createPortal(
         <div
-          className="fixed inset-0 z-[250] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
               if (hasUnsavedChanges) {
@@ -342,13 +343,13 @@ export function EmailsPanel() {
             </div>
 
             {/* Body: Preview + Editor */}
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex overflow-hidden min-h-0">
               {/* Left: Preview (always visible) */}
-              <div className={`${isEditing ? 'w-3/5' : 'w-full'} flex flex-col p-4`}>
+              <div className={`${isEditing ? 'w-3/5' : 'w-full'} flex flex-col p-4 min-h-0`}>
                 <iframe
                   ref={iframeRef}
                   srcDoc={previewHtml}
-                  className="w-full h-full border border-white/10 rounded bg-white"
+                  className="w-full flex-1 min-h-0 border border-white/10 rounded bg-white"
                   title="Email Preview"
                 />
               </div>
@@ -432,7 +433,8 @@ export function EmailsPanel() {
               </div>
             )}
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </>
   )
