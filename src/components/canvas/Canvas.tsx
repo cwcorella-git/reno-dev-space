@@ -60,6 +60,8 @@ export function Canvas() {
   const [previewColor, setPreviewColor] = useState('#4ade80')
   const [previewFont, setPreviewFont] = useState('var(--font-inter)')
   const [previewSize, setPreviewSize] = useState<{ width: number; height: number }>({ width: 12, height: 6 })
+  // Ref to avoid stale closure in mouse handlers - always has latest measured size
+  const previewSizeRef = useRef<{ width: number; height: number }>({ width: 12, height: 6 })
 
   // Track cursor position for paste operations
   const cursorPosRef = useRef<{ x: number; y: number }>({ x: 50, y: 50 })
@@ -533,10 +535,14 @@ export function Canvas() {
       const canvas = canvasRef.current
       if (canvas) {
         const measured = measureNewBlockSize(canvas, font, 1) // 1rem default
-        setPreviewSize({
+        const newSize = {
           width: measured.widthPercent,
           height: measured.heightPercent
-        })
+        }
+        // Update both state (for UI) and ref (for handlers to avoid stale closure)
+        setPreviewSize(newSize)
+        previewSizeRef.current = newSize
+        console.log('[Canvas] Measured preview size:', newSize)
       }
     }
   }, [isAddTextMode, canvasRef])
@@ -557,12 +563,13 @@ export function Canvas() {
       const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
 
       // Check if placement would be valid (not overlapping)
-      // Use measured preview size for accurate detection
+      // Use ref for latest measured size to avoid stale closure issue
+      const currentSize = previewSizeRef.current
       const shouldDebug = Math.random() < 0.1 // ~10% of checks for debugging
       if (shouldDebug) {
-        console.log('[Canvas] previewSize:', previewSize, 'canvasHeightPercent:', canvasHeightPercent)
+        console.log('[Canvas] previewSize (ref):', currentSize, 'canvasHeightPercent:', canvasHeightPercent)
       }
-      const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent, previewSize.width, previewSize.height, shouldDebug)
+      const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent, currentSize.width, currentSize.height, shouldDebug)
 
       setAddTextPreview({ x, y, isValid })
     }
@@ -583,7 +590,7 @@ export function Canvas() {
         canvas.removeEventListener('mouseleave', handleMouseLeave)
       }
     }
-  }, [isAddTextMode, canAddText, blocks, canvasRef, canvasHeightPercent, previewSize])
+  }, [isAddTextMode, canAddText, blocks, canvasRef, canvasHeightPercent]) // previewSize removed - using ref
 
 
   if (authLoading || canvasLoading) {

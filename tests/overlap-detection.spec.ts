@@ -9,6 +9,10 @@ const ADMIN_PASSWORD = process.env.TEST_ADMIN_PASSWORD || '.YQZv*S*7"jk^=?'
 
 /** Sign in as admin user */
 async function signInAsAdmin(page: Page): Promise<boolean> {
+  // Take diagnostic screenshot to see initial state
+  await page.screenshot({ path: 'tests/screenshots/auth-00-initial-state.png' })
+  console.log('[Auth] Took initial state screenshot')
+
   // Check if already signed in (Add Text button visible = admin already logged in)
   const addTextButton = page.locator('button:has-text("Add Text")')
   if (await addTextButton.isVisible({ timeout: 2000 }).catch(() => false)) {
@@ -16,15 +20,44 @@ async function signInAsAdmin(page: Page): Promise<boolean> {
     return true
   }
 
-  // Look for "Sign In" button in the panel (Profile tab area)
+  // Wait longer for content to load from Firestore
+  await page.waitForTimeout(3000)
+
+  // Look for "Sign In" button - try multiple selectors
+  // 1. By text content (EditableText might load async)
+  // 2. By the floating button structure (fixed bottom-4 right-4)
   const signInButton = page.locator('button:has-text("Sign In")')
-  const isVisible = await signInButton.isVisible({ timeout: 3000 }).catch(() => false)
+  const floatingButton = page.locator('button.fixed.bottom-4.right-4')
+  const anyLoginButton = page.locator('button:has(svg[viewBox="0 0 24 24"]):near(.z-50)')
+
+  let targetButton = signInButton
+  let isVisible = await signInButton.isVisible({ timeout: 3000 }).catch(() => false)
+
   if (!isVisible) {
-    console.log('[Auth] Sign In button not found')
+    // Try the floating button by class
+    isVisible = await floatingButton.isVisible({ timeout: 2000 }).catch(() => false)
+    if (isVisible) {
+      targetButton = floatingButton
+      console.log('[Auth] Found floating button by class')
+    }
+  }
+
+  if (!isVisible) {
+    // Take a screenshot to debug
+    await page.screenshot({ path: 'tests/screenshots/auth-signin-not-found.png' })
+    console.log('[Auth] Sign In button not found - see auth-signin-not-found.png')
+    // Dump all visible button text for debugging
+    const buttons = await page.locator('button').all()
+    console.log(`[Auth] Found ${buttons.length} buttons on page:`)
+    for (const btn of buttons.slice(0, 10)) {
+      const text = await btn.textContent().catch(() => '(no text)')
+      const isVis = await btn.isVisible().catch(() => false)
+      console.log(`  - "${text?.trim()}" visible=${isVis}`)
+    }
     return false
   }
 
-  await signInButton.click()
+  await targetButton.click()
   await page.waitForTimeout(500)
 
   // Modal opens in signup mode by default - look for "Already have an account? Sign in" link
@@ -185,17 +218,14 @@ async function findEmptyPosition(
 ): Promise<{ xPercent: number; yPercent: number } | null> {
   // Preview box dimensions must match the app's calculation!
   // Width: 12% of canvas width
-  // Height: 6% of DESIGN_HEIGHT (not canvas height!)
-  const DESIGN_HEIGHT = 900
-  const canvasHeightPercent = (canvasBox.height / DESIGN_HEIGHT) * 100
-
+  // Height: 6% of canvas height (NOT DESIGN_HEIGHT - both use 0-100 percentages)
   const previewWidthPx = (12 / 100) * canvasBox.width
-  const previewHeightPx = (6 / canvasHeightPercent) * canvasBox.height  // ~54px
+  const previewHeightPx = (6 / 100) * canvasBox.height  // 6% of canvas height
 
   function hitsAnyBlock(xPct: number, yPct: number): boolean {
-    // Convert percentage to screen pixels (matching the app's calculation)
+    // Convert percentage to screen pixels (both use 0-100 percentages)
     const previewLeft = canvasBox.x + (xPct / 100) * canvasBox.width
-    const previewTop = canvasBox.y + (yPct / canvasHeightPercent) * canvasBox.height
+    const previewTop = canvasBox.y + (yPct / 100) * canvasBox.height
     const previewRight = previewLeft + previewWidthPx
     const previewBottom = previewTop + previewHeightPx
 
@@ -207,8 +237,8 @@ async function findEmptyPosition(
     ))
   }
 
-  // Scan for empty space (y is in canvasHeightPercent units, not 0-100)
-  for (let yPct = 5; yPct < canvasHeightPercent * 0.8; yPct += 8) {
+  // Scan for empty space (both x and y are 0-100 percentages)
+  for (let yPct = 5; yPct < 80; yPct += 8) {
     for (let xPct = 5; xPct < 80; xPct += 10) {
       if (!hitsAnyBlock(xPct, yPct)) {
         return { xPercent: xPct, yPercent: yPct }
@@ -256,18 +286,13 @@ test.describe('Block Geometry Analysis (no auth required)', () => {
 
     const blocks = await getBlocks(page)
 
-    // DESIGN_HEIGHT from the app constants
-    const DESIGN_HEIGHT = 900
-    const canvasHeightPercent = (canvasBox.height / DESIGN_HEIGHT) * 100
-
-    // Preview dimensions: 12% of width, but 6% of DESIGN_HEIGHT (not canvas height!)
+    // Preview dimensions: both use 0-100 percentages of actual canvas dimensions
     const previewWidthPx = (12 / 100) * canvasBox.width
-    const previewHeightPx = (6 / canvasHeightPercent) * canvasBox.height  // This equals 6% of DESIGN_HEIGHT
+    const previewHeightPx = (6 / 100) * canvasBox.height  // 6% of canvas height
 
     console.log('\n===== BLOCK GEOMETRY ANALYSIS =====')
     console.log(`Canvas: ${canvasBox.width.toFixed(0)}x${canvasBox.height.toFixed(0)} at (${canvasBox.x.toFixed(0)}, ${canvasBox.y.toFixed(0)})`)
-    console.log(`canvasHeightPercent: ${canvasHeightPercent.toFixed(1)}%`)
-    console.log(`Preview box size: ${previewWidthPx.toFixed(0)}px x ${previewHeightPx.toFixed(0)}px (should be ~${(0.12 * 1440).toFixed(0)}px x 54px)`)
+    console.log(`Preview box size: ${previewWidthPx.toFixed(0)}px x ${previewHeightPx.toFixed(0)}px (12% x 6% of canvas)`)
     console.log(`Found ${blocks.length} blocks:\n`)
 
     for (const block of blocks) {
@@ -325,16 +350,30 @@ test.describe('Overlap Detection Accuracy (requires auth)', () => {
   test.beforeEach(async ({ page }) => {
     consoleLogs = []
 
-    // Capture console logs
+    // Capture ALL console logs for debugging
     page.on('console', (msg: ConsoleMessage) => {
-      if (msg.text().includes('[wouldOverlapDOM]')) {
-        consoleLogs.push(msg.text())
-      }
+      const text = msg.text()
+      consoleLogs.push(`[${msg.type()}] ${text}`)
+    })
+
+    // Capture page errors
+    page.on('pageerror', (error) => {
+      consoleLogs.push(`[PAGE ERROR] ${error.message}`)
     })
 
     // Dev server runs at root, production uses /reno-dev-space/
     await page.goto('/')
-    await page.waitForLoadState('load')
+    await page.waitForLoadState('load')  // Don't use networkidle - Firestore keeps connections open
+
+    // Wait for React app to hydrate - look for the canvas or panel
+    try {
+      await page.waitForSelector('.bg-brand-dark, button, [data-block-id]', { timeout: 15000 })
+      console.log('[Setup] App hydrated')
+    } catch {
+      console.log('[Setup] App may not have fully hydrated')
+      await page.screenshot({ path: 'tests/screenshots/hydration-timeout.png' })
+    }
+
     await page.waitForTimeout(2000)
 
     // Dismiss IntroHint if visible
@@ -343,16 +382,29 @@ test.describe('Overlap Detection Accuracy (requires auth)', () => {
       await browseButton.click()
       await page.waitForTimeout(500)
     }
+
+    // Alternative: try clicking anywhere to dismiss intro hint
+    const gotItButton = page.locator('button:has-text("Got it")')
+    if (await gotItButton.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await gotItButton.click()
+      await page.waitForTimeout(500)
+    }
   })
 
   test.describe.configure({ mode: 'serial' })  // Run auth test first
 
   test.afterEach(async () => {
+    // Always log console output for debugging
+    console.log('\n===== Browser Console Logs =====')
     if (consoleLogs.length > 0) {
-      console.log('\n===== Overlap Detection Console Logs =====')
-      consoleLogs.forEach(log => console.log(log))
-      console.log('===== End Logs =====\n')
+      consoleLogs.slice(0, 50).forEach(log => console.log(log))
+      if (consoleLogs.length > 50) {
+        console.log(`... and ${consoleLogs.length - 50} more logs`)
+      }
+    } else {
+      console.log('(no logs captured)')
     }
+    console.log('===== End Logs =====\n')
   })
 
   test('can authenticate as admin', async ({ page }) => {
