@@ -5,9 +5,9 @@ import { CanvasBlock } from '@/types/canvas'
 const NEW_BLOCK_WIDTH = 12  // ~12% of canvas width
 const NEW_BLOCK_HEIGHT = 6  // ~6% of canvasHeightPercent
 
-// Tolerance for overlap detection (pixels) - allows padded boxes to touch
-// without flagging overlap. Set to padding value so only TEXT overlap triggers.
-const OVERLAP_TOLERANCE = 8  // px - matches block vertical padding
+// Tolerance for overlap detection (pixels) - allows padded boxes to overlap
+// without flagging. Set to 2x padding to account for padding on BOTH blocks.
+const OVERLAP_TOLERANCE = 16  // px - 8px padding × 2 (new block + existing block)
 
 // Fallback height estimate when DOM is not available (percentage)
 // This is used for server-side rendering or when block hasn't mounted yet
