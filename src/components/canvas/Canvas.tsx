@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { usePresence } from '@/contexts/PresenceContext'
 import { CanvasBlock, OVERFLOW_LEFT, OVERFLOW_RIGHT } from './CanvasBlock'
 import { CursorPresence } from './CursorPresence'
-import { getRandomColor } from '@/types/canvas'
+import { getRandomColor, getRandomFont } from '@/types/canvas'
 import { UnifiedPanel } from '@/components/panel/UnifiedPanel'
 import { IntroHint } from '@/components/IntroHint'
 import { CampaignBanner } from '@/components/CampaignBanner'
@@ -15,7 +15,7 @@ import { GalleryPositionSlider } from '@/components/property/GalleryPositionSlid
 import { AddPropertyModal } from '@/components/property/AddPropertyModal'
 import { incrementPageViews } from '@/lib/storage/campaignStorage'
 import { subscribeToGalleryPosition, updateGalleryPosition, migrateGalleryPositionIfNeeded, DEFAULT_POSITION as DEFAULT_GALLERY_POSITION } from '@/lib/storage/propertyGalleryStorage'
-import { wouldOverlap, wouldOverlapDOM } from '@/lib/overlapDetection'
+import { wouldOverlap, wouldOverlapDOM, measureNewBlockSize } from '@/lib/overlapDetection'
 import { filterEditableBlocks } from '@/lib/permissions'
 import { EditableText } from '@/components/EditableText'
 
@@ -58,6 +58,8 @@ export function Canvas() {
   // Add Text mode cursor preview
   const [addTextPreview, setAddTextPreview] = useState<{ x: number; y: number; isValid: boolean } | null>(null)
   const [previewColor, setPreviewColor] = useState('#4ade80')
+  const [previewFont, setPreviewFont] = useState('var(--font-inter)')
+  const [previewSize, setPreviewSize] = useState<{ width: number; height: number }>({ width: 12, height: 6 })
 
   // Track cursor position for paste operations
   const cursorPosRef = useRef<{ x: number; y: number }>({ x: 50, y: 50 })
@@ -209,7 +211,7 @@ export function Canvas() {
             return
           }
 
-          addText(x, y, previewColor)
+          addText(x, y, previewColor, previewFont)
           setIsAddTextMode(false)
           return
         }
@@ -222,7 +224,7 @@ export function Canvas() {
         setContextMenu(null)
       }
     },
-    [selectBlock, isAddTextMode, setIsAddTextMode, canAddText, canvasRef, addText, canvasHeightPercent, blocks, previewColor]
+    [selectBlock, isAddTextMode, setIsAddTextMode, canAddText, canvasRef, addText, canvasHeightPercent, blocks, previewColor, previewFont]
   )
 
   // Start marquee selection on mouse down (available to everyone)
@@ -357,10 +359,10 @@ export function Canvas() {
 
   const handleAddText = useCallback(() => {
     if (contextMenu) {
-      addText(contextMenu.canvasX, contextMenu.canvasY, previewColor)
+      addText(contextMenu.canvasX, contextMenu.canvasY, previewColor, previewFont)
       setContextMenu(null)
     }
-  }, [contextMenu, addText, previewColor])
+  }, [contextMenu, addText, previewColor, previewFont])
 
   // Keyboard shortcuts: Delete, Escape, Ctrl+A/Z/Y/C/V
   useEffect(() => {
@@ -519,10 +521,25 @@ export function Canvas() {
     }
   }, [isAdmin, user])
 
-  // Pick a random color when entering add-text mode
+  // Pick random color/font and measure size when entering add-text mode
   useEffect(() => {
-    if (isAddTextMode) setPreviewColor(getRandomColor())
-  }, [isAddTextMode])
+    if (isAddTextMode) {
+      const color = getRandomColor()
+      const font = getRandomFont()
+      setPreviewColor(color)
+      setPreviewFont(font)
+
+      // Measure actual block size with selected font
+      const canvas = canvasRef.current
+      if (canvas) {
+        const measured = measureNewBlockSize(canvas, font, 1) // 1rem default
+        setPreviewSize({
+          width: measured.widthPercent,
+          height: measured.heightPercent
+        })
+      }
+    }
+  }, [isAddTextMode, canvasRef])
 
   // Track mouse position for Add Text mode preview
   useEffect(() => {
@@ -540,9 +557,9 @@ export function Canvas() {
       const y = ((e.clientY - rect.top) / rect.height) * canvasHeightPercent
 
       // Check if placement would be valid (not overlapping)
-      // Debug: Log every 60 frames (~1 per second) to avoid spam
+      // Use measured preview size for accurate detection
       const shouldDebug = Math.random() < 0.02 // ~2% of checks
-      const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent, shouldDebug)
+      const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent, previewSize.width, previewSize.height, shouldDebug)
 
       setAddTextPreview({ x, y, isValid })
     }
@@ -563,7 +580,7 @@ export function Canvas() {
         canvas.removeEventListener('mouseleave', handleMouseLeave)
       }
     }
-  }, [isAddTextMode, canAddText, blocks, canvasRef, canvasHeightPercent])
+  }, [isAddTextMode, canAddText, blocks, canvasRef, canvasHeightPercent, previewSize])
 
 
   if (authLoading || canvasLoading) {
@@ -728,8 +745,8 @@ export function Canvas() {
                   style={{
                     left: `${addTextPreview.x}%`,
                     top: `${(addTextPreview.y / canvasHeightPercent) * 100}%`,
-                    width: '12%',
-                    height: `${(6 / canvasHeightPercent) * 100}%`,
+                    width: `${previewSize.width}%`,
+                    height: `${(previewSize.height / canvasHeightPercent) * 100}%`,
                     minHeight: '30px',
                     borderColor: addTextPreview.isValid ? previewColor : '#ef4444',
                     backgroundColor: addTextPreview.isValid ? `${previewColor}1a` : '#ef44441a',

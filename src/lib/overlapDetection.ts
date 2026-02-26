@@ -13,6 +13,60 @@ const OVERLAP_PADDING = 0
 const FALLBACK_HEIGHT_ESTIMATE = 6 // Conservative estimate (matches NEW_BLOCK_HEIGHT)
 
 /**
+ * Measure what a new text block would actually render at.
+ * Creates a hidden measurement element with exact block styling.
+ *
+ * @param canvasElement - The canvas DOM element for size reference
+ * @param fontFamily - CSS font-family value (e.g., 'var(--font-inter)')
+ * @param fontSize - Font size in rem units (default: 1)
+ * @param placeholderText - Text to measure (default: 'Click to edit')
+ * @returns Dimensions as percentages of canvas
+ */
+export function measureNewBlockSize(
+  canvasElement: HTMLElement,
+  fontFamily: string = 'var(--font-inter)',
+  fontSize: number = 1,
+  placeholderText: string = 'Click to edit'
+): { widthPercent: number; heightPercent: number } {
+  const canvasRect = canvasElement.getBoundingClientRect()
+
+  // Create measurement element with exact block styling (matches CanvasBlock.tsx)
+  const measurer = document.createElement('div')
+  measurer.style.cssText = `
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    padding: 8px 12px;
+    min-width: 80px;
+    max-width: min(100%, 90vw);
+    font-family: ${fontFamily};
+    font-size: ${fontSize}rem;
+    font-weight: normal;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.5;
+  `
+  measurer.textContent = placeholderText
+
+  canvasElement.appendChild(measurer)
+  const rect = measurer.getBoundingClientRect()
+  canvasElement.removeChild(measurer)
+
+  // Convert to percentages of canvas
+  const widthPercent = (rect.width / canvasRect.width) * 100
+  const heightPercent = (rect.height / canvasRect.height) * 100
+
+  // Enforce minimums to prevent tiny previews
+  return {
+    widthPercent: Math.max(widthPercent, 5),   // At least 5% width
+    heightPercent: Math.max(heightPercent, 2)  // At least 2% height
+  }
+}
+
+/**
  * Get the actual height of a block in percentage units.
  * Tries DOM measurement first, falls back to conservative estimate.
  *
@@ -119,12 +173,22 @@ export function wouldBlockOverlap(
  * DOM-based overlap check for Add Text placement.
  * Uses getBoundingClientRect() on existing blocks for pixel-accurate hit zones,
  * instead of the percentage-based estimates which underestimate block height.
+ *
+ * @param canvasElement - The canvas DOM element
+ * @param cursorX - Cursor X position as percentage (0-100)
+ * @param cursorY - Cursor Y position as percentage (0-canvasHeightPercent)
+ * @param canvasHeightPercent - Canvas height as percentage of DESIGN_HEIGHT
+ * @param newBlockWidth - Width of new block as percentage (default: NEW_BLOCK_WIDTH)
+ * @param newBlockHeight - Height of new block as percentage (default: NEW_BLOCK_HEIGHT)
+ * @param debug - Enable console logging for debugging
  */
 export function wouldOverlapDOM(
   canvasElement: HTMLElement,
-  cursorX: number,            // percentage (0–100)
-  cursorY: number,            // percentage (0–canvasHeightPercent)
+  cursorX: number,
+  cursorY: number,
   canvasHeightPercent: number,
+  newBlockWidth: number = NEW_BLOCK_WIDTH,
+  newBlockHeight: number = NEW_BLOCK_HEIGHT,
   debug: boolean = false
 ): boolean {
   const canvasRect = canvasElement.getBoundingClientRect()
@@ -132,9 +196,9 @@ export function wouldOverlapDOM(
   // Convert new block's top-left from canvas percentages to screen pixels
   const newLeft = canvasRect.left + (cursorX / 100) * canvasRect.width
   const newTop = canvasRect.top + (cursorY / canvasHeightPercent) * canvasRect.height
-  // Estimate new block size in screen pixels (matches the 12% × 6% preview box)
-  const newRight = newLeft + (NEW_BLOCK_WIDTH / 100) * canvasRect.width
-  const newBottom = newTop + (NEW_BLOCK_HEIGHT / canvasHeightPercent) * canvasRect.height
+  // Calculate new block size in screen pixels using provided dimensions
+  const newRight = newLeft + (newBlockWidth / 100) * canvasRect.width
+  const newBottom = newTop + (newBlockHeight / canvasHeightPercent) * canvasRect.height
 
   if (debug) {
     console.log('[wouldOverlapDOM] Canvas:', {

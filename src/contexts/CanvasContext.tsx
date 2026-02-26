@@ -72,7 +72,7 @@ interface CanvasContextType {
   setIsGroupDragging: (dragging: boolean) => void
 
   // Block operations (admin only)
-  addText: (x: number, y: number, color?: string) => Promise<string | null>
+  addText: (x: number, y: number, color?: string, fontFamily?: string) => Promise<string | null>
   moveBlock: (id: string, x: number, y: number) => Promise<void>
   moveBlocks: (moves: { id: string; x: number; y: number }[]) => Promise<void>
   resizeBlock: (id: string, width: number, height: number) => Promise<void>
@@ -406,10 +406,10 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
 
   // Admin operations
   const addText = useCallback(
-    async (x: number, y: number, color?: string): Promise<string | null> => {
+    async (x: number, y: number, color?: string, fontFamily?: string): Promise<string | null> => {
       if (!canAddText || !user) return null
       try {
-        const id = await addTextBlock(x, y, user.uid, '', getMaxZIndex(), color)
+        const id = await addTextBlock(x, y, user.uid, '', getMaxZIndex(), color, fontFamily)
         recordHistory('add', [], { createdIds: [id] })
         setSelectedBlockId(id)
         return id

@@ -67,7 +67,8 @@ export async function addTextBlock(
   createdBy: string,
   content: string = '',
   maxZIndex: number = 0,
-  color?: string
+  color?: string,
+  fontFamily?: string
 ): Promise<string> {
   const db = getDb()
   const now = Date.now()
@@ -80,7 +81,7 @@ export async function addTextBlock(
     height: 0, // auto height
     zIndex: maxZIndex + 1,
     content,
-    style: { ...DEFAULT_TEXT_STYLE, color: color ?? getRandomColor(), fontFamily: getRandomFont() },
+    style: { ...DEFAULT_TEXT_STYLE, color: color ?? getRandomColor(), fontFamily: fontFamily ?? getRandomFont() },
     createdBy,
     brightness: DEFAULT_BRIGHTNESS,
     voters: [],
