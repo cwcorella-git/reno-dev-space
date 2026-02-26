@@ -132,15 +132,6 @@ export function PropertyCard({ property }: PropertyCardProps) {
           className="fixed inset-0 z-[200] flex items-center justify-center bg-black"
           onClick={() => setShowImageModal(false)}
         >
-          {/* Close button - fixed position, always visible */}
-          <button
-            onClick={() => setShowImageModal(false)}
-            className="fixed top-4 right-4 z-[210] w-12 h-12 md:w-14 md:h-14 bg-black/50 hover:bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors border border-white/20"
-            aria-label="Close"
-          >
-            <XMarkIcon className="w-6 h-6 md:w-7 md:h-7" />
-          </button>
-
           {/* Image container - enables pinch-to-zoom on mobile, fills screen on desktop */}
           <div
             className="relative w-full h-full overflow-auto"
@@ -148,23 +139,34 @@ export function PropertyCard({ property }: PropertyCardProps) {
             style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
           >
             {/* Wrapper to center image initially */}
-            <div className="min-w-full min-h-full flex items-center justify-center">
-              <div className="relative w-full h-full flex items-center justify-center">
+            <div className="min-w-full min-h-full flex items-center justify-center p-4">
+              <div className="relative">
                 <img
                   src={property.imageUrl}
                   alt={property.address}
-                  className="max-w-[calc(100vw-2rem)] max-h-[calc(100vh-2rem)] md:max-w-[98vw] md:max-h-[98vh] object-contain"
+                  className="max-w-[calc(100vw-2rem)] max-h-[calc(100vh-6rem)] md:max-w-[95vw] md:max-h-[calc(100vh-5rem)] object-contain"
                   style={{ touchAction: 'pan-x pan-y pinch-zoom' }}
                 />
 
-                {/* Image caption - overlays bottom of image */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-full max-w-4xl bg-gradient-to-t from-black/90 via-black/50 to-transparent p-4 md:p-6 rounded-t-lg">
-                  <h3 className="text-white font-semibold text-base md:text-xl">{property.address}</h3>
-                  <p className="text-indigo-300 text-sm md:text-base">
-                    {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : 'Contact for Pricing'}
-                  </p>
-                </div>
+                {/* Close button - overlaps image top-right corner */}
+                <button
+                  onClick={() => setShowImageModal(false)}
+                  className="absolute -top-3 -right-3 md:top-2 md:right-2 z-[210] w-10 h-10 md:w-12 md:h-12 bg-black/70 hover:bg-black/90 backdrop-blur-sm rounded-full flex items-center justify-center text-white transition-colors border border-white/30"
+                  aria-label="Close"
+                >
+                  <XMarkIcon className="w-5 h-5 md:w-6 md:h-6" />
+                </button>
               </div>
+            </div>
+          </div>
+
+          {/* Image caption - full width at bottom of viewport */}
+          <div className="fixed bottom-0 inset-x-0 z-[205] bg-gradient-to-t from-black/95 via-black/70 to-transparent p-4 md:p-6 pointer-events-none">
+            <div className="max-w-screen-xl mx-auto">
+              <h3 className="text-white font-semibold text-base md:text-xl">{property.address}</h3>
+              <p className="text-indigo-300 text-sm md:text-base">
+                {property.cost !== null ? `$${property.cost.toLocaleString()}/mo` : 'Contact for Pricing'}
+              </p>
             </div>
           </div>
         </div>,
