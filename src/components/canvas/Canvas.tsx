@@ -747,7 +747,6 @@ export function Canvas() {
                     top: `${(addTextPreview.y / canvasHeightPercent) * 100}%`,
                     width: `${previewSize.width}%`,
                     height: `${previewSize.height}%`,  // 0-100 scale (matches measureNewBlockSize output)
-                    minHeight: '30px',
                     borderColor: addTextPreview.isValid ? previewColor : '#ef4444',
                     backgroundColor: addTextPreview.isValid ? `${previewColor}1a` : '#ef44441a',
                   }}
