@@ -45,15 +45,41 @@ function createTransporter(): nodemailer.Transporter {
 
 /**
  * Load and populate an email template with variables
+ * Checks Firestore for custom template first, falls back to static file
  */
-export function loadTemplate(templateName: string, variables: Record<string, string>): string {
-  const templatePath = path.join(__dirname, '../templates', templateName)
+export async function loadTemplate(templateName: string, variables: Record<string, string>): Promise<string> {
+  let html: string
 
-  if (!fs.existsSync(templatePath)) {
-    throw new Error(`Template not found: ${templateName}`)
+  // Template ID is filename without .html extension
+  const templateId = templateName.replace('.html', '')
+
+  // Try Firestore first (custom templates)
+  try {
+    const db = getDb()
+    const customDoc = await db.collection('emailTemplates').doc(templateId).get()
+
+    if (customDoc.exists) {
+      const data = customDoc.data()
+      if (data?.html) {
+        console.log(`✓ Using custom template from Firestore: ${templateId}`)
+        html = data.html
+      } else {
+        throw new Error('Custom template has no HTML')
+      }
+    } else {
+      throw new Error('No custom template found')
+    }
+  } catch {
+    // Fall back to static file
+    const templatePath = path.join(__dirname, '../templates', templateName)
+
+    if (!fs.existsSync(templatePath)) {
+      throw new Error(`Template not found: ${templateName}`)
+    }
+
+    console.log(`Using static template file: ${templateName}`)
+    html = fs.readFileSync(templatePath, 'utf-8')
   }
-
-  let html = fs.readFileSync(templatePath, 'utf-8')
 
   // Replace all {{VARIABLE}} placeholders
   Object.entries(variables).forEach(([key, value]) => {

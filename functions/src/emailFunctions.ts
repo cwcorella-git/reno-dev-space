@@ -31,7 +31,7 @@ export const sendVerificationEmail = functions.auth.user().onCreate(async (user)
     const link = await admin.auth().generateEmailVerificationLink(user.email)
 
     // Load and populate template
-    const html = loadTemplate('verify-email.html', {
+    const html = await loadTemplate('verify-email.html', {
       VERIFICATION_LINK: link
     })
 
@@ -73,7 +73,7 @@ export const sendCampaignSuccessEmails = functions.https.onCall(async (data, con
     console.log(`Sending success emails to ${stats.pledges.length} backers...`)
 
     const emailPromises = stats.pledges.map(async (pledge) => {
-      const html = loadTemplate('campaign-success.html', {
+      const html = await loadTemplate('campaign-success.html', {
         TOTAL_RAISED: stats.totalRaised.toLocaleString(),
         BACKER_COUNT: stats.backerCount.toString(),
         USER_PLEDGE: pledge.amount.toString()
@@ -140,7 +140,7 @@ export const sendCampaignEndedEmails = functions.https.onCall(async (data, conte
     console.log(`Sending campaign ended emails to ${stats.pledges.length} backers...`)
 
     const emailPromises = stats.pledges.map(async (pledge) => {
-      const html = loadTemplate('campaign-ended.html', {
+      const html = await loadTemplate('campaign-ended.html', {
         TOTAL_RAISED: stats.totalRaised.toLocaleString(),
         PERCENT: stats.percent.toString(),
         USER_PLEDGE: pledge.amount.toString()
@@ -221,7 +221,7 @@ export const sendCampaignUpdate = functions.https.onCall(async (data, context) =
     console.log(`  Progress: ${stats.percent}% ($${stats.totalRaised.toLocaleString()} of $${stats.goalAmount.toLocaleString()})`)
 
     const emailPromises = stats.pledges.map(async (pledge) => {
-      const html = loadTemplate('campaign-update.html', {
+      const html = await loadTemplate('campaign-update.html', {
         MILESTONE_TITLE: milestoneTitle,
         MILESTONE_MESSAGE: milestoneMessage,
         DAYS_LEFT: stats.daysLeft.toString(),
@@ -342,7 +342,7 @@ export const sendTestEmail = functions.https.onCall(async (data, context) => {
     }
 
     const templateData = testData[template] || testData['verify-email.html']
-    const html = loadTemplate(template, templateData)
+    const html = await loadTemplate(template, templateData)
 
     await sendEmail(
       recipientEmail,
@@ -353,7 +353,6 @@ export const sendTestEmail = functions.https.onCall(async (data, context) => {
     console.log(`✓ Test email sent to ${recipientEmail} (template: ${template})`)
 
     // Log to email history
-    const db = getDb()
     await db.collection('emailHistory').add({
       templateId: 'test',
       sentAt: Date.now(),
