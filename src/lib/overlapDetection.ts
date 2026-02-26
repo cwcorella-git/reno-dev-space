@@ -198,8 +198,9 @@ export function wouldOverlapDOM(
   const newLeft = canvasRect.left + (cursorX / 100) * canvasRect.width
   const newTop = canvasRect.top + (cursorY / canvasHeightPercent) * canvasRect.height
   // Calculate new block size in screen pixels using provided dimensions
+  // Both width and height use /100 since measureNewBlockSize() returns 0-100 percentages
   const newRight = newLeft + (newBlockWidth / 100) * canvasRect.width
-  const newBottom = newTop + (newBlockHeight / canvasHeightPercent) * canvasRect.height
+  const newBottom = newTop + (newBlockHeight / 100) * canvasRect.height
 
   if (debug) {
     console.log('[wouldOverlapDOM] Canvas:', {
