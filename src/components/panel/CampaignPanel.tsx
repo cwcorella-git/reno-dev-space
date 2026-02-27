@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useCanvas } from '@/contexts/CanvasContext'
 import {
   subscribeToCampaignSettings,
   startCampaignTimer,
@@ -29,13 +30,15 @@ import {
 import { useEffects } from '@/contexts/EffectsContext'
 import { useContent } from '@/contexts/ContentContext'
 import { EditableText } from '@/components/EditableText'
-import { EnvelopeIcon, CheckCircleIcon, ClockIcon, PaperAirplaneIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
+import { EnvelopeIcon, CheckCircleIcon, ClockIcon, PaperAirplaneIcon, PencilSquareIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import { CampaignUpdateModal } from './CampaignUpdateModal'
+import { MeasurementControls } from '@/components/dev/MeasurementOverlay'
 
 export function CampaignPanel() {
   const { user, isAdmin } = useAuth()
   const { getText } = useContent()
   const { settings: effectsSettings } = useEffects()
+  const { measurementDebugConfig, setMeasurementDebugConfig } = useCanvas()
 
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
@@ -268,6 +271,18 @@ export function CampaignPanel() {
                 ? <EditableText id="campaign.button.enabled" defaultValue="Enabled" category="campaign" />
                 : <EditableText id="campaign.button.disabled" defaultValue="Disabled" category="campaign" />}
             </button>
+          </div>
+
+          {/* Dev Tools Section */}
+          <div className="border-t border-white/10 pt-3 mt-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <WrenchScrewdriverIcon className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-medium text-white">Dev Tools</span>
+            </div>
+            <MeasurementControls
+              config={measurementDebugConfig}
+              onChange={setMeasurementDebugConfig}
+            />
           </div>
 
           {/* Divider */}

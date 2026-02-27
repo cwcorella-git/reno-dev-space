@@ -14,6 +14,7 @@ import { CanvasBlock, TextBlock, TextEffectName, VOTE_BRIGHTNESS_CHANGE } from '
 import { getCelebrationEffect, getRandomEffect } from '@/lib/voteEffects'
 import { subscribeToEffectsSettings } from '@/lib/storage/effectsStorage'
 import { TextEffectsSettings, DEFAULT_EFFECTS_SETTINGS } from '@/types/canvas'
+import { measurementService, MeasurementDebugConfig, DEFAULT_DEBUG_CONFIG } from '@/lib/measurement'
 
 // History entry for undo/redo (session-only)
 interface HistoryEntry {
@@ -62,7 +63,13 @@ interface CanvasContextType {
   isAddTextMode: boolean
   isGroupDragging: boolean
   canvasRef: RefObject<HTMLDivElement | null>
+  canvasHeightPercent: number
+  setCanvasHeightPercent: (height: number) => void
   loading: boolean
+
+  // Measurement debug overlay
+  measurementDebugConfig: MeasurementDebugConfig
+  setMeasurementDebugConfig: (config: MeasurementDebugConfig) => void
 
   // Selection
   selectBlock: (id: string | null) => void
@@ -128,6 +135,10 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
   const [celebratingEffect, setCelebratingEffect] = useState<TextEffectName | null>(null)
   const [effectsSettings, setEffectsSettings] = useState<TextEffectsSettings>(DEFAULT_EFFECTS_SETTINGS)
   const canvasRef = useRef<HTMLDivElement | null>(null)
+  const [canvasHeightPercent, setCanvasHeightPercentState] = useState(100)
+  const [measurementDebugConfig, setMeasurementDebugConfig] = useState<MeasurementDebugConfig>(
+    DEFAULT_DEBUG_CONFIG
+  )
 
   // History for undo/redo (session-only, stored in ref to avoid re-renders on every action)
   const historyRef = useRef<HistoryEntry[]>([])
@@ -164,6 +175,17 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     if (typeof window === 'undefined') return
     const unsub = subscribeToEffectsSettings(setEffectsSettings)
     return () => unsub()
+  }, [])
+
+  // Initialize measurement service when canvas ref changes
+  useEffect(() => {
+    measurementService.setCanvas(canvasRef.current, canvasHeightPercent)
+  }, [canvasHeightPercent])
+
+  // Setter for canvasHeightPercent that also updates measurement service
+  const setCanvasHeightPercent = useCallback((height: number) => {
+    setCanvasHeightPercentState(height)
+    measurementService.updateCanvasHeight(height)
   }, [])
 
   // Subscribe to pledges to determine canAddText
@@ -695,7 +717,11 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         isAddTextMode,
         isGroupDragging,
         canvasRef,
+        canvasHeightPercent,
+        setCanvasHeightPercent,
         loading,
+        measurementDebugConfig,
+        setMeasurementDebugConfig,
         selectBlock,
         selectBlocks,
         setIsEditing,

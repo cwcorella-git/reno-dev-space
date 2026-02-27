@@ -15,9 +15,11 @@ import { GalleryPositionSlider } from '@/components/property/GalleryPositionSlid
 import { AddPropertyModal } from '@/components/property/AddPropertyModal'
 import { incrementPageViews } from '@/lib/storage/campaignStorage'
 import { subscribeToGalleryPosition, updateGalleryPosition, migrateGalleryPositionIfNeeded, DEFAULT_POSITION as DEFAULT_GALLERY_POSITION } from '@/lib/storage/propertyGalleryStorage'
-import { wouldOverlap, wouldOverlapDOM, measureNewBlockSize } from '@/lib/overlapDetection'
+import { measureNewBlockSize } from '@/lib/overlapDetection'
+import { collisionDetector } from '@/lib/measurement'
 import { filterEditableBlocks } from '@/lib/permissions'
 import { EditableText } from '@/components/EditableText'
+import { MeasurementOverlay } from '@/components/dev/MeasurementOverlay'
 
 // Mobile safe zone width (for admin visual guide)
 const MOBILE_SAFE_ZONE = 375
@@ -49,7 +51,7 @@ interface MarqueeState {
 
 export function Canvas() {
   const { user, isAdmin, loading: authLoading } = useAuth()
-  const { blocks, canvasRef, canAddText, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText, isAddTextMode, setIsAddTextMode, removeBlocks, undo, redo, copyBlocks, pasteBlocks } = useCanvas()
+  const { blocks, canvasRef, canAddText, selectedBlockIds, loading: canvasLoading, selectBlock, selectBlocks, addText, isAddTextMode, setIsAddTextMode, removeBlocks, undo, redo, copyBlocks, pasteBlocks, setCanvasHeightPercent, measurementDebugConfig } = useCanvas()
   const { updateCursorPosition } = usePresence()
   const [contextMenu, setContextMenu] = useState<ContextMenuState | null>(null)
   const [marquee, setMarquee] = useState<MarqueeState | null>(null)
@@ -145,6 +147,11 @@ export function Canvas() {
   // For coordinate calculations, we need the height as a percentage (100 = one screen)
   const canvasHeightPercent = (canvasHeightPx / DESIGN_HEIGHT) * 100
 
+  // Sync canvas height with measurement service (for collision detection)
+  useEffect(() => {
+    setCanvasHeightPercent(canvasHeightPercent)
+  }, [canvasHeightPercent, setCanvasHeightPercent])
+
   // Track viewport size and update scale with smooth transitions
   // Uses three zones: mobile (safe zone), tablet (transitional), desktop (focus width)
   useEffect(() => {
@@ -211,7 +218,15 @@ export function Canvas() {
 
           // Use current preview size from ref for accurate overlap check
           const currentSize = previewSizeRef.current
-          if (wouldOverlapDOM(canvas, x, y, canvasHeightPercent, currentSize.width, currentSize.height)) {
+          const result = collisionDetector.checkAddTextCollision(
+            x,
+            y,
+            currentSize.width,
+            currentSize.height,
+            blocks,
+            canvasHeightPercent
+          )
+          if (result.collides) {
             return
           }
 
@@ -577,8 +592,15 @@ export function Canvas() {
       // Check if placement would be valid (not overlapping)
       // Use ref for latest measured size to avoid stale closure issue
       const currentSize = previewSizeRef.current
-      console.log('[Canvas mousemove] Checking overlap at', { x: x.toFixed(1), y: y.toFixed(1), previewSize: currentSize })
-      const isValid = !wouldOverlapDOM(canvas, x, y, canvasHeightPercent, currentSize.width, currentSize.height)
+      const result = collisionDetector.checkAddTextCollision(
+        x,
+        y,
+        currentSize.width,
+        currentSize.height,
+        blocks,
+        canvasHeightPercent
+      )
+      const isValid = !result.collides
 
       setAddTextPreview({ x, y, isValid })
     }
@@ -717,6 +739,15 @@ export function Canvas() {
           {blocks.map((block) => (
             <CanvasBlock key={block.id} block={block} canvasHeightPercent={canvasHeightPercent} />
           ))}
+
+          {/* Measurement debug overlay (admin only) */}
+          {isAdmin && (
+            <MeasurementOverlay
+              canvasRef={canvasRef}
+              canvasHeightPercent={canvasHeightPercent}
+              config={measurementDebugConfig}
+            />
+          )}
 
           {/* Other users' cursors */}
           <CursorPresence />

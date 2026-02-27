@@ -7,7 +7,7 @@ import { CelebrationOverlay } from './CelebrationOverlay'
 import { useCanvas, DESIGN_HEIGHT } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { filterEditableBlocks } from '@/lib/permissions'
-import { wouldBlockOverlap, checkDOMOverlap } from '@/lib/overlapDetection'
+import { collisionDetector } from '@/lib/measurement'
 
 interface CanvasBlockProps {
   block: CanvasBlockType
@@ -100,9 +100,15 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       setIsResizeOverlapping(false)
       return
     }
-    const overlaps = checkDOMOverlap(block.id)
-    setIsResizeOverlapping(overlaps)
-  }, [resizeWidth, isResizing, block.id])
+    const result = collisionDetector.checkResizeCollision(
+      block.id,
+      resizeWidth?.width ?? block.width,
+      block,
+      blocks,
+      canvasHeightPercent
+    )
+    setIsResizeOverlapping(result.collides)
+  }, [resizeWidth, isResizing, block, blocks, canvasHeightPercent])
 
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
@@ -227,8 +233,15 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         const newY = Math.max(0, Math.min(canvasHeightPercent - 5, startBlockY + deltaY))
 
         // Check if this position would overlap other blocks
-        const overlaps = wouldBlockOverlap(block.id, newX, newY, block.width || 12, blocks, 0, canvasHeightPercent)
-        setIsOverlapping(overlaps)
+        const result = collisionDetector.checkMoveCollision(
+          block.id,
+          newX,
+          newY,
+          block,
+          blocks,
+          canvasHeightPercent
+        )
+        setIsOverlapping(result.collides)
 
         setDragPos({ x: newX, y: newY })
       }
@@ -245,9 +258,16 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         setDragPos((currentPos) => {
           if (currentPos && (currentPos.x !== block.x || currentPos.y !== block.y)) {
             // Check for overlap before saving
-            const overlaps = wouldBlockOverlap(block.id, currentPos.x, currentPos.y, block.width || 12, blocks, 0, canvasHeightPercent)
+            const result = collisionDetector.checkMoveCollision(
+              block.id,
+              currentPos.x,
+              currentPos.y,
+              block,
+              blocks,
+              canvasHeightPercent
+            )
 
-            if (overlaps) {
+            if (result.collides) {
               // Don't save - position will revert when dragPos is cleared
               return null
             }
@@ -336,8 +356,14 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         // Save final width to Firestore (blocked if overlapping)
         setResizeWidth((currentWidth) => {
           if (currentWidth && currentWidth.width !== block.width) {
-            const overlaps = checkDOMOverlap(block.id)
-            if (overlaps) {
+            const result = collisionDetector.checkResizeCollision(
+              block.id,
+              currentWidth.width,
+              block,
+              blocks,
+              canvasHeightPercent
+            )
+            if (result.collides) {
               // Revert — don't save to Firestore
               setIsResizeOverlapping(false)
               return null
@@ -353,7 +379,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
     },
-    [isAdmin, isSelected, isEditing, canvasRef, block, resizeBlock, recordHistory]
+    [isAdmin, isSelected, isEditing, canvasRef, block, blocks, canvasHeightPercent, resizeBlock, recordHistory]
   )
 
   // Touch move handler (document-level for smooth dragging)
