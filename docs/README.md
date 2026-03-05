@@ -11,6 +11,7 @@ For a quick-reference overview of the entire codebase, start with [CLAUDE.md](..
 | File | Description |
 |------|-------------|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | System design, core patterns, all Firestore schemas |
+| [VOTING.md](VOTING.md) | Voting system — brightness model, state machine, storage layer, UI |
 | [PROPERTIES.md](PROPERTIES.md) | Rental property gallery — components, voting, admin controls |
 | [MEASUREMENT.md](MEASUREMENT.md) | Coordinate system, measurement service, collision detection |
 | [EMAIL_SYSTEM.md](EMAIL_SYSTEM.md) | Email infrastructure, templates, Cloud Functions |

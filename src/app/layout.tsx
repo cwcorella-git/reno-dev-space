@@ -17,7 +17,6 @@ import './globals.css'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { CanvasProvider } from '@/contexts/CanvasContext'
 import { ContentProvider } from '@/contexts/ContentContext'
-import { EffectsProvider } from '@/contexts/EffectsContext'
 import { PresenceProvider } from '@/contexts/PresenceContext'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -55,11 +54,9 @@ export default function RootLayout({
         <AuthProvider>
           <ContentProvider>
             <CanvasProvider>
-              <EffectsProvider>
-                <PresenceProvider>
-                  {children}
-                </PresenceProvider>
-              </EffectsProvider>
+              <PresenceProvider>
+                {children}
+              </PresenceProvider>
             </CanvasProvider>
           </ContentProvider>
         </AuthProvider>

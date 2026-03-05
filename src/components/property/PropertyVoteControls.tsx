@@ -4,10 +4,6 @@ import { useState } from 'react'
 import { RentalProperty, ARCHIVE_THRESHOLD } from '@/types/property'
 import { voteProperty } from '@/lib/storage/propertyStorage'
 import { useAuth } from '@/contexts/AuthContext'
-import { useEffects } from '@/contexts/EffectsContext'
-import { getCelebrationEffect, getRandomEffect } from '@/lib/voteEffects'
-import { CelebrationOverlay } from '@/components/canvas/CelebrationOverlay'
-import { TextEffectName } from '@/types/canvas'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/solid'
 
 interface PropertyVoteControlsProps {
@@ -15,9 +11,7 @@ interface PropertyVoteControlsProps {
 }
 
 export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
-  const { user, isAdmin } = useAuth()
-  const { settings: effectsSettings } = useEffects()
-  const [celebrating, setCelebrating] = useState<TextEffectName | null>(null)
+  const { user } = useAuth()
   const [isVoting, setIsVoting] = useState(false)
 
   const isArchived = property.brightness <= ARCHIVE_THRESHOLD
@@ -36,19 +30,7 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
 
     setIsVoting(true)
     try {
-      // Check if this is an unvote (clicking same direction to toggle off)
-      const isUnvote = (direction === 'up' && votedUp) || (direction === 'down' && votedDown)
-
-      const wasArchived = await voteProperty(property.id, user.uid, direction)
-
-      // Trigger celebration on upvote (not unvote, not archive)
-      if (direction === 'up' && !isUnvote && !wasArchived) {
-        // Test mode: trigger random effect, otherwise use property-based effect
-        const effect = effectsSettings.testMode
-          ? getRandomEffect(effectsSettings)
-          : getCelebrationEffect(property.id, effectsSettings)
-        setCelebrating(effect)
-      }
+      await voteProperty(property.id, user.uid, direction)
     } catch (error) {
       console.error('[PropertyVoteControls] Failed to vote:', error)
     } finally {
@@ -57,53 +39,41 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
   }
 
   return (
-    <>
-      <div className="flex flex-col items-center gap-0.5 bg-black/60 backdrop-blur-sm rounded-lg p-1.5">
-        {/* Up arrow */}
-        <button
-          onClick={() => handleVote('up')}
-          disabled={isVoting || isLegacyVoter}
-          className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
-            votedUp
-              ? 'bg-green-600 text-white hover:bg-green-700'
-              : 'bg-white/10 hover:bg-green-600/50 text-white/70 hover:text-white'
-          }`}
-          aria-label={votedUp ? 'Remove upvote' : 'Vote up'}
-          title={votedUp ? 'Click to unvote' : 'Vote up (+5)'}
-        >
-          <ChevronUpIcon className="w-4 h-4" />
-        </button>
+    <div className="flex flex-col items-center gap-0.5 bg-black/60 backdrop-blur-sm rounded-lg p-1.5">
+      {/* Up arrow */}
+      <button
+        onClick={() => handleVote('up')}
+        disabled={isVoting || isLegacyVoter}
+        className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
+          votedUp
+            ? 'bg-green-600 text-white hover:bg-green-700'
+            : 'bg-white/10 hover:bg-green-600/50 text-white/70 hover:text-white'
+        }`}
+        aria-label={votedUp ? 'Remove upvote' : 'Vote up'}
+        title={votedUp ? 'Click to unvote' : 'Vote up (+5)'}
+      >
+        <ChevronUpIcon className="w-4 h-4" />
+      </button>
 
-        {/* Brightness number */}
-        <span className="text-[10px] font-mono text-white font-semibold px-1">
-          {property.brightness}
-        </span>
+      {/* Brightness number */}
+      <span className="text-[10px] font-mono text-white font-semibold px-1">
+        {property.brightness}
+      </span>
 
-        {/* Down arrow */}
-        <button
-          onClick={() => handleVote('down')}
-          disabled={isVoting || isLegacyVoter}
-          className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
-            votedDown
-              ? 'bg-red-600 text-white hover:bg-red-700'
-              : 'bg-white/10 hover:bg-red-600/50 text-white/70 hover:text-white'
-          }`}
-          aria-label={votedDown ? 'Remove downvote' : 'Vote down'}
-          title={votedDown ? 'Click to unvote' : 'Vote down (-5)'}
-        >
-          <ChevronDownIcon className="w-4 h-4" />
-        </button>
-      </div>
-
-      {/* Celebration overlay */}
-      {celebrating && (
-        <CelebrationOverlay
-          effect={celebrating}
-          color="#818cf8"
-          onComplete={() => setCelebrating(null)}
-          showLabel={isAdmin}
-        />
-      )}
-    </>
+      {/* Down arrow */}
+      <button
+        onClick={() => handleVote('down')}
+        disabled={isVoting || isLegacyVoter}
+        className={`w-8 h-8 rounded flex items-center justify-center transition-colors ${
+          votedDown
+            ? 'bg-red-600 text-white hover:bg-red-700'
+            : 'bg-white/10 hover:bg-red-600/50 text-white/70 hover:text-white'
+        }`}
+        aria-label={votedDown ? 'Remove downvote' : 'Vote down'}
+        title={votedDown ? 'Click to unvote' : 'Vote down (-5)'}
+      >
+        <ChevronDownIcon className="w-4 h-4" />
+      </button>
+    </div>
   )
 }

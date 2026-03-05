@@ -10,10 +10,7 @@ import {
   RefObject,
   useRef,
 } from 'react'
-import { CanvasBlock, TextBlock, TextEffectName, VOTE_BRIGHTNESS_CHANGE } from '@/types/canvas'
-import { getCelebrationEffect, getRandomEffect } from '@/lib/voteEffects'
-import { subscribeToEffectsSettings } from '@/lib/storage/effectsStorage'
-import { TextEffectsSettings, DEFAULT_EFFECTS_SETTINGS } from '@/types/canvas'
+import { CanvasBlock, TextBlock, VOTE_BRIGHTNESS_CHANGE } from '@/types/canvas'
 import { measurementService, MeasurementDebugConfig, DEFAULT_DEBUG_CONFIG } from '@/lib/measurement'
 
 // History entry for undo/redo (session-only)
@@ -93,11 +90,6 @@ interface CanvasContextType {
   // Voting (any logged-in user)
   vote: (id: string, direction: 'up' | 'down') => Promise<boolean>
 
-  // Celebration (client-side only, fires on upvote)
-  celebratingBlockId: string | null
-  celebratingEffect: TextEffectName | null
-  clearCelebration: () => void
-
   // Reporting
   report: (id: string) => Promise<void>
   dismissReport: (id: string) => Promise<void>
@@ -131,9 +123,6 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
   const [isGroupDragging, setIsGroupDragging] = useState(false)
   const [loading, setLoading] = useState(true)
   const [hasPledged, setHasPledged] = useState(false)
-  const [celebratingBlockId, setCelebratingBlockId] = useState<string | null>(null)
-  const [celebratingEffect, setCelebratingEffect] = useState<TextEffectName | null>(null)
-  const [effectsSettings, setEffectsSettings] = useState<TextEffectsSettings>(DEFAULT_EFFECTS_SETTINGS)
   const canvasRef = useRef<HTMLDivElement | null>(null)
   const [canvasHeightPercent, setCanvasHeightPercentState] = useState(100)
   const [measurementDebugConfig, setMeasurementDebugConfig] = useState<MeasurementDebugConfig>(
@@ -168,13 +157,6 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
     )
 
     return () => unsubscribe()
-  }, [])
-
-  // Subscribe to effects settings (for test mode)
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    const unsub = subscribeToEffectsSettings(setEffectsSettings)
-    return () => unsub()
   }, [])
 
   // Initialize measurement service when canvas ref changes
@@ -609,14 +591,6 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         const block = blocks.find(b => b.id === id)
         if (!block) return false
 
-        // Test mode: skip actual voting, just trigger random celebration on upvote
-        if (effectsSettings.testMode && direction === 'up') {
-          const effect = getRandomEffect(effectsSettings)
-          setCelebratingBlockId(id)
-          setCelebratingEffect(effect)
-          return false
-        }
-
         // We must detect no-ops BEFORE recordHistory because recordHistory pushes
         // synchronously. If we recorded first and checked voteBrightness (async) after,
         // the user could Ctrl+Z during the await and undo a phantom entry.
@@ -642,25 +616,14 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
           if (selectedBlockId === id) {
             setSelectedBlockId(null)
           }
-        } else if (direction === 'up' && !isNoOp) {
-          // Trigger one-shot celebration for the voter
-          const effect = getCelebrationEffect(id, effectsSettings)
-          setCelebratingBlockId(id)
-          setCelebratingEffect(effect)
-        }
         return wasDeleted
       } catch (error) {
         console.error('[CanvasContext] Failed to vote:', error)
         return false
       }
     },
-    [user, blocks, selectedBlockId, recordHistory, effectsSettings]
+    [user, blocks, selectedBlockId, recordHistory]
   )
-
-  const clearCelebration = useCallback(() => {
-    setCelebratingBlockId(null)
-    setCelebratingEffect(null)
-  }, [])
 
   // Toggle report on a block
   const report = useCallback(
@@ -738,9 +701,6 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         bringBlockToFront,
         sendBlockToBack,
         vote,
-        celebratingBlockId,
-        celebratingEffect,
-        clearCelebration,
         report,
         dismissReport,
         recordHistory,

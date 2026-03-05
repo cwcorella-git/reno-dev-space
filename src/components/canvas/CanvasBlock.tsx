@@ -3,7 +3,6 @@
 import { useCallback, useRef, useState, useEffect } from 'react'
 import { CanvasBlock as CanvasBlockType, isTextBlock } from '@/types/canvas'
 import { TextBlockRenderer } from './TextBlockRenderer'
-import { CelebrationOverlay } from './CelebrationOverlay'
 import { useCanvas, DESIGN_HEIGHT } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { filterEditableBlocks } from '@/lib/permissions'
@@ -49,9 +48,6 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
     updateContent,
     removeBlock,
     vote,
-    celebratingBlockId,
-    celebratingEffect,
-    clearCelebration,
     report,
     dismissReport,
     recordHistory,
@@ -600,16 +596,6 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       tabIndex={user ? 0 : -1}
     >
       {renderContent()}
-
-      {/* One-shot celebration overlay (visible only to voter) */}
-      {celebratingBlockId === block.id && celebratingEffect && (
-        <CelebrationOverlay
-          effect={celebratingEffect}
-          color={isTextBlock(block) ? block.style.color : '#818cf8'}
-          onComplete={clearCelebration}
-          showLabel={isAdmin}
-        />
-      )}
 
       {/* Vote arrows - right side, shown on hover for logged-in users */}
       {user && !isEditing && !isDragging && (

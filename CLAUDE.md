@@ -22,7 +22,7 @@ Real-time updates via Firestore `onSnapshot` subscriptions throughout. No global
 
 Provider nesting order (`layout.tsx`):
 ```
-AuthProvider → ContentProvider → CanvasProvider → EffectsProvider → PresenceProvider
+AuthProvider → ContentProvider → CanvasProvider → PresenceProvider
 ```
 
 **Firestore Collections** (all on `main` database):
