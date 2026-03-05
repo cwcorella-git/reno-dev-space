@@ -11,6 +11,7 @@ import {
   useRef,
 } from 'react'
 import { CanvasBlock, TextBlock, VOTE_BRIGHTNESS_CHANGE } from '@/types/canvas'
+import { deriveVoterState } from '@/lib/voteUtils'
 import { measurementService, MeasurementDebugConfig, DEFAULT_DEBUG_CONFIG } from '@/lib/measurement'
 
 // History entry for undo/redo (session-only)
@@ -595,9 +596,9 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
         // synchronously. If we recorded first and checked voteBrightness (async) after,
         // the user could Ctrl+Z during the await and undo a phantom entry.
         // No-op detection (mirrors voteBrightness logic to avoid junk history entries)
-        const votedUp = block.votersUp?.includes(user.uid) ?? false
-        const votedDown = block.votersDown?.includes(user.uid) ?? false
-        const isLegacy = (block.voters?.includes(user.uid) ?? false) && !votedUp && !votedDown
+        const { votedUp, votedDown, isLegacyVoter: isLegacy } = deriveVoterState(
+          block.votersUp, block.votersDown, block.voters, user.uid
+        )
         const isNoOp = (direction === 'up' && votedUp) || (direction === 'down' && votedDown) || isLegacy
 
         if (!isNoOp) {

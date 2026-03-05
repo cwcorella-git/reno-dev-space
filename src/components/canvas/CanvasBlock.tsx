@@ -7,6 +7,7 @@ import { useCanvas, DESIGN_HEIGHT } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { filterEditableBlocks } from '@/lib/permissions'
 import { collisionDetector } from '@/lib/measurement'
+import { deriveVoterState } from '@/lib/voteUtils'
 
 interface CanvasBlockProps {
   block: CanvasBlockType
@@ -607,10 +608,9 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
           onClick={(e) => e.stopPropagation()}
         >
           {(() => {
-            const votedUp = block.votersUp?.includes(user.uid) ?? false
-            const votedDown = block.votersDown?.includes(user.uid) ?? false
-            const isLegacyVoter = (block.voters?.includes(user.uid) ?? false) && !votedUp && !votedDown
-            const hasVoted = votedUp || votedDown || isLegacyVoter
+            const { votedUp, votedDown, isLegacyVoter, hasVoted } = deriveVoterState(
+              block.votersUp, block.votersDown, block.voters, user.uid
+            )
             return (
               <>
                 <button

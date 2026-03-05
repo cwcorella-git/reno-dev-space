@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { RentalProperty, ARCHIVE_THRESHOLD } from '@/types/property'
 import { voteProperty } from '@/lib/storage/propertyStorage'
 import { useAuth } from '@/contexts/AuthContext'
+import { deriveVoterState } from '@/lib/voteUtils'
 import { ChevronUpIcon, ChevronDownIcon } from '@heroicons/react/24/solid'
 
 interface PropertyVoteControlsProps {
@@ -15,10 +16,9 @@ export function PropertyVoteControls({ property }: PropertyVoteControlsProps) {
   const [isVoting, setIsVoting] = useState(false)
 
   const isArchived = property.brightness <= ARCHIVE_THRESHOLD
-  const votedUp = property.votersUp?.includes(user?.uid ?? '') ?? false
-  const votedDown = property.votersDown?.includes(user?.uid ?? '') ?? false
-  const inLegacyVoters = property.voters?.includes(user?.uid ?? '') ?? false
-  const isLegacyVoter = inLegacyVoters && !votedUp && !votedDown
+  const { votedUp, votedDown, isLegacyVoter } = deriveVoterState(
+    property.votersUp, property.votersDown, property.voters, user?.uid ?? ''
+  )
 
   if (!user || isArchived) return null
 
