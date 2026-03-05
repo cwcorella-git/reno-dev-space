@@ -21,7 +21,7 @@ CollisionDetector (singleton)
 
 MeasurementOverlay (component)
   ├── Admin debug visualization
-  └── MeasurementControls embedded in CampaignPanel
+  └── MeasurementControls (toggle UI — currently not mounted; re-expose via CanvasContext)
 ```
 
 ## Coordinate System (CanvasRect)
@@ -130,12 +130,12 @@ The preview rect is centered on the cursor position (offset by half width/height
 
 ## MeasurementOverlay (Debug Tool)
 
-Admin-only visual debug overlay. Accessible from CampaignPanel via `MeasurementControls`.
+Admin-only visual debug overlay. Toggled via `measurementDebugConfig` / `setMeasurementDebugConfig` in `CanvasContext`. The exported `MeasurementControls` UI panel is not currently mounted in any tab — re-expose it by rendering `<MeasurementControls config={measurementDebugConfig} onChange={setMeasurementDebugConfig} />` in any admin panel.
 
 ### Exports
 
 - `MeasurementOverlay` — the visual overlay component
-- `MeasurementControls` — the toggle UI panel (embedded in CampaignPanel)
+- `MeasurementControls` — the toggle UI panel (available to mount in any admin panel)
 
 ### Visualization Layers
 

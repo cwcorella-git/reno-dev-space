@@ -131,12 +131,6 @@ Runs 5 checks to verify the deployment is safe to go live with real Stripe payme
 - Send campaign emails to all backers (success, ended, update)
 - View email send history (last 5, stored in `emailHistory` collection)
 
-### Effects Admin (TextEffectsPanel)
-
-- Toggle all vote celebrations on/off globally
-- Disable individual effects (2-column grid, strikethrough when disabled)
-- Enable **Test Mode**: unlimited votes + random effect assignment (bypasses deterministic hash)
-
 ---
 
 ## Admin System Architecture

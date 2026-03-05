@@ -61,7 +61,6 @@ Dynamic admin emails in `admins` Firestore collection. `AuthContext` subscribes 
 - Ctrl+click any EditableText to edit inline
 - Start/stop campaign timer, set funding goal, lock/unlock editing
 - Send campaign email updates to backers; edit HTML email templates (EmailsPanel)
-- Toggle vote celebration effects globally or per-effect (TextEffectsPanel)
 - Undo/redo, copy/paste, multi-select blocks
 - Delete/ban/promote users (Members tab)
 - Dismiss block reports, view deletion/edit history (History panel)
@@ -82,11 +81,13 @@ src/
 ├── components/
 │   ├── canvas/                 # Canvas.tsx, CanvasBlock.tsx, TextBlockRenderer.tsx,
 │   │                           # CursorPresence.tsx, CelebrationOverlay.tsx
+│   ├── chat/                   # MessageList.tsx, MessageInput.tsx
 │   ├── panel/                  # UnifiedPanel.tsx, EditorTab.tsx, ChatTab.tsx,
-│   │                           # MembersTab.tsx, EmailsPanel.tsx, TextEffectsPanel.tsx,
-│   │                           # ContentPanel.tsx, ContentTab.tsx, CampaignPanel.tsx,
+│   │                           # MembersTab.tsx, EmailsPanel.tsx, EmailHtmlEditor.tsx,
+│   │                           # EmailVariableEditor.tsx, ContentPanel.tsx, ContentTab.tsx,
+│   │                           # CampaignPanel.tsx, CampaignUpdateModal.tsx,
 │   │                           # HistoryPanel.tsx, HistoryTab.tsx, ProfilePanel.tsx,
-│   │                           # DonateTab.tsx, CampaignUpdateModal.tsx
+│   │                           # DonateTab.tsx
 │   ├── property/               # PropertyGallery.tsx, PropertyCarousel.tsx, PropertyCard.tsx,
 │   │                           # PropertyVoteControls.tsx, GalleryPositionSlider.tsx,
 │   │                           # AddPropertyModal.tsx
@@ -98,9 +99,10 @@ src/
 ├── hooks/                      # useDragResize.ts, useFirestoreChat.ts
 ├── lib/
 │   ├── measurement/            # MeasurementService.ts, CollisionDetector.ts, types.ts
-│   ├── storage/                # 13+ Firestore CRUD modules
-│   └── (root)                  # admin.ts, emailFunctions.ts, permissions.ts,
-│                               # sanitize.ts, selectionFormat.ts, voteEffects.ts,
+│   ├── storage/                # 16 Firestore CRUD modules (one per collection)
+│   └── (root)                  # admin.ts, emailFunctions.ts, firebase.ts,
+│                               # permissions.ts, sanitize.ts, selectionFormat.ts,
+│                               # voteEffects.ts,
 │                               # overlapDetection.ts (legacy — replaced by measurement/)
 └── types/                      # canvas.ts, property.ts
 
@@ -239,7 +241,7 @@ Session-only history (max 50 steps, Ctrl+Z / Ctrl+Y). Before-snapshots captured 
 ## Panel Structure
 
 ```
-[ Editor ] [ Chat ● ] [ Members ] [ Profile ]    [🕐] [📧] [✨] [📝] [📊] [˅]
+[ Editor ] [ Chat ● ] [ Members ] [ Profile ]    [📝] [📊] [📧] [🕐] [˅]
 ←──────── tabs ──────────────────→              ←── admin icons ──────────→
 ```
 
@@ -249,11 +251,10 @@ Session-only history (max 50 steps, Ctrl+Z / Ctrl+Y). Before-snapshots captured 
 | **Chat** | Real-time community chat (green dot = connected) |
 | **Members** | User directory + admin: delete, ban/unban, promote/demote |
 | **Profile** | User info, pledge, account actions, sign out |
-| **History** 🕐 | Deletion + edit history; restore or delete (admin-only) |
-| **Emails** 📧 | Email template editor + send campaign updates (admin-only) |
-| **Effects** ✨ | Toggle/test vote celebration effects per-effect (admin-only) |
 | **Content** 📝 | CMS for 80+ UI text keys (admin-only) |
 | **Campaign** 📊 | Timer, goal, lock, reset votes (admin-only) |
+| **Emails** 📧 | Email template editor + send campaign updates (admin-only) |
+| **History** 🕐 | Deletion + edit history; restore or delete (admin-only) |
 
 ## Keyboard Shortcuts
 

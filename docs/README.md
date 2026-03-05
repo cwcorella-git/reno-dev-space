@@ -19,8 +19,6 @@ For a quick-reference overview of the entire codebase, start with [CLAUDE.md](..
 | [BACKUP.md](BACKUP.md) | Backup/restore procedures for Firestore data |
 | [SECURITY.md](SECURITY.md) | Firestore rules, auth, permissions, sanitization |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Build process, GitHub Pages, CI/CD, Cloud Functions |
-| [SESSION_NOTES.md](SESSION_NOTES.md) | Development session log and decisions |
-| [OVERLAP_DETECTION_DEBUG.md](OVERLAP_DETECTION_DEBUG.md) | Technical deep-dive on legacy overlap detection |
 
 ---
 
@@ -94,4 +92,3 @@ See [PROPERTIES.md](PROPERTIES.md) for full details.
 1. **Read [CLAUDE.md](../CLAUDE.md)** — get oriented with file structure and patterns
 2. **Check [TODO.md](../TODO.md)** — see what needs work
 3. **Update [CHANGELOG.md](../CHANGELOG.md)** — document your changes
-4. **Log in [SESSION_NOTES.md](SESSION_NOTES.md)** — record decisions and learnings

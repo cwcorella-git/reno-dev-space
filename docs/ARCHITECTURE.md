@@ -157,7 +157,7 @@ votersDown:        []          []           [uid]
 
 **UI behavior**: Same-direction vote button is **disabled** (no-op). The opposite-direction button removes the existing vote and returns to neutral.
 
-**Vote celebration effects** (canvas text blocks only — not properties):
+**Vote celebration effects** (canvas text blocks and rental properties):
 - 8 one-shot animations: ring-burst, confetti-pop, glow-flash, bounce-pop, shimmer-sweep, sparkle-burst, ripple, star-shower
 - Deterministically assigned via djb2 hash of block ID (`getCelebrationEffect(blockId, settings)`)
 - Configurable: `TextEffectsSettings` controls which effects are enabled; `testMode` enables unlimited votes + random effects
@@ -186,7 +186,6 @@ All collections on the `main` database (not default). See [CLAUDE.md](../CLAUDE.
     fontFamily: string    // CSS variable (e.g. var(--font-inter))
     color: string         // hex
     textAlign: 'left' | 'center' | 'right'
-    backgroundColor?: string
   }
   brightness: number      // 0-100 (default: 50); deleted at 0
   voters: string[]        // legacy array
@@ -317,7 +316,7 @@ Gallery position (stored separately in `settings` doc `propertyGallery`):
 }
 ```
 
-> **Backup note**: `backup-firestore.js` covers 12 collections but currently **omits** `emailTemplates`, `emailHistory`, and `presence`. Consider adding them if email template customization needs to be preserved.
+> **Backup note**: `backup-firestore.js` covers all 14 collections. `presence` is intentionally excluded (ephemeral 30s TTL — not meaningful to back up).
 
 ## Component Architecture
 

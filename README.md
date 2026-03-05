@@ -8,7 +8,7 @@ A collaborative space for indie game developers in Reno. Features a canvas-based
 
 - **Canvas Editor** — Add text blocks, drag to reposition, resize via 8-direction handles
 - **Voting System** — Brightness-based voting with directional up/down tracking. Blocks deleted at 0 brightness.
-- **Vote Text Effects** — CSS effects escalate with upvotes: glow → pulse → hue-cycle → rainbow gradient
+- **Vote Celebration Effects** — 8 one-shot animations on upvotes (ring-burst, confetti-pop, glow-flash, bounce-pop, shimmer-sweep, sparkle-burst, ripple, star-shower)
 - **Real-time Chat** — Persistent community chat synced via Firestore
 - **Campaign System** — Always-visible banner with three states: member count teaser, active countdown with donations, and completed/locked
 - **Donations** — One-time Stripe donations via campaign banner (during active campaigns)
@@ -63,7 +63,7 @@ NEXT_PUBLIC_FIREBASE_APP_ID=
 The bottom panel has 4 tabs + admin icon buttons:
 
 ```
-[ Editor ] [ Chat ] [ Members ] [ Profile ]    [History] [Content] [Campaign] [Collapse]
+[ Editor ] [ Chat ] [ Members ] [ Profile ]    [Content] [Campaign] [Emails] [History] [Collapse]
 ```
 
 | Tab/Icon | Description |
@@ -72,9 +72,10 @@ The bottom panel has 4 tabs + admin icon buttons:
 | **Chat** | Real-time community messages (green dot = connected) |
 | **Members** | User directory + admin tools (delete, ban/unban, promote/demote) |
 | **Profile** | User info, pledge amount, account actions |
-| **History** (clock) | Deletion + edit history with restore/delete (admin-only) |
 | **Content** (pencil) | CMS for all UI text (admin-only) |
 | **Campaign** (chart) | Timer, goal, lock, reset votes (admin-only) |
+| **Emails** (envelope) | Email template editor + send campaign emails (admin-only) |
+| **History** (clock) | Deletion + edit history with restore/delete (admin-only) |
 
 ## Keyboard Shortcuts
 
@@ -92,7 +93,7 @@ The bottom panel has 4 tabs + admin icon buttons:
 
 1. **Sign up** with email/password, display name, and a pledge amount ($20 minimum)
 2. **Add text blocks** to the canvas (requires pledge or admin status)
-3. **Vote** on blocks — upvotes add glow/shimmer effects, downvotes dim the text
+3. **Vote** on blocks — upvotes trigger celebration animations, downvotes dim the text
 4. **Report** inappropriate blocks — admins review and dismiss or delete
 5. **Chat** with other community members in real-time
 6. **Donate** via Stripe during active campaigns (button appears in the top banner)

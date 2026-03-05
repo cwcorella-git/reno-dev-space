@@ -72,7 +72,6 @@ The app detects this automatically via `NODE_ENV`.
 | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Firebase Storage |
 | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Firebase messaging |
 | `NEXT_PUBLIC_FIREBASE_APP_ID` | Firebase app |
-| `NEXT_PUBLIC_SOCKETIO_URL` | Real-time presence WebSocket (optional) |
 
 **Permissions required** (set in workflow file):
 ```yaml
