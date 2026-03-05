@@ -9,14 +9,19 @@
  * 4. Write blocks directly to Firestore (bypasses UI ban check bug)
  * 5. Reload page and take screenshots
  *
- * Usage: node scripts/add-blueprint-keywords.mjs
+ * Usage: ADMIN_EMAIL=you@example.com ADMIN_PASSWORD=secret node scripts/add-blueprint-keywords.mjs
+ * Credentials must be set via env vars — never hardcoded.
  */
 
 import { chromium } from 'playwright'
 
 const SITE_URL = 'https://cwcorella-git.github.io/reno-dev-space/'
-const ADMIN_EMAIL = 'christopher@corella.com'
-const ADMIN_PASSWORD = '.YQZv*S*7"jk^=?'
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD
+if (!ADMIN_EMAIL || !ADMIN_PASSWORD) {
+  console.error('Set ADMIN_EMAIL and ADMIN_PASSWORD env vars before running this script.')
+  process.exit(1)
+}
 const SCREENSHOT_DIR = 'tests/screenshots'
 
 // Blueprint keywords — short phrases and longer extracts

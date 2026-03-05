@@ -35,6 +35,8 @@ const COLLECTIONS = [
   'blockEdits',
   'donations',
   'rentalProperties',
+  'emailTemplates',
+  'emailHistory',
 ]
 
 // Load service account

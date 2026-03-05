@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useCanvas } from '@/contexts/CanvasContext'
 import {
   subscribeToCampaignSettings,
   startCampaignTimer,
@@ -13,7 +12,6 @@ import {
   CampaignSettings,
 } from '@/lib/storage/campaignStorage'
 import { resetAllBrightness } from '@/lib/storage/canvasStorage'
-import { setEffectsEnabled } from '@/lib/storage/effectsStorage'
 import { subscribeToPledges, Pledge, calculatePledgeSummary } from '@/lib/storage/pledgeStorage'
 import { subscribeToUsers, UserProfile } from '@/lib/storage/userStorage'
 import {
@@ -27,18 +25,14 @@ import {
   sendCampaignEndedEmails,
   sendTestEmail,
 } from '@/lib/emailFunctions'
-import { useEffects } from '@/contexts/EffectsContext'
 import { useContent } from '@/contexts/ContentContext'
 import { EditableText } from '@/components/EditableText'
-import { EnvelopeIcon, CheckCircleIcon, ClockIcon, PaperAirplaneIcon, PencilSquareIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
+import { EnvelopeIcon, CheckCircleIcon, ClockIcon, PaperAirplaneIcon, PencilSquareIcon } from '@heroicons/react/24/outline'
 import { CampaignUpdateModal } from './CampaignUpdateModal'
-import { MeasurementControls } from '@/components/dev/MeasurementOverlay'
 
 export function CampaignPanel() {
   const { user, isAdmin } = useAuth()
   const { getText } = useContent()
-  const { settings: effectsSettings } = useEffects()
-  const { measurementDebugConfig, setMeasurementDebugConfig } = useCanvas()
 
   const [settings, setSettings] = useState<CampaignSettings | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
@@ -117,12 +111,6 @@ export function CampaignPanel() {
     const count = await resetAllBrightness()
     showStatus('success', getText('campaign.status.resetBrightness', `Reset brightness for ${count} block(s)`))
     setConfirmAction(null)
-    setActionLoading(false)
-  }
-
-  const handleToggleEffects = async () => {
-    setActionLoading(true)
-    await setEffectsEnabled(!effectsSettings?.enabled)
     setActionLoading(false)
   }
 
@@ -218,33 +206,33 @@ export function CampaignPanel() {
       )}
 
       {!confirmAction && (
-        <div className="p-4 space-y-3">
-          {/* Timer + Lock */}
-          <div className="flex items-center justify-between">
+        <div className="px-3 py-2 space-y-2">
+          {/* Timer */}
+          <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-gray-400"><EditableText id="campaign.label.timer" defaultValue="Timer" category="campaign" /></span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               {timerActive ? (
-                <button onClick={handleResetTimer} disabled={actionLoading} className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium disabled:opacity-50">
+                <button onClick={handleResetTimer} disabled={actionLoading} className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded text-xs font-medium disabled:opacity-50">
                   <EditableText id="campaign.button.reset" defaultValue="Reset" category="campaign" />
                 </button>
               ) : (
-                <button onClick={handleStartTimer} disabled={actionLoading} className="px-3 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50">
+                <button onClick={handleStartTimer} disabled={actionLoading} className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded text-xs font-medium disabled:opacity-50">
                   <EditableText id="campaign.button.start" defaultValue="Start" category="campaign" />
                 </button>
               )}
-              <button onClick={handleToggleLock} disabled={actionLoading} className={`px-3 py-1 rounded text-xs font-medium disabled:opacity-50 ${settings?.isLocked ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-300'}`}>
+              <button onClick={handleToggleLock} disabled={actionLoading} className={`px-2.5 py-1 rounded text-xs font-medium disabled:opacity-50 ${settings?.isLocked ? 'bg-yellow-600 hover:bg-yellow-700 text-white' : 'bg-white/10 hover:bg-white/20 text-gray-300'}`}>
                 {settings?.isLocked
                   ? <EditableText id="campaign.button.unlock" defaultValue="Unlock" category="campaign" />
                   : <EditableText id="campaign.button.lock" defaultValue="Lock" category="campaign" />}
               </button>
-              <button onClick={() => setConfirmAction('brightness')} disabled={actionLoading} className="px-3 py-1 bg-white/10 hover:bg-white/20 text-gray-300 rounded text-xs disabled:opacity-50">
+              <button onClick={() => setConfirmAction('brightness')} disabled={actionLoading} className="px-2.5 py-1 bg-white/10 hover:bg-white/20 text-gray-300 rounded text-xs disabled:opacity-50">
                 <EditableText id="campaign.button.resetVotes" defaultValue="Reset Votes" category="campaign" />
               </button>
             </div>
           </div>
 
-          {/* Goal + Effects */}
-          <div className="flex items-center justify-between">
+          {/* Goal */}
+          <div className="flex items-center justify-between gap-2">
             <span className="text-xs text-gray-400"><EditableText id="campaign.label.goal" defaultValue="Goal" category="campaign" /></span>
             <div className="flex items-center gap-1.5">
               <span className="text-xs text-gray-500">$</span>
@@ -255,38 +243,8 @@ export function CampaignPanel() {
             </div>
           </div>
 
-          {/* Ring-Burst Effects */}
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-gray-400"><EditableText id="campaign.label.ringBurst" defaultValue="Ring-Burst Effects" category="campaign" /></span>
-            <button
-              onClick={handleToggleEffects}
-              disabled={actionLoading}
-              className={`px-3 py-1 rounded text-xs font-medium disabled:opacity-50 ${
-                effectsSettings?.enabled
-                  ? 'bg-green-600 hover:bg-green-700 text-white'
-                  : 'bg-white/10 hover:bg-white/20 text-gray-300'
-              }`}
-            >
-              {effectsSettings?.enabled
-                ? <EditableText id="campaign.button.enabled" defaultValue="Enabled" category="campaign" />
-                : <EditableText id="campaign.button.disabled" defaultValue="Disabled" category="campaign" />}
-            </button>
-          </div>
-
-          {/* Dev Tools Section */}
-          <div className="border-t border-white/10 pt-3 mt-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <WrenchScrewdriverIcon className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-medium text-white">Dev Tools</span>
-            </div>
-            <MeasurementControls
-              config={measurementDebugConfig}
-              onChange={setMeasurementDebugConfig}
-            />
-          </div>
-
           {/* Divider */}
-          <div className="border-t border-white/10 my-2" />
+          <div className="border-t border-white/10 pt-1" />
 
           {/* Email Dashboard Section */}
           <div className="space-y-3">

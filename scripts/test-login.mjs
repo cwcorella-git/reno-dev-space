@@ -9,9 +9,15 @@ const screenshotDir = __dirname + '/../tests/screenshots';
 // Ensure screenshot directory exists
 mkdirSync(screenshotDir, { recursive: true });
 
+// Credentials: set ADMIN_EMAIL and ADMIN_PASSWORD in your environment before running.
+// Example: ADMIN_EMAIL=you@example.com ADMIN_PASSWORD=secret node scripts/test-login.mjs
 const SITE_URL = 'https://cwcorella-git.github.io/reno-dev-space/';
-const EMAIL = 'christopher@corella.com';
-const PASSWORD = '.YQZv*S*7"jk^=?';
+const EMAIL = process.env.ADMIN_EMAIL;
+const PASSWORD = process.env.ADMIN_PASSWORD;
+if (!EMAIL || !PASSWORD) {
+  console.error('Set ADMIN_EMAIL and ADMIN_PASSWORD env vars before running this script.');
+  process.exit(1);
+}
 
 (async () => {
   const consoleErrors = [];

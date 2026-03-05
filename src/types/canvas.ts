@@ -18,7 +18,6 @@ export interface TextStyle {
   fontFamily: string      // font family name
   color: string           // hex color
   textAlign: 'left' | 'center' | 'right'
-  backgroundColor?: string
 }
 
 // Available colors for random selection

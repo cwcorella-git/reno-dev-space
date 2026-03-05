@@ -1,5 +1,12 @@
 #!/usr/bin/env node
 
+const EMAIL_TO_DELETE = process.argv[2]
+if (!EMAIL_TO_DELETE) {
+  console.error('Usage: node scripts/delete-user.js <email>')
+  console.error('Note: This is NOT a full cascade delete. Use in-app admin deletion for cascade.')
+  process.exit(1)
+}
+
 const admin = require('firebase-admin')
 const path = require('path')
 
@@ -11,8 +18,6 @@ admin.initializeApp({
 
 const db = admin.firestore()
 db.settings({ databaseId: 'main' })
-
-const EMAIL_TO_DELETE = 'cwcorella@gmail.com'
 
 async function deleteUser() {
   console.log(`🔍 Finding user with email: ${EMAIL_TO_DELETE}`)

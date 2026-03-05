@@ -6,14 +6,24 @@ The Reno Dev Space project uses Playwright for end-to-end testing. Tests focus o
 
 ## Test Suite Structure
 
-```
-tests/
-├── property-voting.spec.ts    # Property voting behavior
-├── drag-jitter.spec.ts        # Gallery drag optimization
-├── font-size-input.spec.ts    # Font size input validation
-├── effects-visual.spec.ts     # Vote celebration effects
-└── property-mobile.spec.ts    # Mobile-specific property tests
-```
+| File | Type | What it tests |
+|------|------|--------------|
+| `console-errors.spec.ts` | Diagnostic | Console errors/warnings on page load |
+| `drag-bounce.spec.ts` | Visual | Block drag bounce behavior |
+| `drag-jitter.spec.ts` | Visual | Block drag jitter prevention |
+| `effects-visual.spec.ts` | Visual | Vote celebration effects |
+| `font-size-input.spec.ts` | Functional | Font size input handling |
+| `marquee-select.spec.ts` | Functional | Marquee/lasso multi-block selection |
+| `mobile-screenshots.spec.ts` | Visual | Mobile viewport screenshots (production) |
+| `overlap-detection.spec.ts` | Functional | Add Text collision detection |
+| `overlap-diagnostic.spec.ts` | Diagnostic | Overlap detection diagnostic logging |
+| `precision-bounce.spec.ts` | Visual | Sub-pixel position stability |
+| `preview-size-debug.spec.ts` | Diagnostic | Add Text preview size calculations |
+| `property-gallery.spec.ts` | Functional | Property gallery positioning |
+| `property-mobile.spec.ts` | Functional | Property gallery on mobile |
+| `property-voting.spec.ts` | Functional | Property voting behavior |
+
+> **Note**: `scroll-debug.mjs` also exists as a standalone Node.js diagnostic script (not a Playwright spec — run with `node` directly).
 
 ## Running Tests
 
@@ -287,7 +297,7 @@ npx playwright test --reporter=list
 
 ## Coverage Goals
 
-**Current coverage**: ~15% (property voting only)
+**Current coverage**: ~40% (functional, visual, and diagnostic tests across canvas, properties, drag, and effects)
 
 **Target coverage**:
 - ✅ Property voting (upvote, downvote, neutralize)

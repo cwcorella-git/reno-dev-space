@@ -101,7 +101,41 @@ const DEFAULT_CONTENT = [
 ]
 ```
 
-### 4. Vote System Architecture
+### 4. Undo/Redo — Deferred After-State Capture
+
+**Problem**: Capturing after-snapshots immediately after a Firestore write races with the async snapshot callback, producing stale data.
+
+**Solution**: Capture before-snapshots immediately; capture after-snapshots **lazily during undo**.
+
+```typescript
+// CanvasContext action history entry
+{
+  type: 'move' | 'resize' | 'add' | 'delete' | 'style' | 'content' | 'vote'
+  beforeSnapshots: Record<string, CanvasBlock>   // captured at action time
+  afterSnapshots?: Record<string, CanvasBlock>   // populated lazily during undo
+}
+```
+
+**Key behaviors**:
+- Max 50 history entries; index-based navigation (Ctrl+Z / Ctrl+Y)
+- Batch operations (multi-select style, multi-delete) produce one undo step
+- Session-only — history clears on page reload
+
+### 5. Canvas Height — Grow-Only Floor
+
+**Problem**: Blocks moving down triggers canvas resize → layout shift → blocks measured again → oscillation.
+
+**Solution**: Height grows immediately; shrinks only after 300ms debounce.
+
+```typescript
+// ResizeObserver watches [data-block-id] elements
+// On measurement: new height = max(currentHeight, measuredHeight)  // grow-only
+// On blocks moving up: debounce 300ms before allowing shrink
+```
+
+**`canvasHeightPercent`**: Internal value where 100 = DESIGN_HEIGHT (900px). Y positions can exceed 100 for scrollable content.
+
+### 6. Vote System Architecture
 
 **Three-state model**:
 ```
@@ -121,23 +155,76 @@ votersDown:        []          []           [uid]
 
 **Key invariant**: User can only be in one state at a time
 
+**UI behavior**: Same-direction vote button is **disabled** (no-op). The opposite-direction button removes the existing vote and returns to neutral.
+
+**Vote celebration effects** (canvas text blocks only — not properties):
+- 8 one-shot animations: ring-burst, confetti-pop, glow-flash, bounce-pop, shimmer-sweep, sparkle-burst, ripple, star-shower
+- Deterministically assigned via djb2 hash of block ID (`getCelebrationEffect(blockId, settings)`)
+- Configurable: `TextEffectsSettings` controls which effects are enabled; `testMode` enables unlimited votes + random effects
+- Returns `null` if all effects disabled or celebrations globally off
+
 ## Firestore Collections
 
-### Properties (`rentalProperties`)
+All collections on the `main` database (not default). See [CLAUDE.md](../CLAUDE.md) for the full list.
+
+### Canvas Blocks (`canvasBlocks`)
 ```typescript
 {
   id: string
-  address: string
-  imageUrl: string           // Firebase Storage path
-  cost: number | null
-  brightness: number         // 0-100, default 50
-  voters: string[]          // Legacy array
-  votersUp: string[]        // UIDs who upvoted
-  votersDown: string[]      // UIDs who downvoted
+  type: 'text'
+  x: number             // percentage 0-100 of DESIGN_WIDTH
+  y: number             // percentage 0-100+ of DESIGN_HEIGHT (can exceed for scroll)
+  width: number         // percentage
+  height: number        // 0 = auto-fit content
+  zIndex: number
+  content: string
+  style: {
+    fontSize: number      // rem
+    fontWeight: 'normal' | 'bold'
+    fontStyle: 'normal' | 'italic'
+    textDecoration: 'none' | 'underline' | 'line-through'
+    fontFamily: string    // CSS variable (e.g. var(--font-inter))
+    color: string         // hex
+    textAlign: 'left' | 'center' | 'right'
+    backgroundColor?: string
+  }
+  brightness: number      // 0-100 (default: 50); deleted at 0
+  voters: string[]        // legacy array
+  votersUp?: string[]     // UIDs who voted up
+  votersDown?: string[]   // UIDs who voted down
+  reportedBy?: string[]
+  dismissedReporters?: string[]
   createdBy: string
   createdAt: number
   updatedAt: number
 }
+```
+
+### Rental Properties (`rentalProperties`)
+```typescript
+{
+  id: string
+  address: string
+  description: string
+  imageStoragePath: string   // Firebase Storage path: properties/{id}/main.jpg
+  cost: number | null
+  brightness: number         // 0-100 (default: 50); archived (not deleted) at ≤ 20
+  voters: string[]           // legacy array
+  votersUp: string[]         // UIDs who upvoted
+  votersDown: string[]       // UIDs who downvoted
+  reportedBy?: string[]
+  dismissedReporters?: string[]
+  phone?: string
+  companyName?: string
+  createdBy: string
+  createdAt: number
+  updatedAt: number
+}
+```
+
+Gallery position (stored separately in `settings` doc `propertyGallery`):
+```typescript
+{ x: number, y: number }  // percentages; default x: 37.5%, y: 66.7%
 ```
 
 ### Email Templates (`emailTemplates`)
@@ -152,6 +239,17 @@ votersDown:        []          []           [uid]
 }
 ```
 
+### Email History (`emailHistory`)
+```typescript
+{
+  templateType: 'campaign-success' | 'campaign-ended' | 'campaign-update' | 'verify-email'
+  recipientCount: number
+  sentAt: number
+  sentBy: string             // uid of admin who sent
+  variables: Record<string, string>
+}
+```
+
 ### Site Content (`siteContent`)
 ```typescript
 {
@@ -162,6 +260,64 @@ votersDown:        []          []           [uid]
   updatedBy: string
 }
 ```
+
+### Admins (`admins`)
+```typescript
+{
+  // Document ID = email address
+  email: string
+  addedAt: number
+  addedBy: string            // uid of promoting admin
+}
+```
+
+### Banned Emails (`bannedEmails`)
+```typescript
+{
+  // Document ID = email address (O(1) lookup)
+  email: string
+  bannedAt: number
+  bannedBy: string
+  reason?: string
+}
+```
+
+### Deleted Blocks (`deletedBlocks`)
+```typescript
+{
+  blockId: string
+  content: string
+  createdBy: string
+  deletedBy: string
+  deletedAt: number
+  reason: 'self' | 'admin' | 'vote' | 'cascade' | 'report'
+  style: TextStyle
+}
+```
+
+### Block Edits (`blockEdits`)
+```typescript
+{
+  blockId: string
+  previousContent: string   // content BEFORE the edit
+  editedBy: string
+  editedAt: number
+}
+```
+
+### Presence (`presence`)
+```typescript
+{
+  // Document ID = userId
+  userId: string
+  displayName: string
+  cursorX: number            // percentage 0-100
+  cursorY: number            // percentage 0-100
+  lastSeen: Timestamp        // server timestamp, 30s TTL
+}
+```
+
+> **Backup note**: `backup-firestore.js` covers 12 collections but currently **omits** `emailTemplates`, `emailHistory`, and `presence`. Consider adding them if email template customization needs to be preserved.
 
 ## Component Architecture
 
@@ -183,6 +339,7 @@ votersDown:        []          []           [uid]
 - Panel: `z-20`
 - Modals: `z-200` (property), `z-250` (emails)
 - Modal close buttons: `z-[210]`, `z-[260]`
+- Measurement overlay: `z-[300]` (topmost, admin debug only)
 
 ### Responsive Design
 
@@ -201,10 +358,13 @@ const MOBILE_ZONE_RIGHT = 63.0  // 907.5 / 1440 * 100
 
 **No global state library** - Uses React Context API:
 
-- **AuthContext**: User auth, admin status
-- **CanvasContext**: Canvas blocks, selection, undo/redo
-- **ContentContext**: CMS content, getText() function
-- **EffectsContext**: Vote celebration effects
+- **AuthContext**: User auth, admin status, real-time profile listener, auto sign-out
+- **CanvasContext**: Canvas blocks, selection, undo/redo history, copy/paste clipboard
+- **ContentContext**: CMS content, `getText()` function, Firestore sync
+- **EffectsContext**: Vote celebration effect settings, subscribes to `settings/textEffects` doc
+  - `TextEffectsSettings`: `{ enabled: boolean, disabledEffects: TextEffectName[], testMode?: boolean }`
+  - Test mode: unlimited votes + random effect assignment instead of deterministic hash
+- **PresenceContext**: Live cursor positions — 200ms throttled writes to `presence` collection, 30s TTL, 8-color palette
 
 ## Security Model
 

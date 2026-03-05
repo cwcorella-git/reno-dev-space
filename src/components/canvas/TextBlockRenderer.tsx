@@ -75,7 +75,6 @@ export function TextBlockRenderer({
     fontFamily: getFontFamily(block.style.fontFamily),
     color: block.style.color,
     textAlign: block.style.textAlign as 'left' | 'center' | 'right',
-    backgroundColor: block.style.backgroundColor || 'transparent',
     opacity,
   }
 
