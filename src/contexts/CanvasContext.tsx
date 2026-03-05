@@ -616,6 +616,7 @@ export function CanvasProvider({ children }: { children: ReactNode }) {
           if (selectedBlockId === id) {
             setSelectedBlockId(null)
           }
+        }
         return wasDeleted
       } catch (error) {
         console.error('[CanvasContext] Failed to vote:', error)
