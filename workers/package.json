@@ -1,0 +1,24 @@
+{
+  "name": "reno-dev-space-workers",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --persist-to=.wrangler/state",
+    "deploy": "wrangler deploy",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply reno-dev-space --local",
+    "db:migrate:remote": "wrangler d1 migrations apply reno-dev-space --remote",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "better-auth": "^1.2.0",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250109.0",
+    "drizzle-kit": "^0.31.4",
+    "typescript": "^5.7.2",
+    "wrangler": "^3.95.0"
+  }
+}

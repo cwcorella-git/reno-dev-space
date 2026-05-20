@@ -1,0 +1,28 @@
+/**
+ * Session 1 minimum config.
+ * Adds: D1 binding only. No R2, no Durable Objects, no production routes.
+ * Deploys to *.workers.dev. Production routing on renodevspace.org lands at cutover.
+ */
+{
+  "name": "reno-dev-space-api",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-05-19",
+  "compatibility_flags": ["nodejs_compat"],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "reno-dev-space",
+      "database_id": "PLACEHOLDER_FILLED_BY_WRANGLER_D1_CREATE",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "vars": {
+    "PUBLIC_SITE_URL": "https://renodevspace.org"
+  },
+  "rules": [
+    { "type": "Text", "globs": ["**/*.html"], "fallthrough": false }
+  ],
+  "observability": {
+    "enabled": true
+  }
+}

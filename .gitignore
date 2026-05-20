@@ -3,6 +3,11 @@
 /functions/node_modules
 /workers/node_modules
 /functions/lib
+/workers/node_modules
+
+# Cloudflare Workers local state
+/workers/.wrangler
+/workers/.dev.vars
 
 # Firebase
 firebase-debug.log
