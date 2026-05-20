@@ -37,8 +37,8 @@ export const metadata: Metadata = {
   description: 'Local game developers in Reno. Build together, keep what you make.',
   icons: {
     icon: [
-      { url: '/reno-dev-space/favicon.svg', type: 'image/svg+xml' },
-      { url: '/reno-dev-space/favicon.ico', sizes: '32x32' },
+      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.ico', sizes: '32x32' },
     ],
   },
 }

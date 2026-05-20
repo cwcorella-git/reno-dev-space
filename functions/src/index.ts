@@ -70,8 +70,8 @@ export const createCheckoutSession = functions
             },
           ],
           mode: 'payment',
-          success_url: `${req.headers.origin}/reno-dev-space/?donation=success`,
-          cancel_url: `${req.headers.origin}/reno-dev-space/?donation=cancelled`,
+          success_url: `${req.headers.origin}/?donation=success`,
+          cancel_url: `${req.headers.origin}/?donation=cancelled`,
           customer_email: email || undefined,
           metadata: {
             userId: userId || '',

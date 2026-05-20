@@ -15,9 +15,9 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Only use basePath in production (for GitHub Pages)
-  basePath: process.env.NODE_ENV === 'production' ? '/reno-dev-space' : '',
-  assetPrefix: process.env.NODE_ENV === 'production' ? '/reno-dev-space/' : '',
+  // Served from the apex domain root (renodevspace.org) — no subpath
+  basePath: '',
+  assetPrefix: '',
   env: {
     NEXT_PUBLIC_COMMIT_SHA: commitSha,
     NEXT_PUBLIC_BUILD_TIME: new Date().toISOString(),

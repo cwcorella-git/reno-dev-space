@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { ArrowPathIcon, BoltIcon } from '@heroicons/react/24/outline'
 import { subscribeToPledges, Pledge, calculatePledgeSummary } from '@/lib/storage/pledgeStorage'
 import { subscribeToCampaignSettings, CampaignSettings } from '@/lib/storage/campaignStorage'
+import { SITE_URL } from '@/lib/siteConfig'
 
 interface EmailVariableEditorProps {
   variables: string[]
@@ -57,7 +58,7 @@ export function EmailVariableEditor({
         DAILY_AVERAGE: '0',
         MILESTONE_TITLE: 'Campaign Update',
         MILESTONE_MESSAGE: 'Thank you for your continued support!',
-        VERIFICATION_LINK: 'https://cwcorella-git.github.io/reno-dev-space/'
+        VERIFICATION_LINK: SITE_URL
       }
 
       setLiveData(data)

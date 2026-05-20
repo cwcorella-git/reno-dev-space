@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '@/contexts/AuthContext'
+import { SITE_URL } from '@/lib/siteConfig'
 import { EditableText } from '@/components/EditableText'
 import { EditorTab } from './EditorTab'
 import { PencilSquareIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -25,7 +26,7 @@ const TEMPLATES: TemplateInfo[] = [
     name: 'Email Verification',
     description: 'Sent automatically when a user signs up',
     sampleData: {
-      VERIFICATION_LINK: 'https://cwcorella-git.github.io/reno-dev-space/'
+      VERIFICATION_LINK: SITE_URL
     }
   },
   {
@@ -181,9 +182,8 @@ export function EmailsPanel() {
         setTemplateVariables(customTemplate.variables)
         setIsCustomTemplate(true)
       } else {
-        // Fallback to static file
-        const basePath = process.env.NODE_ENV === 'production' ? '/reno-dev-space' : ''
-        const response = await fetch(`${basePath}/email-templates/${selectedTemplate}.html`)
+        // Fallback to static file (served from site root)
+        const response = await fetch(`/email-templates/${selectedTemplate}.html`)
         if (!response.ok) throw new Error(`HTTP ${response.status}`)
         html = await response.text()
 

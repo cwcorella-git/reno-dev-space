@@ -315,7 +315,7 @@ export const sendTestEmail = functions.https.onCall(async (data, context) => {
     // Test data
     const testData: Record<string, Record<string, string>> = {
       'verify-email.html': {
-        VERIFICATION_LINK: 'https://cwcorella-git.github.io/reno-dev-space/'
+        VERIFICATION_LINK: 'https://renodevspace.org'
       },
       'campaign-success.html': {
         TOTAL_RAISED: '15,250',
