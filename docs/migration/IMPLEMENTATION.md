@@ -121,22 +121,23 @@ Frontend talks to the local Worker via `NEXT_PUBLIC_API_BASE=http://localhost:87
 
 **Goal:** end of session, deployed Worker on `.workers.dev` accepts super-admin signup with verification email landing in inbox.
 
+**Status (2026-05-20):** scaffolding committed (`79ecaf3`). Deploy + verification blocked on user-side dashboard prep — see [RESUME.md](RESUME.md).
+
 ### Scope
 
-1. `workers/` directory scaffolding:
+1. ✅ `workers/` directory scaffolding:
    - `package.json`, `tsconfig.json`, `wrangler.jsonc`
    - `src/index.ts` with Hono router skeleton
-   - `src/db/schema.ts` with the Drizzle definitions matching `SCHEMA.md`
+   - `src/db/schema.ts` with the Drizzle definitions (auth + users only — see deviation below)
    - `src/auth.ts` with better-auth + Drizzle adapter setup
    - `src/email.ts` with Resend transport
-2. D1 + R2 + bindings provisioned (user-driven dashboard steps).
-3. Drizzle migrations generated + applied:
-   - `0001_initial.sql` — all tables from `SCHEMA.md` (post-resolved-decisions, so with hard FK cascades)
-   - `0002_auth.sql` — better-auth tables from `AUTH.md`
-   - `0003_unsubscribe.sql` — `pledges.unsubscribe_token` column from `EMAIL.md`
-4. Resend account + domain verification (user-driven).
-5. `POST /api/auth/sign-up` works end-to-end.
-6. Super-admin signs up; verification email lands; clicking the link sets `email_verified=1`.
+2. ⏸ D1 + bindings provisioned (user-driven dashboard steps). R2 deferred to a later session — not needed for signup.
+3. ⏸ Drizzle migrations generated + applied:
+   - ✅ `0000_initial.sql` — minimal `users` + better-auth tables only (deviation from original plan; sufficient for signup, the rest land per-session as routes need them)
+   - Deferred to later sessions: full schema from `SCHEMA.md`, `pledges.unsubscribe_token` from `EMAIL.md`
+4. ⏸ Resend account + domain verification (user-driven).
+5. ⏸ `POST /api/auth/sign-up/email` works end-to-end.
+6. ⏸ Super-admin signs up; verification email lands; clicking the link sets `email_verified=1`.
 
 ### Out of scope for first session
 

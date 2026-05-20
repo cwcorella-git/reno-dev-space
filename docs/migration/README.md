@@ -104,7 +104,7 @@ See `IMPLEMENTATION.md` for full details:
 - **Branch strategy:** single long-lived `feat/cloudflare-migration` branch with incremental sub-PRs; single merge to `main` is the cutover commit.
 - **Local dev:** `wrangler dev` + local D1 (`.wrangler/state`).
 - **First session scope:** Worker skeleton + D1 schema + better-auth + Resend; end-state is super-admin can sign up and receive verification email.
-- **Implementation kickoff:** next session.
+- **Implementation kickoff:** in progress on `feat/cloudflare-migration` (Session 1 scaffolding committed at `79ecaf3`; deploy blocked on user-side dashboard prep — see [RESUME.md](RESUME.md)).
 
 ## Verification items (not user decisions; flagged for implementation)
 
@@ -116,7 +116,7 @@ See `IMPLEMENTATION.md` for full details:
 
 ## What this set does NOT include
 
-- Implementation code. Zero `.ts` files have been written for the Worker, DOs, schema migrations, or the data import script.
+- Most implementation code. Session 1 has scaffolded the Worker (Hono router, better-auth, Resend transport, Drizzle schema for auth + users) on `feat/cloudflare-migration`. DOs, the other 14 collections, and the import script are still unwritten.
 - A timeline. The implementation phase will produce its own plan with sequencing once these docs are approved.
 - Commitment to Path A from `/docs/POST_FIREBASE.md`. If `COSTS.md` reveals Cloudflare is unviable at projected scale, Path B (self-hosted) gets revisited; these docs are sized so the work isn't wasted in that case (SCHEMA.md applies to Postgres almost unchanged; CUTOVER.md is platform-agnostic).
 - A formal threat model. Security considerations are scattered across `AUTH.md`, `FUNCTIONS.md`, and `EMAIL.md`; if the user wants a unified `SECURITY.md`, that's a follow-on doc.
