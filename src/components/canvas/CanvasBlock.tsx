@@ -65,18 +65,28 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
   // Track the position we're waiting for Firestore to confirm
   const pendingPosRef = useRef<DragState | null>(null)
 
-  // Clear dragPos when Firestore confirms the new position (prevents jitter)
+  // Clear dragPos when Firestore confirms the new position (prevents jitter).
+  // Tolerance is sub-pixel at 1440px width (0.5% x ~= 7px is too loose; 0.05%
+  // x ~= 0.7px). A clamped/rounded save can differ from the local drag value
+  // by more than the old 0.01, which would strand the block — so we also arm a
+  // 1s safety timeout that force-clears regardless.
   useEffect(() => {
-    if (pendingPosRef.current && !isDragging) {
-      const tolerance = 0.01 // Small tolerance for floating point comparison
-      const xMatches = Math.abs(block.x - pendingPosRef.current.x) < tolerance
-      const yMatches = Math.abs(block.y - pendingPosRef.current.y) < tolerance
-      if (xMatches && yMatches) {
-        // Firestore has confirmed the position, safe to clear local state
-        pendingPosRef.current = null
-        setDragPos(null)
-      }
+    if (!pendingPosRef.current || isDragging) return
+
+    const tolerance = 0.05
+    const xMatches = Math.abs(block.x - pendingPosRef.current.x) < tolerance
+    const yMatches = Math.abs(block.y - pendingPosRef.current.y) < tolerance
+    if (xMatches && yMatches) {
+      pendingPosRef.current = null
+      setDragPos(null)
+      return
     }
+
+    const safety = setTimeout(() => {
+      pendingPosRef.current = null
+      setDragPos(null)
+    }, 1000)
+    return () => clearTimeout(safety)
   }, [block.x, block.y, isDragging])
 
   // Local resize state for immediate visual feedback
