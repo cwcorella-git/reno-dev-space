@@ -1,4 +1,5 @@
-import { CanvasBlock } from '@/types/canvas'
+import { CanvasBlock, DESIGN_WIDTH, DESIGN_HEIGHT } from '@/types/canvas'
+import { percentRectsOverlap, rectsOverlapPx, PX_PER_X_UNIT } from '@/lib/measurement/geometry'
 
 // Approximate dimensions for a new text block (percentages of canvas)
 // These match the preview box in Canvas.tsx (12% wide, 6% tall)
@@ -9,7 +10,7 @@ const NEW_BLOCK_HEIGHT = 6  // ~6% of canvasHeightPercent
 // without flagging. Must cover padding on BOTH blocks.
 // Horizontal padding: 12px × 2 = 24px, Vertical padding: 8px × 2 = 16px
 // Use the larger value (horizontal) to allow text to get close on all sides.
-const OVERLAP_TOLERANCE = 24  // px - 12px horizontal padding × 2
+const OVERLAP_TOLERANCE = 24  // px - 12px horizontal padding × 2 (screen-px space: raw getBoundingClientRect scaled by CSS transform, unlike CollisionDetector's proximityMargin which is in design-px space)
 
 // Fallback height estimate when DOM is not available (percentage)
 // This is used for server-side rendering or when block hasn't mounted yet
@@ -58,9 +59,13 @@ export function measureNewBlockSize(
   const rect = measurer.getBoundingClientRect()
   canvasElement.removeChild(measurer)
 
-  // Convert to percentages of canvas
+  // Convert to percentages. Width is %-of-canvas-width (= %-of-1440).
+  // Height must be in canvasHeightPercent units (100 = one DESIGN_HEIGHT
+  // screen), NOT a fraction of the full scrolled canvas — otherwise the
+  // value disagrees with the collision system once the canvas scrolls.
+  const oneScreenPx = (canvasRect.width / DESIGN_WIDTH) * DESIGN_HEIGHT
   const widthPercent = (rect.width / canvasRect.width) * 100
-  const heightPercent = (rect.height / canvasRect.height) * 100
+  const heightPercent = (rect.height / oneScreenPx) * 100
 
   // Enforce minimums to prevent tiny previews
   return {
@@ -108,166 +113,21 @@ export function wouldOverlap(
   padding: number = 0,
   canvasHeightPercent: number = 100
 ): boolean {
-  const newRight = newX + NEW_BLOCK_WIDTH
-  const newBottom = newY + NEW_BLOCK_HEIGHT
+  const newRect = { x: newX, y: newY, width: NEW_BLOCK_WIDTH, height: NEW_BLOCK_HEIGHT }
 
   for (const block of blocks) {
-    const blockWidth = block.width || 5
-    const blockHeight = getBlockHeightPercent(block.id, canvasHeightPercent)
-
-    const blockRight = block.x + blockWidth
-    const blockBottom = block.y + blockHeight
-
-    // Check rectangle intersection with padding
-    // Two rectangles DON'T overlap if one is completely to the left, right, above, or below
-    const noOverlap =
-      newRight + padding < block.x ||  // new block is to the left
-      newX > blockRight + padding ||   // new block is to the right
-      newBottom + padding < block.y || // new block is above
-      newY > blockBottom + padding     // new block is below
-
-    if (!noOverlap) return true
-  }
-  return false
-}
-
-/**
- * Check if moving an existing block to (newX, newY) would overlap other blocks.
- * Excludes the block itself from the check.
- * Uses actual DOM measurements when available for accurate collision detection.
- */
-export function wouldBlockOverlap(
-  blockId: string,
-  newX: number,
-  newY: number,
-  blockWidth: number,
-  blocks: CanvasBlock[],
-  padding: number = 0,
-  canvasHeightPercent: number = 100
-): boolean {
-  // Get moving block's actual height
-  const movingBlockHeight = getBlockHeightPercent(blockId, canvasHeightPercent)
-  const newRight = newX + blockWidth
-  const newBottom = newY + movingBlockHeight
-
-  for (const other of blocks) {
-    // Skip self
-    if (other.id === blockId) continue
-
-    const otherWidth = other.width || 5
-    const otherHeight = getBlockHeightPercent(other.id, canvasHeightPercent)
-
-    const otherRight = other.x + otherWidth
-    const otherBottom = other.y + otherHeight
-
-    // Check rectangle intersection with padding
-    const noOverlap =
-      newRight + padding < other.x ||
-      newX > otherRight + padding ||
-      newBottom + padding < other.y ||
-      newY > otherBottom + padding
-
-    if (!noOverlap) return true
-  }
-  return false
-}
-
-/**
- * DOM-based overlap check for Add Text placement.
- * Uses getBoundingClientRect() on existing blocks for pixel-accurate hit zones,
- * instead of the percentage-based estimates which underestimate block height.
- *
- * @param canvasElement - The canvas DOM element
- * @param cursorX - Cursor X position as percentage (0-100)
- * @param cursorY - Cursor Y position as percentage (0-canvasHeightPercent)
- * @param canvasHeightPercent - Canvas height as percentage of DESIGN_HEIGHT
- * @param newBlockWidth - Width of new block as percentage (default: NEW_BLOCK_WIDTH)
- * @param newBlockHeight - Height of new block as percentage (default: NEW_BLOCK_HEIGHT)
- * @param debug - Enable console logging for debugging
- */
-export function wouldOverlapDOM(
-  canvasElement: HTMLElement,
-  cursorX: number,
-  cursorY: number,
-  canvasHeightPercent: number,
-  newBlockWidth: number = NEW_BLOCK_WIDTH,
-  newBlockHeight: number = NEW_BLOCK_HEIGHT,
-  debug: boolean = false
-): boolean {
-  const canvasRect = canvasElement.getBoundingClientRect()
-
-  // Calculate preview size in pixels
-  const previewWidthPx = (newBlockWidth / 100) * canvasRect.width
-  const previewHeightPx = (newBlockHeight / 100) * canvasRect.height
-
-  // Convert cursor position to screen pixels
-  const cursorScreenX = canvasRect.left + (cursorX / 100) * canvasRect.width
-  const cursorScreenY = canvasRect.top + (cursorY / canvasHeightPercent) * canvasRect.height
-
-  // CENTER the preview on cursor (not top-left at cursor)
-  // This makes approach from all 4 directions symmetric
-  const newLeft = cursorScreenX - previewWidthPx / 2
-  const newTop = cursorScreenY - previewHeightPx / 2
-  const newRight = cursorScreenX + previewWidthPx / 2
-  const newBottom = cursorScreenY + previewHeightPx / 2
-
-  if (debug) {
-    console.log('[wouldOverlapDOM] Canvas:', {
-      left: canvasRect.left, top: canvasRect.top,
-      width: canvasRect.width, height: canvasRect.height
-    })
-    console.log('[wouldOverlapDOM] Cursor %:', { x: cursorX, y: cursorY, canvasHeightPercent })
-    console.log('[wouldOverlapDOM] Preview size params:', { width: newBlockWidth, height: newBlockHeight })
-    console.log('[wouldOverlapDOM] Preview size px:', { width: previewWidthPx, height: previewHeightPx })
-    console.log('[wouldOverlapDOM] New block rect (screen px):', {
-      left: newLeft, top: newTop, right: newRight, bottom: newBottom
-    })
-  }
-
-  const blockElements = canvasElement.querySelectorAll<HTMLElement>('[data-block-id]')
-
-  if (debug) {
-    console.log('[wouldOverlapDOM] Found', blockElements.length, 'blocks')
-  }
-
-  for (let i = 0; i < blockElements.length; i++) {
-    const blockRect = blockElements[i].getBoundingClientRect()
-    const blockId = blockElements[i].getAttribute('data-block-id')
-
-    if (debug) {
-      console.log(`[wouldOverlapDOM] Block ${blockId}:`, {
-        left: blockRect.left, top: blockRect.top,
-        right: blockRect.right, bottom: blockRect.bottom,
-        width: blockRect.width, height: blockRect.height
-      })
+    const blockRect = {
+      x: block.x,
+      y: block.y,
+      width: block.width || 5,
+      height: getBlockHeightPercent(block.id, canvasHeightPercent),
     }
-
-    // Apply tolerance: shrink existing block's hit zone by padding amount
-    // This allows padded boxes to touch without flagging text overlap
-    const noOverlap =
-      newRight <= blockRect.left + OVERLAP_TOLERANCE ||
-      newLeft >= blockRect.right - OVERLAP_TOLERANCE ||
-      newBottom <= blockRect.top + OVERLAP_TOLERANCE ||
-      newTop >= blockRect.bottom - OVERLAP_TOLERANCE
-
-    if (!noOverlap) {
-      // ALWAYS log overlap detection to diagnose the issue
-      console.log(`[OVERLAP BLOCKED] Preview blocked by block ${blockId}`, {
-        preview: { left: newLeft.toFixed(0), top: newTop.toFixed(0), right: newRight.toFixed(0), bottom: newBottom.toFixed(0) },
-        block: { left: blockRect.left.toFixed(0), top: blockRect.top.toFixed(0), right: blockRect.right.toFixed(0), bottom: blockRect.bottom.toFixed(0) },
-        tolerance: OVERLAP_TOLERANCE,
-        failedChecks: {
-          rightVsLeft: newRight > blockRect.left + OVERLAP_TOLERANCE ? `preview.right(${newRight.toFixed(0)}) > block.left+tol(${(blockRect.left + OVERLAP_TOLERANCE).toFixed(0)})` : null,
-          leftVsRight: newLeft < blockRect.right - OVERLAP_TOLERANCE ? `preview.left(${newLeft.toFixed(0)}) < block.right-tol(${(blockRect.right - OVERLAP_TOLERANCE).toFixed(0)})` : null,
-          bottomVsTop: newBottom > blockRect.top + OVERLAP_TOLERANCE ? `preview.bottom(${newBottom.toFixed(0)}) > block.top+tol(${(blockRect.top + OVERLAP_TOLERANCE).toFixed(0)})` : null,
-          topVsBottom: newTop < blockRect.bottom - OVERLAP_TOLERANCE ? `preview.top(${newTop.toFixed(0)}) < block.bottom-tol(${(blockRect.bottom - OVERLAP_TOLERANCE).toFixed(0)})` : null,
-        }
-      })
+    // `padding` is a percentage-x value in the old API; convert to px for the
+    // symmetric margin (0 in every current caller, so this is a no-op today).
+    if (percentRectsOverlap(newRect, blockRect, padding * PX_PER_X_UNIT)) {
       return true
     }
   }
-  // Log when placement is ALLOWED
-  console.log(`[OVERLAP OK] Placement allowed at (${cursorX.toFixed(1)}%, ${cursorY.toFixed(1)}%) - no collisions with ${blockElements.length} blocks`)
   return false
 }
 
@@ -305,15 +165,11 @@ export function checkDOMOverlap(
   if (!targetRect) return false
 
   for (const other of otherRects) {
-    // Two rects DON'T overlap if one is completely left, right, above, or below
-    // Apply tolerance to allow padded boxes to touch without flagging text overlap
-    const noOverlap =
-      targetRect.right <= other.left + OVERLAP_TOLERANCE ||
-      targetRect.left >= other.right - OVERLAP_TOLERANCE ||
-      targetRect.bottom <= other.top + OVERLAP_TOLERANCE ||
-      targetRect.top >= other.bottom - OVERLAP_TOLERANCE
-
-    if (!noOverlap) return true
+    // Negative margin = tolerance: allow up to OVERLAP_TOLERANCE px of overlap
+    // (padding) before flagging. `targetRect`/`other` are screen-pixel rects.
+    if (rectsOverlapPx(targetRect, other, -OVERLAP_TOLERANCE)) {
+      return true
+    }
   }
 
   return false
@@ -365,7 +221,8 @@ export function findOpenPosition(
 
   const stepX = Math.max(blockWidth + 1, 6)
   const stepY = 3
-  for (let y = 5; y < 200; y += stepY) {
+  const yCeiling = Math.max(canvasHeightPercent, 100)
+  for (let y = 5; y < yCeiling; y += stepY) {
     for (let x = 5; x < 95; x += stepX) {
       if (!wouldOverlap(x, y, blocks, 0, canvasHeightPercent)) {
         return { x, y }
@@ -384,12 +241,7 @@ function rectanglesOverlap(
   r1: { x: number; y: number; width: number; height: number },
   r2: { x: number; y: number; width: number; height: number }
 ): boolean {
-  return !(
-    r1.x + r1.width <= r2.x ||
-    r2.x + r2.width <= r1.x ||
-    r1.y + r1.height <= r2.y ||
-    r2.y + r2.height <= r1.y
-  )
+  return percentRectsOverlap(r1, r2, 0)
 }
 
 /**

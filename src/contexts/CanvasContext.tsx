@@ -10,7 +10,7 @@ import {
   RefObject,
   useRef,
 } from 'react'
-import { CanvasBlock, TextBlock, VOTE_BRIGHTNESS_CHANGE } from '@/types/canvas'
+import { CanvasBlock, TextBlock, VOTE_BRIGHTNESS_CHANGE, DESIGN_WIDTH, DESIGN_HEIGHT } from '@/types/canvas'
 import { deriveVoterState } from '@/lib/voteUtils'
 import { measurementService, MeasurementDebugConfig, DEFAULT_DEBUG_CONFIG } from '@/lib/measurement'
 
@@ -26,9 +26,7 @@ interface HistoryEntry {
 
 const MAX_HISTORY = 50
 
-// Fixed design canvas dimensions - all positioning is relative to these
-export const DESIGN_WIDTH = 1440
-export const DESIGN_HEIGHT = 900 // Base "one screen" height in pixels
+export { DESIGN_WIDTH, DESIGN_HEIGHT }
 import {
   subscribeToCanvas,
   addTextBlock,

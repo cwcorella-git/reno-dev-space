@@ -620,7 +620,6 @@ export function Canvas() {
         // Update both state (for UI) and ref (for handlers to avoid stale closure)
         setPreviewSize(newSize)
         previewSizeRef.current = newSize
-        console.log('[Canvas] Measured preview size:', newSize)
       }
     }
   }, [isAddTextMode, canvasRef])
@@ -848,7 +847,7 @@ export function Canvas() {
                     left: `${addTextPreview.x}%`,
                     top: `${(addTextPreview.y / canvasHeightPercent) * 100}%`,
                     width: `${previewSize.width}%`,
-                    height: `${previewSize.height}%`,  // 0-100 scale (matches measureNewBlockSize output)
+                    height: `${(previewSize.height / canvasHeightPercent) * 100}%`,
                     transform: 'translate(-50%, -50%)',  // Center on cursor
                     borderColor: addTextPreview.isValid ? previewColor : '#ef4444',
                     backgroundColor: addTextPreview.isValid ? `${previewColor}1a` : '#ef44441a',

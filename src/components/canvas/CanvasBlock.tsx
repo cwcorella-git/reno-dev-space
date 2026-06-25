@@ -6,7 +6,7 @@ import { TextBlockRenderer } from './TextBlockRenderer'
 import { useCanvas, DESIGN_HEIGHT } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { filterEditableBlocks } from '@/lib/permissions'
-import { collisionDetector } from '@/lib/measurement'
+import { collisionDetector, measurementService } from '@/lib/measurement'
 import { deriveVoterState } from '@/lib/voteUtils'
 
 interface CanvasBlockProps {
@@ -65,18 +65,28 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
   // Track the position we're waiting for Firestore to confirm
   const pendingPosRef = useRef<DragState | null>(null)
 
-  // Clear dragPos when Firestore confirms the new position (prevents jitter)
+  // Clear dragPos when Firestore confirms the new position (prevents jitter).
+  // Tolerance is sub-pixel at 1440px width (0.5% x ~= 7px is too loose; 0.05%
+  // x ~= 0.7px). A clamped/rounded save can differ from the local drag value
+  // by more than the old 0.01, which would strand the block — so we also arm a
+  // 1s safety timeout that force-clears regardless.
   useEffect(() => {
-    if (pendingPosRef.current && !isDragging) {
-      const tolerance = 0.01 // Small tolerance for floating point comparison
-      const xMatches = Math.abs(block.x - pendingPosRef.current.x) < tolerance
-      const yMatches = Math.abs(block.y - pendingPosRef.current.y) < tolerance
-      if (xMatches && yMatches) {
-        // Firestore has confirmed the position, safe to clear local state
-        pendingPosRef.current = null
-        setDragPos(null)
-      }
+    if (!pendingPosRef.current || isDragging) return
+
+    const tolerance = 0.05
+    const xMatches = Math.abs(block.x - pendingPosRef.current.x) < tolerance
+    const yMatches = Math.abs(block.y - pendingPosRef.current.y) < tolerance
+    if (xMatches && yMatches) {
+      pendingPosRef.current = null
+      setDragPos(null)
+      return
     }
+
+    const safety = setTimeout(() => {
+      pendingPosRef.current = null
+      setDragPos(null)
+    }, 1000)
+    return () => clearTimeout(safety)
   }, [block.x, block.y, isDragging])
 
   // Local resize state for immediate visual feedback
@@ -97,6 +107,10 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       setIsResizeOverlapping(false)
       return
     }
+    // The DOM has already re-rendered at the new width (this effect runs
+    // post-commit), but the cache still holds the old box. Drop it so the
+    // collision check re-measures the actual reflowed height.
+    measurementService.invalidate([block.id])
     const result = collisionDetector.checkResizeCollision(
       block.id,
       resizeWidth?.width ?? block.width,
@@ -255,6 +269,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         setDragPos((currentPos) => {
           if (currentPos && (currentPos.x !== block.x || currentPos.y !== block.y)) {
             // Check for overlap before saving
+            measurementService.invalidate([block.id])
             const result = collisionDetector.checkMoveCollision(
               block.id,
               currentPos.x,
@@ -353,6 +368,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         // Save final width to Firestore (blocked if overlapping)
         setResizeWidth((currentWidth) => {
           if (currentWidth && currentWidth.width !== block.width) {
+            measurementService.invalidate([block.id])
             const result = collisionDetector.checkResizeCollision(
               block.id,
               currentWidth.width,

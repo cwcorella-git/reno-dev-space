@@ -10,6 +10,11 @@ export interface BlockSize {
   height: number  // percentage 0-100 of canvas height (use 0 for auto)
 }
 
+// Base design canvas dimensions (px). The single source of truth.
+// x/width percentages are of DESIGN_WIDTH; y/height percentages are of DESIGN_HEIGHT.
+export const DESIGN_WIDTH = 1440
+export const DESIGN_HEIGHT = 900 // Base "one screen" height in pixels
+
 export interface TextStyle {
   fontSize: number        // rem units
   fontWeight: 'normal' | 'bold'
