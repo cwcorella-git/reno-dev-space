@@ -10,7 +10,7 @@ const NEW_BLOCK_HEIGHT = 6  // ~6% of canvasHeightPercent
 // without flagging. Must cover padding on BOTH blocks.
 // Horizontal padding: 12px × 2 = 24px, Vertical padding: 8px × 2 = 16px
 // Use the larger value (horizontal) to allow text to get close on all sides.
-const OVERLAP_TOLERANCE = 24  // px - 12px horizontal padding × 2
+const OVERLAP_TOLERANCE = 24  // px - 12px horizontal padding × 2 (screen-px space: raw getBoundingClientRect scaled by CSS transform, unlike CollisionDetector's proximityMargin which is in design-px space)
 
 // Fallback height estimate when DOM is not available (percentage)
 // This is used for server-side rendering or when block hasn't mounted yet
