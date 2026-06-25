@@ -1,4 +1,5 @@
 import { CanvasBlock, DESIGN_WIDTH, DESIGN_HEIGHT } from '@/types/canvas'
+import { percentRectsOverlap, rectsOverlapPx, PX_PER_X_UNIT } from '@/lib/measurement/geometry'
 
 // Approximate dimensions for a new text block (percentages of canvas)
 // These match the preview box in Canvas.tsx (12% wide, 6% tall)
@@ -112,25 +113,20 @@ export function wouldOverlap(
   padding: number = 0,
   canvasHeightPercent: number = 100
 ): boolean {
-  const newRight = newX + NEW_BLOCK_WIDTH
-  const newBottom = newY + NEW_BLOCK_HEIGHT
+  const newRect = { x: newX, y: newY, width: NEW_BLOCK_WIDTH, height: NEW_BLOCK_HEIGHT }
 
   for (const block of blocks) {
-    const blockWidth = block.width || 5
-    const blockHeight = getBlockHeightPercent(block.id, canvasHeightPercent)
-
-    const blockRight = block.x + blockWidth
-    const blockBottom = block.y + blockHeight
-
-    // Check rectangle intersection with padding
-    // Two rectangles DON'T overlap if one is completely to the left, right, above, or below
-    const noOverlap =
-      newRight + padding < block.x ||  // new block is to the left
-      newX > blockRight + padding ||   // new block is to the right
-      newBottom + padding < block.y || // new block is above
-      newY > blockBottom + padding     // new block is below
-
-    if (!noOverlap) return true
+    const blockRect = {
+      x: block.x,
+      y: block.y,
+      width: block.width || 5,
+      height: getBlockHeightPercent(block.id, canvasHeightPercent),
+    }
+    // `padding` is a percentage-x value in the old API; convert to px for the
+    // symmetric margin (0 in every current caller, so this is a no-op today).
+    if (percentRectsOverlap(newRect, blockRect, padding * PX_PER_X_UNIT)) {
+      return true
+    }
   }
   return false
 }
@@ -169,15 +165,11 @@ export function checkDOMOverlap(
   if (!targetRect) return false
 
   for (const other of otherRects) {
-    // Two rects DON'T overlap if one is completely left, right, above, or below
-    // Apply tolerance to allow padded boxes to touch without flagging text overlap
-    const noOverlap =
-      targetRect.right <= other.left + OVERLAP_TOLERANCE ||
-      targetRect.left >= other.right - OVERLAP_TOLERANCE ||
-      targetRect.bottom <= other.top + OVERLAP_TOLERANCE ||
-      targetRect.top >= other.bottom - OVERLAP_TOLERANCE
-
-    if (!noOverlap) return true
+    // Negative margin = tolerance: allow up to OVERLAP_TOLERANCE px of overlap
+    // (padding) before flagging. `targetRect`/`other` are screen-pixel rects.
+    if (rectsOverlapPx(targetRect, other, -OVERLAP_TOLERANCE)) {
+      return true
+    }
   }
 
   return false
@@ -229,7 +221,8 @@ export function findOpenPosition(
 
   const stepX = Math.max(blockWidth + 1, 6)
   const stepY = 3
-  for (let y = 5; y < 200; y += stepY) {
+  const yCeiling = Math.max(canvasHeightPercent, 100)
+  for (let y = 5; y < yCeiling; y += stepY) {
     for (let x = 5; x < 95; x += stepX) {
       if (!wouldOverlap(x, y, blocks, 0, canvasHeightPercent)) {
         return { x, y }
@@ -248,12 +241,7 @@ function rectanglesOverlap(
   r1: { x: number; y: number; width: number; height: number },
   r2: { x: number; y: number; width: number; height: number }
 ): boolean {
-  return !(
-    r1.x + r1.width <= r2.x ||
-    r2.x + r2.width <= r1.x ||
-    r1.y + r1.height <= r2.y ||
-    r2.y + r2.height <= r1.y
-  )
+  return percentRectsOverlap(r1, r2, 0)
 }
 
 /**
