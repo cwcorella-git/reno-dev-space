@@ -93,7 +93,7 @@ export interface MeasurementConfig {
  * Configuration for collision detection.
  */
 export interface CollisionConfig {
-  proximityMargin: number       // percentage margin (default: 1)
+  proximityMargin: number       // pixel gap enforced around each block (default: 12)
   enableCharacterLevel: boolean // use character-level for precise checks
 }
 
@@ -119,7 +119,7 @@ export const DEFAULT_MEASUREMENT_CONFIG: MeasurementConfig = {
 }
 
 export const DEFAULT_COLLISION_CONFIG: CollisionConfig = {
-  proximityMargin: 1,
+  proximityMargin: 12,
   enableCharacterLevel: false,  // Fast by default
 }
 

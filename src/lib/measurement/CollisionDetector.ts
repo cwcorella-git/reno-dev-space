@@ -14,6 +14,7 @@ import {
   CollisionConfig,
   DEFAULT_COLLISION_CONFIG,
 } from './types'
+import { percentRectsOverlap, PX_PER_X_UNIT, PX_PER_Y_UNIT } from './geometry'
 
 /**
  * Collision detector that uses the measurement service.
@@ -56,10 +57,11 @@ class CollisionDetector {
       // Skip excluded blocks
       if (excludeIds.includes(block.id)) continue
 
-      // Get measured bounding box
+      // Get measured bounding box (percentage space)
       const blockBounds = measurementService.getBoundingBox(block)
 
-      // Create proximity zone (expanded bounding box)
+      // Create proximity zone for visualization (expanded by the px margin,
+      // converted back to each axis's percentage so the overlay matches reality)
       const zone: ProximityZone = {
         blockId: block.id,
         inner: blockBounds,
@@ -68,8 +70,8 @@ class CollisionDetector {
       }
       proximityZones.push(zone)
 
-      // Fast bounding box check first
-      if (this.rectsIntersect(proposedRect, zone.outer)) {
+      // Pixel-space collision with the configured gap
+      if (percentRectsOverlap(proposedRect, blockBounds, this.config.proximityMargin)) {
         collidingBlockIds.push(block.id)
       }
     }
@@ -201,29 +203,26 @@ class CollisionDetector {
   }
 
   /**
-   * Expand a rectangle by a margin percentage.
+   * Expand a rectangle by a pixel margin, converting asymmetrically to percent
+   * so the debug overlay ring matches the real pixel-symmetric hit zone.
    */
-  private expandRect(rect: CanvasRect, margin: number): CanvasRect {
+  private expandRect(rect: CanvasRect, marginPx: number): CanvasRect {
+    const mx = marginPx / PX_PER_X_UNIT // px -> x-percent units
+    const my = marginPx / PX_PER_Y_UNIT // px -> y-percent units
     return {
-      x: rect.x - margin,
-      y: rect.y - margin,
-      width: rect.width + margin * 2,
-      height: rect.height + margin * 2,
+      x: rect.x - mx,
+      y: rect.y - my,
+      width: rect.width + mx * 2,
+      height: rect.height + my * 2,
     }
   }
 
   /**
-   * Check if two rectangles intersect.
-   * Returns true if any part of the rectangles overlap.
+   * Check if two rectangles intersect using pixel-space comparison.
+   * Used for character-level refinement.
    */
   private rectsIntersect(a: CanvasRect, b: CanvasRect): boolean {
-    // No intersection if one is completely to the left/right/above/below the other
-    return !(
-      a.x + a.width <= b.x ||   // a is completely left of b
-      b.x + b.width <= a.x ||   // b is completely left of a
-      a.y + a.height <= b.y ||  // a is completely above b
-      b.y + b.height <= a.y     // b is completely above a
-    )
+    return percentRectsOverlap(a, b, 0)
   }
 
   /**
