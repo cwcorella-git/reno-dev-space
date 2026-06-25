@@ -620,7 +620,6 @@ export function Canvas() {
         // Update both state (for UI) and ref (for handlers to avoid stale closure)
         setPreviewSize(newSize)
         previewSizeRef.current = newSize
-        console.log('[Canvas] Measured preview size:', newSize)
       }
     }
   }, [isAddTextMode, canvasRef])

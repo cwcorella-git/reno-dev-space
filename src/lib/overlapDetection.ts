@@ -1,4 +1,4 @@
-import { CanvasBlock } from '@/types/canvas'
+import { CanvasBlock, DESIGN_WIDTH, DESIGN_HEIGHT } from '@/types/canvas'
 
 // Approximate dimensions for a new text block (percentages of canvas)
 // These match the preview box in Canvas.tsx (12% wide, 6% tall)
@@ -58,9 +58,13 @@ export function measureNewBlockSize(
   const rect = measurer.getBoundingClientRect()
   canvasElement.removeChild(measurer)
 
-  // Convert to percentages of canvas
+  // Convert to percentages. Width is %-of-canvas-width (= %-of-1440).
+  // Height must be in canvasHeightPercent units (100 = one DESIGN_HEIGHT
+  // screen), NOT a fraction of the full scrolled canvas — otherwise the
+  // value disagrees with the collision system once the canvas scrolls.
+  const oneScreenPx = (canvasRect.width / DESIGN_WIDTH) * DESIGN_HEIGHT
   const widthPercent = (rect.width / canvasRect.width) * 100
-  const heightPercent = (rect.height / canvasRect.height) * 100
+  const heightPercent = (rect.height / oneScreenPx) * 100
 
   // Enforce minimums to prevent tiny previews
   return {
