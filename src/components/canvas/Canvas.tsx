@@ -73,6 +73,12 @@ export function Canvas() {
   const [isMobileView, setIsMobileView] = useState(false)
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
 
+  // Middle-mouse drag-to-pan state. Available to everyone (not gated on admin).
+  // null when not panning; otherwise the gesture's starting cursor Y and the
+  // scroll offset captured at gesture start.
+  const panStateRef = useRef<{ startClientY: number; startScrollTop: number } | null>(null)
+  const [isPanning, setIsPanning] = useState(false)
+
   // Property modal state (lifted to control panel visibility and scrolling)
   const [showPropertyModal, setShowPropertyModal] = useState(false)
 
@@ -357,6 +363,46 @@ export function Canvas() {
     }
   }, [marquee, blocks, selectBlock, selectBlocks, canvasRef, canvasHeightPercent])
 
+  // Start a middle-mouse pan gesture (button 1). Open to all users.
+  const handlePanStart = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 1) return // Middle mouse only
+    const container = scrollContainerRef.current
+    if (!container) return
+    e.preventDefault() // Suppress the browser's middle-click autoscroll widget
+    panStateRef.current = {
+      startClientY: e.clientY,
+      startScrollTop: container.scrollTop,
+    }
+    setIsPanning(true)
+  }, [])
+
+  // While panning, translate vertical cursor movement into scroll offset.
+  useEffect(() => {
+    if (!isPanning) return
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const handlePanMove = (e: MouseEvent) => {
+      const pan = panStateRef.current
+      if (!pan) return
+      // Grab-and-drag: the canvas follows the cursor. Dragging down moves the
+      // content down (reveals what's above), so subtract the cursor delta.
+      container.scrollTop = pan.startScrollTop - (e.clientY - pan.startClientY)
+    }
+
+    const handlePanEnd = () => {
+      panStateRef.current = null
+      setIsPanning(false)
+    }
+
+    document.addEventListener('mousemove', handlePanMove)
+    document.addEventListener('mouseup', handlePanEnd)
+    return () => {
+      document.removeEventListener('mousemove', handlePanMove)
+      document.removeEventListener('mouseup', handlePanEnd)
+    }
+  }, [isPanning])
+
   // Right-click to show context menu (admin only)
   const handleContextMenu = useCallback(
     (e: React.MouseEvent) => {
@@ -384,14 +430,19 @@ export function Canvas() {
 
   const handleAddText = useCallback(() => {
     if (contextMenu) {
+      // Right-click placement never enters add-text mode, so the preview
+      // color/font are never randomized — pick fresh ones here to match the
+      // "Add Text" button behavior.
+      const color = getRandomColor()
+      const font = getRandomFont()
       // Place block with TOP-LEFT at the centered position (same logic as click handler)
       const currentSize = previewSizeRef.current
       const offsetX = currentSize.width / 2
       const offsetY = (currentSize.height * canvasHeightPercent / 100) / 2
-      addText(contextMenu.canvasX - offsetX, contextMenu.canvasY - offsetY, previewColor, previewFont)
+      addText(contextMenu.canvasX - offsetX, contextMenu.canvasY - offsetY, color, font)
       setContextMenu(null)
     }
-  }, [contextMenu, addText, previewColor, previewFont, canvasHeightPercent])
+  }, [contextMenu, addText, canvasHeightPercent])
 
   // Keyboard shortcuts: Delete, Escape, Ctrl+A/Z/Y/C/V
   useEffect(() => {
@@ -642,7 +693,8 @@ export function Canvas() {
       <div
         ref={scrollContainerRef}
         className="h-screen w-full overflow-y-auto overflow-x-hidden bg-brand-dark"
-        style={{ overflowAnchor: 'auto' }}
+        style={{ overflowAnchor: 'auto', cursor: isPanning ? 'grabbing' : undefined }}
+        onMouseDown={handlePanStart}
         onClick={(e) => {
           // Click on page background (not canvas) also deselects
           if (e.target === e.currentTarget || e.target === scrollContainerRef.current) {
