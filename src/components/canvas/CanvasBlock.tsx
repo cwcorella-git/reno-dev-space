@@ -6,7 +6,7 @@ import { TextBlockRenderer } from './TextBlockRenderer'
 import { useCanvas, DESIGN_HEIGHT } from '@/contexts/CanvasContext'
 import { useAuth } from '@/contexts/AuthContext'
 import { filterEditableBlocks } from '@/lib/permissions'
-import { collisionDetector } from '@/lib/measurement'
+import { collisionDetector, measurementService } from '@/lib/measurement'
 import { deriveVoterState } from '@/lib/voteUtils'
 
 interface CanvasBlockProps {
@@ -97,6 +97,10 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
       setIsResizeOverlapping(false)
       return
     }
+    // The DOM has already re-rendered at the new width (this effect runs
+    // post-commit), but the cache still holds the old box. Drop it so the
+    // collision check re-measures the actual reflowed height.
+    measurementService.invalidate([block.id])
     const result = collisionDetector.checkResizeCollision(
       block.id,
       resizeWidth?.width ?? block.width,
@@ -255,6 +259,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         setDragPos((currentPos) => {
           if (currentPos && (currentPos.x !== block.x || currentPos.y !== block.y)) {
             // Check for overlap before saving
+            measurementService.invalidate([block.id])
             const result = collisionDetector.checkMoveCollision(
               block.id,
               currentPos.x,
@@ -353,6 +358,7 @@ export function CanvasBlock({ block, canvasHeightPercent }: CanvasBlockProps) {
         // Save final width to Firestore (blocked if overlapping)
         setResizeWidth((currentWidth) => {
           if (currentWidth && currentWidth.width !== block.width) {
+            measurementService.invalidate([block.id])
             const result = collisionDetector.checkResizeCollision(
               block.id,
               currentWidth.width,
