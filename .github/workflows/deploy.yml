@@ -3,6 +3,20 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [main]
+    # Skip the Pages build for pushes that touch none of the static export.
+    # A push is skipped only if EVERY changed file matches one of these — a
+    # mixed docs+src commit still deploys. Use the workflow_dispatch button
+    # below to force a deploy if one is ever skipped by mistake.
+    paths-ignore:
+      - '**.md'          # no markdown is imported at build time (verified)
+      - 'docs/**'
+      - 'tests/**'       # Playwright specs
+      - 'scripts/**'     # node admin scripts, run locally
+      - 'workers/**'     # Cloudflare Worker — deploys via wrangler
+      - 'functions/**'   # Firebase Cloud Functions — deploys via firebase
+      - '.remember/**'
+      - '.claude/**'
+      - '.superpowers/**'
   workflow_dispatch:
 
 permissions:
