@@ -20,6 +20,7 @@ For a quick-reference overview of the entire codebase, start with [CLAUDE.md](..
 | [BACKUP.md](BACKUP.md) | Backup/restore procedures for Firestore data |
 | [SECURITY.md](SECURITY.md) | Firestore rules, auth, permissions, sanitization |
 | [DEPLOYMENT.md](DEPLOYMENT.md) | Build process, GitHub Pages, CI/CD, Cloud Functions |
+| [FEDERATION.md](FEDERATION.md) | Research brief — ActivityPub/fediverse options (no commitment) |
 
 ---
 
