@@ -443,3 +443,97 @@ If moving to Vercel/Netlify:
 - Use Next.js Image optimization
 - Consider Server Components for auth checks
 - Move Firebase Functions to API routes
+
+
+---
+
+# Appendix (moved from CLAUDE.md 2026-09-06)
+
+## Repository layout
+
+```
+src/
+├── app/
+│   ├── layout.tsx              # Root layout + provider chain
+│   ├── page.tsx                # Main page (Canvas + VersionTag)
+│   └── globals.css             # Tailwind + vote effect animations + font CSS vars
+├── components/
+│   ├── canvas/                 # Canvas.tsx, CanvasBlock.tsx, TextBlockRenderer.tsx,
+│   │                           # CursorPresence.tsx, CelebrationOverlay.tsx
+│   ├── chat/                   # MessageList.tsx, MessageInput.tsx
+│   ├── panel/                  # UnifiedPanel.tsx, EditorTab.tsx, ChatTab.tsx,
+│   │                           # MembersTab.tsx, EmailsPanel.tsx, EmailHtmlEditor.tsx,
+│   │                           # EmailVariableEditor.tsx, ContentPanel.tsx, ContentTab.tsx,
+│   │                           # CampaignPanel.tsx, CampaignUpdateModal.tsx,
+│   │                           # HistoryPanel.tsx, HistoryTab.tsx, ProfilePanel.tsx,
+│   │                           # DonateTab.tsx
+│   ├── property/               # PropertyGallery.tsx, PropertyCarousel.tsx, PropertyCard.tsx,
+│   │                           # PropertyVoteControls.tsx, GalleryPositionSlider.tsx,
+│   │                           # AddPropertyModal.tsx
+│   ├── dev/                    # MeasurementOverlay.tsx (admin debug tool)
+│   └── (root)                  # AuthModal.tsx, CampaignBanner.tsx, DonateModal.tsx,
+│                               # EditableText.tsx, IntroHint.tsx, VersionTag.tsx
+├── contexts/                   # AuthContext, CanvasContext, ContentContext,
+│                               # EffectsContext, PresenceContext
+├── hooks/                      # useDragResize.ts, useFirestoreChat.ts
+├── lib/
+│   ├── measurement/            # MeasurementService.ts, CollisionDetector.ts, types.ts
+│   ├── storage/                # 16 Firestore CRUD modules (one per collection)
+│   └── (root)                  # admin.ts, emailFunctions.ts, firebase.ts,
+│                               # permissions.ts, sanitize.ts, selectionFormat.ts,
+│                               # voteEffects.ts,
+│                               # overlapDetection.ts (legacy — replaced by measurement/)
+└── types/                      # canvas.ts, property.ts
+
+functions/src/
+├── index.ts                    # Stripe checkout/webhook + email function exports
+├── email.ts                    # Template loader, SMTP sender, helper queries
+└── emailFunctions.ts           # 5 callable/triggered email functions
+
+scripts/
+├── backup-firestore.js         # Export all Firestore collections + Auth users
+├── restore-firestore.js        # Restore from backup (supports --dry-run, --collection)
+├── migrate-users.js            # Sync Firebase Auth users → Firestore users collection
+├── delete-user.js              # Cascade-delete a user by email
+├── randomize-fonts.js          # Randomize fonts for all existing canvas blocks
+└── add-blueprint-keywords.mjs  # Seed predefined community keyword blocks on canvas
+
+email-templates/                # 4 HTML templates (verify-email, campaign-success,
+                                # campaign-ended, campaign-update)
+tests/                          # 14 Playwright E2E spec files
+docs/                           # Detailed documentation (see docs/README.md)
+```
+
+## Panel Structure
+
+```
+[ Editor ] [ Chat ● ] [ Members ] [ Profile ]    [📝] [📊] [📧] [🕐] [˅]
+←──────── tabs ──────────────────→              ←── admin icons ──────────→
+```
+
+| Tab / Icon | Content |
+|------------|---------|
+| **Editor** | Block styling (font, size, color, B/I/U/S, alignment, link) |
+| **Chat** | Real-time community chat (green dot = connected) |
+| **Members** | User directory + admin: delete, ban/unban, promote/demote |
+| **Profile** | User info, pledge, account actions, sign out |
+| **Content** 📝 | CMS for 80+ UI text keys (admin-only) |
+| **Campaign** 📊 | Timer, goal, lock, reset votes (admin-only) |
+| **Emails** 📧 | Email template editor + send campaign updates (admin-only) |
+| **History** 🕐 | Deletion + edit history; restore or delete (admin-only) |
+
+## Keyboard Shortcuts
+
+| Shortcut | Context | Action |
+|----------|---------|--------|
+| Space | Canvas selection | Vote up |
+| Alt | Canvas selection | Vote down |
+| Delete / Backspace | Canvas selection | Delete own blocks |
+| Ctrl+A | Canvas | Select all blocks |
+| Ctrl+Z | Canvas | Undo |
+| Ctrl+Y / Ctrl+Shift+Z | Canvas | Redo |
+| Ctrl+C / Ctrl+V | Canvas | Copy / Paste at cursor |
+| Escape | Canvas | Deselect / exit add-text mode |
+| Ctrl+B / I / U | Text editing | Bold / Italic / Underline |
+| Escape | Text editing | Save and exit |
+| Ctrl+click | EditableText | Open inline CMS editor (admin) |

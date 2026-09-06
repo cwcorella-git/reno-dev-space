@@ -25,27 +25,10 @@ Provider nesting order (`layout.tsx`):
 AuthProvider → ContentProvider → CanvasProvider → PresenceProvider
 ```
 
-**Firestore Collections** (all on `main` database):
-
-| Collection | Purpose |
-|------------|---------|
-| `canvasBlocks` | Text blocks on the canvas |
-| `rentalProperties` | Rental property gallery entries |
-| `chatMessages` | Community chat (last 100 messages) |
-| `siteContent` | Content CMS (80+ text keys) |
-| `users` | User profiles |
-| `pledges` | Backer pledge records |
-| `donations` | Stripe donation records (created by webhook) |
-| `settings` | Campaign settings (doc: `campaign`) |
-| `admins` | Dynamic admin emails (email as doc ID) |
-| `bannedEmails` | Banned email addresses (email as doc ID) |
-| `deletedBlocks` | Deletion audit log |
-| `blockEdits` | Content edit history |
-| `presence` | Live cursor positions (30s TTL) |
-| `emailTemplates` | Editable HTML email templates |
-| `emailHistory` | Sent email audit log |
-
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for detailed schemas.
+**Firestore collections** (all on the `main` database — never the default): 15 collections
+(`canvasBlocks`, `rentalProperties`, `chatMessages`, `siteContent`, `users`, `pledges`,
+`donations`, `settings`, `admins`, `bannedEmails`, `deletedBlocks`, `blockEdits`,
+`presence`, `emailTemplates`, `emailHistory`). Schemas: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
 ## Admin System
 
@@ -55,75 +38,16 @@ Hardcoded email: `christopher@corella.com` (in `src/lib/admin.ts`). Can never be
 ### Multi-Admin
 Dynamic admin emails in `admins` Firestore collection. `AuthContext` subscribes in real-time.
 
-### Admin Capabilities
-- Add/edit/delete/resize/reposition canvas text blocks
-- Position and manage rental property gallery
-- Ctrl+click any EditableText to edit inline
-- Start/stop campaign timer, set funding goal, lock/unlock editing
-- Send campaign email updates to backers; edit HTML email templates (EmailsPanel)
-- Undo/redo, copy/paste, multi-select blocks
-- Delete/ban/promote users (Members tab)
-- Dismiss block reports, view deletion/edit history (History panel)
-- Use Measurement Overlay for collision debugging (dev tool)
+### Admin capabilities
 
+Full list, admin scripts, and moderation procedures: [docs/ADMIN.md](docs/ADMIN.md).
 **Pledged users** can also add text blocks and vote.
-
-See [docs/ADMIN.md](docs/ADMIN.md) for admin scripts and moderation procedures.
 
 ## Key Files
 
-```
-src/
-├── app/
-│   ├── layout.tsx              # Root layout + provider chain
-│   ├── page.tsx                # Main page (Canvas + VersionTag)
-│   └── globals.css             # Tailwind + vote effect animations + font CSS vars
-├── components/
-│   ├── canvas/                 # Canvas.tsx, CanvasBlock.tsx, TextBlockRenderer.tsx,
-│   │                           # CursorPresence.tsx, CelebrationOverlay.tsx
-│   ├── chat/                   # MessageList.tsx, MessageInput.tsx
-│   ├── panel/                  # UnifiedPanel.tsx, EditorTab.tsx, ChatTab.tsx,
-│   │                           # MembersTab.tsx, EmailsPanel.tsx, EmailHtmlEditor.tsx,
-│   │                           # EmailVariableEditor.tsx, ContentPanel.tsx, ContentTab.tsx,
-│   │                           # CampaignPanel.tsx, CampaignUpdateModal.tsx,
-│   │                           # HistoryPanel.tsx, HistoryTab.tsx, ProfilePanel.tsx,
-│   │                           # DonateTab.tsx
-│   ├── property/               # PropertyGallery.tsx, PropertyCarousel.tsx, PropertyCard.tsx,
-│   │                           # PropertyVoteControls.tsx, GalleryPositionSlider.tsx,
-│   │                           # AddPropertyModal.tsx
-│   ├── dev/                    # MeasurementOverlay.tsx (admin debug tool)
-│   └── (root)                  # AuthModal.tsx, CampaignBanner.tsx, DonateModal.tsx,
-│                               # EditableText.tsx, IntroHint.tsx, VersionTag.tsx
-├── contexts/                   # AuthContext, CanvasContext, ContentContext,
-│                               # EffectsContext, PresenceContext
-├── hooks/                      # useDragResize.ts, useFirestoreChat.ts
-├── lib/
-│   ├── measurement/            # MeasurementService.ts, CollisionDetector.ts, types.ts
-│   ├── storage/                # 16 Firestore CRUD modules (one per collection)
-│   └── (root)                  # admin.ts, emailFunctions.ts, firebase.ts,
-│                               # permissions.ts, sanitize.ts, selectionFormat.ts,
-│                               # voteEffects.ts,
-│                               # overlapDetection.ts (legacy — replaced by measurement/)
-└── types/                      # canvas.ts, property.ts
-
-functions/src/
-├── index.ts                    # Stripe checkout/webhook + email function exports
-├── email.ts                    # Template loader, SMTP sender, helper queries
-└── emailFunctions.ts           # 5 callable/triggered email functions
-
-scripts/
-├── backup-firestore.js         # Export all Firestore collections + Auth users
-├── restore-firestore.js        # Restore from backup (supports --dry-run, --collection)
-├── migrate-users.js            # Sync Firebase Auth users → Firestore users collection
-├── delete-user.js              # Cascade-delete a user by email
-├── randomize-fonts.js          # Randomize fonts for all existing canvas blocks
-└── add-blueprint-keywords.mjs  # Seed predefined community keyword blocks on canvas
-
-email-templates/                # 4 HTML templates (verify-email, campaign-success,
-                                # campaign-ended, campaign-update)
-tests/                          # 14 Playwright E2E spec files
-docs/                           # Detailed documentation (see docs/README.md)
-```
+Full annotated repository layout: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) appendix.
+Anchors: provider chain in `src/app/layout.tsx`; one Firestore CRUD module per collection
+in `src/lib/storage/`; Cloud Functions in `functions/src/`; admin scripts in `scripts/`.
 
 ## Canvas Constants
 
@@ -140,29 +64,9 @@ OVERFLOW_RIGHT = 10      // Blocks may extend to 110% right
 
 ## Environment Variables
 
-Required in `.env.local`:
-```
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-NEXT_PUBLIC_FUNCTIONS_URL=       # Optional, defaults to Cloud Functions URL
-```
-
-Cloud Functions secrets (set via `firebase functions:secrets:set`):
-```
-STRIPE_SECRET_KEY
-STRIPE_WEBHOOK_SECRET
-email.host / email.port / email.user / email.pass   # nodemailer SMTP config
-```
-
-Build-time env vars (injected by GitHub Actions / next.config.js):
-```
-NEXT_PUBLIC_COMMIT_SHA        # Git commit hash for VersionTag
-NEXT_PUBLIC_BUILD_TIME        # Build timestamp
-```
+Full tables (`.env.local` Firebase keys, Cloud Functions secrets, build-time vars):
+[docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Missing `NEXT_PUBLIC_FIREBASE_*` fails only at
+runtime, not build — a green build is not proof the env is right.
 
 ## Development Commands
 
@@ -176,14 +80,7 @@ git push          # GitHub Actions deploys to GitHub Pages (main branch)
 cd functions && npm run build    # Compile TypeScript
 cd functions && npm run deploy   # Deploy functions to Firebase
 
-# Admin scripts (require scripts/serviceAccountKey.json)
-node scripts/backup-firestore.js                          # Backup all data
-node scripts/restore-firestore.js <path> [--dry-run]      # Restore from backup
-node scripts/restore-firestore.js <path> --collection X   # Restore single collection
-node scripts/migrate-users.js                             # Sync Auth → Firestore
-node scripts/delete-user.js                               # Delete user by email (cascade)
-node scripts/randomize-fonts.js                           # Randomize canvas block fonts
-node scripts/add-blueprint-keywords.mjs                   # Seed canvas keywords
+# Admin scripts (require scripts/serviceAccountKey.json) — see docs/ADMIN.md
 
 # E2E Tests
 npx playwright install chromium    # First time only
@@ -238,39 +135,10 @@ Session-only history (max 50 steps, Ctrl+Z / Ctrl+Y). Before-snapshots captured 
 2. Tablet (500–900px): smooth interpolation
 3. Desktop (>900px): cap at 1.2× scale, center on 900px focus area
 
-## Panel Structure
+## Panel Structure & Keyboard Shortcuts
 
-```
-[ Editor ] [ Chat ● ] [ Members ] [ Profile ]    [📝] [📊] [📧] [🕐] [˅]
-←──────── tabs ──────────────────→              ←── admin icons ──────────→
-```
-
-| Tab / Icon | Content |
-|------------|---------|
-| **Editor** | Block styling (font, size, color, B/I/U/S, alignment, link) |
-| **Chat** | Real-time community chat (green dot = connected) |
-| **Members** | User directory + admin: delete, ban/unban, promote/demote |
-| **Profile** | User info, pledge, account actions, sign out |
-| **Content** 📝 | CMS for 80+ UI text keys (admin-only) |
-| **Campaign** 📊 | Timer, goal, lock, reset votes (admin-only) |
-| **Emails** 📧 | Email template editor + send campaign updates (admin-only) |
-| **History** 🕐 | Deletion + edit history; restore or delete (admin-only) |
-
-## Keyboard Shortcuts
-
-| Shortcut | Context | Action |
-|----------|---------|--------|
-| Space | Canvas selection | Vote up |
-| Alt | Canvas selection | Vote down |
-| Delete / Backspace | Canvas selection | Delete own blocks |
-| Ctrl+A | Canvas | Select all blocks |
-| Ctrl+Z | Canvas | Undo |
-| Ctrl+Y / Ctrl+Shift+Z | Canvas | Redo |
-| Ctrl+C / Ctrl+V | Canvas | Copy / Paste at cursor |
-| Escape | Canvas | Deselect / exit add-text mode |
-| Ctrl+B / I / U | Text editing | Bold / Italic / Underline |
-| Escape | Text editing | Save and exit |
-| Ctrl+click | EditableText | Open inline CMS editor (admin) |
+Tab/icon layout and the full shortcut table: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
+appendix. Admin-only surfaces: Content, Campaign, Emails, History.
 
 ## Documentation Index
 
